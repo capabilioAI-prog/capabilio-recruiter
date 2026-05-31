@@ -8,16 +8,21 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const T = {
-  cream:"#F6F6F1", cream2:"#EFEFE9", cream3:"#E8E8E1",
-  ink:"#1A1A18", ink2:"#3A3A38", ink3:"#6B6B68", ink4:"#9A9A97",
-  indigo:"#3D4EAC", indigo2:"#5B6FD4", indigo3:"#EEF0FB",
-  green:"#1A7A4A", green2:"#E8F7EF",
-  amber:"#B8620A", amber2:"#FDF3E7",
-  red:"#C0392B", red2:"#FDECEA",
-  blue:"#1565C0", blue2:"#E8F1FB",
-  border:"rgba(26,26,24,0.09)",
-  shadow:"0 2px 12px rgba(26,26,24,0.07), 0 1px 3px rgba(26,26,24,0.05)",
-  shadow2:"0 8px 32px rgba(26,26,24,0.10), 0 2px 8px rgba(26,26,24,0.06)",
+  bg:     "#FAF8F5",
+  bg2:    "#F3F0EB",
+  bg3:    "#EDE9E2",
+  white:  "#FFFFFF",
+  orange: "#FF4A1C",
+  orange2:"#FFF2EE",
+  dark:   "#0C0C10",
+  dark2:  "#1E1E28",
+  dark3:  "#4A4A5A",
+  dark4:  "#8A8A9A",
+  red:    "#C0392B",
+  red2:   "#FDECEA",
+  border: "rgba(12,12,16,0.08)",
+  shadow: "0 2px 16px rgba(12,12,16,0.06), 0 1px 4px rgba(12,12,16,0.04)",
+  shadow2:"0 12px 48px rgba(12,12,16,0.12), 0 4px 16px rgba(12,12,16,0.07)",
 };
 
 const ensureRecruiterDoc = async (user, extra = {}) => {
@@ -84,27 +89,25 @@ export default function RecruiterAuth({ onAuth }) {
   return (
     <div style={S.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Inter:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: ${T.cream2}; }
-        @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-40px,30px) scale(1.08)} }
-        @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(0.95)} }
-        @keyframes float3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-20px,20px) scale(1.05)} }
+        body { background: ${T.bg}; }
+        @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,20px)} }
+        @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-30px)} }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-        input { font-family: 'DM Sans', sans-serif !important; }
-        input::placeholder { color: ${T.ink4}; }
-        input:focus { outline: none; border-color: ${T.indigo} !important; box-shadow: 0 0 0 3px ${T.indigo3} !important; }
-        .google-btn:hover { background: ${T.cream3} !important; }
-        .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        input { font-family: 'Inter', sans-serif !important; }
+        input::placeholder { color: ${T.dark4}; }
+        input:focus { outline: none; border-color: ${T.orange} !important; box-shadow: 0 0 0 3px ${T.orange2} !important; }
+        .google-btn:hover { background: ${T.bg3} !important; }
+        .submit-btn:hover { background: #e03c10 !important; transform: translateY(-1px); }
         .toggle-btn:hover { text-decoration: underline; }
       `}</style>
 
-      {/* Subtle background orbs */}
-      <div style={S.grid} />
-      <div style={{ ...S.orb, ...S.orb1 }} />
-      <div style={{ ...S.orb, ...S.orb2 }} />
-      <div style={{ ...S.orb, ...S.orb3 }} />
+      {/* Background orbs */}
+      <div style={{ position:"absolute", width:500, height:500, top:-100, left:-100, borderRadius:"50%", background:`radial-gradient(circle, ${T.orange2}, transparent 70%)`, filter:"blur(80px)", zIndex:0, animation:"float1 8s ease-in-out infinite", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", width:400, height:400, bottom:0, right:"25%", borderRadius:"50%", background:`radial-gradient(circle, rgba(255,74,28,0.06), transparent 70%)`, filter:"blur(60px)", zIndex:0, animation:"float2 10s ease-in-out infinite", pointerEvents:"none" }} />
 
       {/* Left Panel */}
       <div style={S.left}>
@@ -113,27 +116,27 @@ export default function RecruiterAuth({ onAuth }) {
           {/* Logo */}
           <div style={S.logoRow}>
             <div style={S.logoMark}>C</div>
-            <span style={S.logoText}>capabilio</span>
-            <span style={S.badge}>RECRUITER</span>
+            <div>
+              <span style={S.logoText}>Capabilio AI</span>
+              <span style={S.badge}>RECRUITER</span>
+            </div>
           </div>
 
           {/* Hero */}
           <h1 style={S.hero}>
-            Hire on <br />
-            <span style={S.heroGrad}>verified skills.</span>
-            <br />Not résumés.
+            Your candidates lie.<br />
+            <em style={S.heroAccent}>Their ELO doesn't.</em>
           </h1>
           <p style={S.heroSub}>
-            Access live ELO ratings, Arena scores, and AI-powered
-            talent insights — all in one command center.
+            Capabilio AI Recruiter replaces resume-heavy shortlisting with live ELO skill intelligence, verified profiles, and AI-ranked pipelines.
           </p>
 
           {/* Stats */}
           <div style={S.statsRow}>
             {[
-              { n: "12K+", l: "Verified Candidates" },
-              { n: "98%",  l: "Match Accuracy" },
-              { n: "3.2×", l: "Faster Hiring" },
+              { n: "9 days", l: "Avg. to shortlist" },
+              { n: "94%",    l: "AI parse accuracy" },
+              { n: "0 ghost",l: "Every candidate updated" },
             ].map((s) => (
               <div key={s.l} style={S.statBox}>
                 <span style={S.statNum}>{s.n}</span>
@@ -301,105 +304,70 @@ export default function RecruiterAuth({ onAuth }) {
 
 const S = {
   root: {
-    minHeight: "100vh",
-    display: "flex",
-    fontFamily: "'DM Sans', sans-serif",
-    background: `radial-gradient(ellipse at top, ${T.indigo3}, ${T.cream2})`,
-    position: "relative",
-    overflow: "hidden",
-  },
-  grid: {
-    position: "absolute", inset: 0, zIndex: 0,
-    backgroundImage: `
-      linear-gradient(${T.border} 1px, transparent 1px),
-      linear-gradient(90deg, ${T.border} 1px, transparent 1px)
-    `,
-    backgroundSize: "50px 50px",
-  },
-  orb: {
-    position: "absolute", borderRadius: "50%",
-    filter: "blur(80px)", zIndex: 0, pointerEvents: "none",
-  },
-  orb1: {
-    width: 500, height: 500,
-    background: `radial-gradient(circle, rgba(61,78,172,0.10) 0%, transparent 70%)`,
-    top: -100, left: -100,
-    animation: "float1 8s ease-in-out infinite",
-  },
-  orb2: {
-    width: 400, height: 400,
-    background: `radial-gradient(circle, rgba(91,111,212,0.08) 0%, transparent 70%)`,
-    bottom: -50, right: "30%",
-    animation: "float2 10s ease-in-out infinite",
-  },
-  orb3: {
-    width: 300, height: 300,
-    background: `radial-gradient(circle, rgba(26,122,74,0.06) 0%, transparent 70%)`,
-    top: "40%", right: "10%",
-    animation: "float3 12s ease-in-out infinite",
+    minHeight: "100vh", display: "flex",
+    fontFamily: "'Inter', sans-serif",
+    background: T.bg, position: "relative", overflow: "hidden",
   },
   left: {
     flex: 1, display: "flex", alignItems: "center",
     justifyContent: "center", padding: "60px 40px", zIndex: 1,
   },
-  leftInner: { maxWidth: 480 },
+  leftInner: { maxWidth: 500 },
   logoRow: {
-    display: "flex", alignItems: "center", gap: 10, marginBottom: 52,
+    display: "flex", alignItems: "center", gap: 12, marginBottom: 52,
   },
   logoMark: {
-    width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-    background: T.ink,
+    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+    background: T.dark,
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: T.cream, fontFamily: "'Syne', sans-serif",
+    color: "white", fontFamily: "'Playfair Display', serif",
     fontWeight: 800, fontSize: 20,
-    boxShadow: "0 2px 12px rgba(26,26,24,0.18)",
   },
   logoText: {
-    fontFamily: "'Syne', sans-serif", fontWeight: 700,
-    fontSize: 20, color: T.ink, letterSpacing: "-0.5px",
+    fontFamily: "'Inter', sans-serif", fontWeight: 700,
+    fontSize: 18, color: T.dark, letterSpacing: "-0.3px",
+    marginRight: 8,
   },
   badge: {
-    fontSize: 10, fontWeight: 600, letterSpacing: 2,
-    color: T.indigo, background: T.indigo3,
-    border: `1px solid rgba(61,78,172,0.2)`,
-    padding: "2px 8px", borderRadius: 20,
+    fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
+    color: T.dark4, background: T.bg3,
+    border: `1px solid ${T.border}`,
+    padding: "2px 8px", borderRadius: 5,
   },
   hero: {
-    fontFamily: "'Syne', sans-serif", fontSize: 54,
-    fontWeight: 800, color: T.ink,
-    lineHeight: 1.12, letterSpacing: "-1.5px",
+    fontFamily: "'Playfair Display', serif", fontSize: 52,
+    fontWeight: 900, color: T.dark,
+    lineHeight: 1.1, letterSpacing: "-0.02em",
     marginBottom: 20,
   },
-  heroGrad: {
-    background: `linear-gradient(135deg, ${T.indigo}, ${T.indigo2})`,
-    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+  heroAccent: {
+    fontStyle: "italic", color: T.orange,
   },
   heroSub: {
-    fontSize: 16, color: T.ink3, lineHeight: 1.7, marginBottom: 44,
+    fontSize: 16, color: T.dark3, lineHeight: 1.8, marginBottom: 44,
   },
-  statsRow: { display: "flex", gap: 32, marginBottom: 48 },
+  statsRow: { display: "flex", gap: 36, marginBottom: 48 },
   statBox: { display: "flex", flexDirection: "column", gap: 4 },
   statNum: {
-    fontFamily: "'Syne', sans-serif", fontSize: 30,
-    fontWeight: 800, color: T.ink,
+    fontFamily: "'Playfair Display', serif", fontSize: 28,
+    fontWeight: 800, color: T.orange,
   },
-  statLbl: { fontSize: 12, color: T.ink4, fontWeight: 500 },
+  statLbl: { fontSize: 12, color: T.dark4, fontWeight: 500 },
   trustedRow: {
     borderTop: `1px solid ${T.border}`, paddingTop: 24,
   },
   trustedLabel: {
-    fontSize: 11, letterSpacing: 2, color: T.ink4,
-    fontWeight: 600, marginBottom: 12,
+    fontSize: 11, letterSpacing: "0.08em", color: T.dark4,
+    fontWeight: 700, marginBottom: 12,
   },
   trustedLogos: { display: "flex", gap: 20, flexWrap: "wrap" },
-  trustedLogo: { fontSize: 13, color: T.ink3, fontWeight: 500 },
+  trustedLogo: { fontSize: 13, color: T.dark3, fontWeight: 500 },
   right: {
-    width: 480, display: "flex", alignItems: "center",
-    justifyContent: "center", padding: "40px 30px", zIndex: 1,
+    width: 490, display: "flex", alignItems: "center",
+    justifyContent: "center", padding: "40px 32px", zIndex: 1,
   },
   card: {
-    width: "100%",
-    background: T.cream,
+    width: "100%", background: T.white,
     border: `1px solid ${T.border}`,
     borderRadius: 24, padding: 40,
     boxShadow: T.shadow2,
@@ -407,85 +375,78 @@ const S = {
   },
   tabRow: {
     display: "flex", gap: 4, padding: 4,
-    background: T.cream3, borderRadius: 12,
+    background: T.bg2, borderRadius: 12,
   },
   tab: {
-    flex: 1, padding: "8px 16px", borderRadius: 9,
+    flex: 1, padding: "9px 16px", borderRadius: 9,
     border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600,
-    fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s",
+    fontFamily: "'Inter', sans-serif", transition: "all 0.2s",
   },
   tabActive: {
-    background: T.ink, color: T.cream,
-    boxShadow: "0 1px 4px rgba(26,26,24,0.15)",
+    background: T.dark, color: "white",
+    boxShadow: "0 1px 4px rgba(12,12,16,0.18)",
   },
   tabInactive: {
-    background: "transparent", color: T.ink3,
+    background: "transparent", color: T.dark4,
   },
   cardTitle: {
-    fontFamily: "'Syne', sans-serif", fontSize: 26,
-    fontWeight: 700, color: T.ink, letterSpacing: "-0.5px",
+    fontFamily: "'Playfair Display', serif", fontSize: 26,
+    fontWeight: 800, color: T.dark, letterSpacing: "-0.3px",
     marginBottom: 6,
   },
-  cardSub: { fontSize: 14, color: T.ink3 },
+  cardSub: { fontSize: 14, color: T.dark3 },
   googleBtn: {
     width: "100%", display: "flex", alignItems: "center",
-    justifyContent: "center", gap: 10, padding: "12px 20px",
-    background: T.cream2,
-    border: `1px solid ${T.border}`,
-    borderRadius: 12, color: T.ink2, fontSize: 14,
+    justifyContent: "center", gap: 10, padding: "13px 20px",
+    background: T.bg2, border: `1px solid ${T.border}`,
+    borderRadius: 12, color: T.dark2, fontSize: 14,
     fontWeight: 500, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-    transition: "all 0.2s",
+    fontFamily: "'Inter', sans-serif", transition: "all 0.2s",
   },
   divider: {
     display: "flex", alignItems: "center", gap: 12, margin: "20px 0",
   },
   divLine: { flex: 1, height: 1, background: T.border },
-  divText: { fontSize: 12, color: T.ink4 },
-  fieldGroup: { display: "flex", flexDirection: "column", gap: 4 },
-  label: { fontSize: 13, fontWeight: 500, color: T.ink2 },
+  divText: { fontSize: 12, color: T.dark4 },
+  fieldGroup: { display: "flex", flexDirection: "column", gap: 5 },
+  label: { fontSize: 13, fontWeight: 500, color: T.dark2 },
   input: {
     width: "100%", padding: "13px 16px",
-    background: T.cream3,
-    border: `1px solid ${T.border}`,
-    borderRadius: 12, color: T.ink, fontSize: 14,
-    transition: "all 0.2s",
+    background: T.bg, border: `1.5px solid ${T.border}`,
+    borderRadius: 10, color: T.dark, fontSize: 14,
+    transition: "all 0.2s", fontFamily: "'Inter', sans-serif",
   },
   errorBox: {
-    padding: "10px 14px",
-    background: T.red2,
+    padding: "10px 14px", background: T.red2,
     border: `1px solid rgba(192,57,43,0.15)`,
     borderRadius: 10, color: T.red, fontSize: 13,
   },
   submitBtn: {
-    width: "100%", padding: "13px 20px",
-    background: T.ink,
-    border: "none", borderRadius: 12, color: T.cream,
-    fontSize: 15, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif", marginTop: 4,
+    width: "100%", padding: "14px 20px",
+    background: T.orange, border: "none", borderRadius: 12,
+    color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer",
+    fontFamily: "'Inter', sans-serif", marginTop: 4,
     display: "flex", alignItems: "center", justifyContent: "center",
-    boxShadow: "0 2px 8px rgba(26,26,24,0.15)",
-    transition: "all 0.2s",
+    boxShadow: `0 4px 16px ${T.orange}40`, transition: "all 0.2s",
   },
   spinner: {
     width: 18, height: 18,
-    border: `2px solid rgba(246,246,241,0.4)`,
-    borderTopColor: T.cream, borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-    display: "inline-block",
+    border: "2px solid rgba(255,255,255,0.35)",
+    borderTopColor: "white", borderRadius: "50%",
+    animation: "spin 0.8s linear infinite", display: "inline-block",
   },
   toggleRow: {
     textAlign: "center", fontSize: 14,
-    color: T.ink4, marginTop: 20,
+    color: T.dark4, marginTop: 20,
   },
   toggleBtn: {
-    background: "none", border: "none", color: T.indigo,
+    background: "none", border: "none", color: T.orange,
     cursor: "pointer", fontSize: 14, fontWeight: 600,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   terms: {
     textAlign: "center", fontSize: 12,
-    color: T.ink4, marginTop: 16,
+    color: T.dark4, marginTop: 16,
   },
-  link: { color: T.indigo, textDecoration: "none" },
+  link: { color: T.orange, textDecoration: "none" },
 };
