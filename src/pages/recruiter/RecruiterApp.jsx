@@ -34,7 +34,7 @@ import FairnessLedger         from "./FairnessLedger";
 import RejectionWorkflow      from "./RejectionWorkflow";
 import CompanyTrustRatings    from "./CompanyTrustRatings"
 import ResumeScreening        from "./ResumeScreening";
-import Applications           from "./Applications";
+import ApplicationsView       from "./ApplicationsView"; // Applications.jsx was a separate, fully-mocked duplicate -- retired in favor of the real component
 import InternalMobility       from "./InternalMobility";
 import CompanyIntegration     from "./CompanyIntegration";
 import AdminPanel             from "./AdminPanel";
@@ -155,7 +155,7 @@ export default function RecruiterApp() {
         <Route path="rejection-workflow"      element={<RejectionWorkflow />} />
         <Route path="trust-ratings"           element={<CompanyTrustRatings />} />
         <Route path="resume-screening"        element={<ResumeScreening />} />
-        <Route path="applications"            element={<Applications />} />
+        <Route path="applications"            element={<ApplicationsView />} />
         <Route path="internal-mobility"       element={<InternalMobility />} />
         <Route path="company-integration"     element={<CompanyIntegration />} />
         <Route path="admin"                   element={<AdminPanel isPlatformAdmin={!!recruiter?.is_platform_admin} />} />

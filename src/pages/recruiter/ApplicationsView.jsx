@@ -612,6 +612,7 @@ The Hiring Team`;
 export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
+  const [jobsById, setJobsById] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // all | strong | good | weak
   const [selected, setSelected] = useState(new Set());
@@ -620,36 +621,49 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   const [toast, setToast] = useState(null);
   const [bulkActionInFlight, setBulkActionInFlight] = useState(false);
 
+  // titleFor(app) resolves the right job title whether this view is scoped
+  // to one job (jobId/jobTitle props, drilled into from JobBoard) or showing
+  // every application across every job (no jobId -- the top-level
+  // /recruiter/applications route) -- in the latter case each row can belong
+  // to a different job, so the single jobTitle prop can't be trusted.
+  const titleFor = (app) => (jobId ? jobTitle : jobsById[app?.jobId] || app?.jobDescription?.slice(0, 40) || "—");
+
   // Load applications + subscribe to realtime changes. Scoring is now done
   // automatically server-side at apply time (POST /apply/:jobId), so every
   // row loaded here already has a score -- there is no manual "Score All"
-  // step anymore.
+  // step anymore. When jobId is omitted this loads every application across
+  // every job for the recruiter's own company (RLS-scoped server-side).
   useEffect(() => {
-    if (!jobId) return;
     let cancelled = false;
 
     async function load() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("applications")
-        .select("*")
-        .eq("job_id", jobId)
-        .order("created_at", { ascending: false });
+      let query = supabase.from("applications").select("*").order("created_at", { ascending: false });
+      if (jobId) query = query.eq("job_id", jobId);
+      const [appsRes, jobsRes] = await Promise.all([
+        query,
+        supabase.from("jobs").select("id,title"),
+      ]);
       if (cancelled) return;
-      if (error) {
-        console.error("Failed to load applications:", error.message);
+      if (appsRes.error) {
+        console.error("Failed to load applications:", appsRes.error.message);
       } else {
-        setApplications((data || []).map(fromDbApplication));
+        setApplications((appsRes.data || []).map(fromDbApplication));
+      }
+      if (!jobsRes.error) {
+        setJobsById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.title])));
       }
       setLoading(false);
     }
     load();
 
     const channel = supabase
-      .channel(`applications-${jobId}`)
+      .channel(jobId ? `applications-${jobId}` : "applications-all")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "applications", filter: `job_id=eq.${jobId}` },
+        jobId
+          ? { event: "*", schema: "public", table: "applications", filter: `job_id=eq.${jobId}` }
+          : { event: "*", schema: "public", table: "applications" },
         (payload) => {
           setApplications((prev) => {
             if (payload.eventType === "INSERT") {
@@ -721,8 +735,8 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
           company_id: c.companyId,
           candidate_id: c.candidateId || c.id,
           name: c.name,
-          job_id: jobId,
-          job_title: jobTitle,
+          job_id: c.jobId,
+          job_title: titleFor(c),
           stage: "applied",
           score: c.score || 0,
         });
@@ -841,7 +855,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
             Applications
           </h1>
           <p style={{ color: "#3A3A38", fontSize: 13, margin: "4px 0 0" }}>
-            {jobTitle} · {counts.all} active applicants
+            {jobId ? jobTitle : "All roles"} · {counts.all} active applicants
           </p>
         </div>
         {/* Scoring now happens automatically at apply time on the backend --
@@ -1044,6 +1058,11 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
                   <div style={{ color: "#1A1A18", fontWeight: 600, fontSize: 14 }}>
                     {app.name || "Unknown"}
                   </div>
+                  {!jobId && (
+                    <div style={{ color: "#3D4EAC", fontSize: 11, fontWeight: 600, marginTop: 2 }}>
+                      {jobsById[app.jobId] || "—"}
+                    </div>
+                  )}
                   <div style={{ color: "#E8E8E1", fontSize: 12, marginTop: 2 }}>
                     {app.email || ""}
                   </div>
@@ -1167,7 +1186,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
       {feedbackTarget && (
         <FeedbackModal
           candidate={feedbackTarget}
-          jobTitle={jobTitle}
+          jobTitle={titleFor(feedbackTarget)}
           onClose={() => setFeedbackTarget(null)}
           onSent={() => {
             setApplications((prev) =>
