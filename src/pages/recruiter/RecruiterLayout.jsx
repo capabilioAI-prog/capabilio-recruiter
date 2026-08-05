@@ -36,6 +36,14 @@ const NAV_PRIMARY = [
     ],
   },
   {
+    heading: "COLLEGE & HR",
+    items: [
+      { icon: "🎓", label: "College Connections", path: "/recruiter/colleges",      badge: "new" },
+      { icon: "✅", label: "HR Approvals",         path: "/recruiter/hr-approvals",  badge: "new" },
+      { icon: "🧩", label: "Tasks & Challenges",    path: "/recruiter/tasks",         badge: "new" },
+    ],
+  },
+  {
     heading: "PEOPLE",
     items: [
       { icon: "🏢", label: "Employees",          path: "/recruiter/employee-network" },

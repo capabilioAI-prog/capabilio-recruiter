@@ -38,6 +38,9 @@ import Applications           from "./Applications";
 import InternalMobility       from "./InternalMobility";
 import CompanyIntegration     from "./CompanyIntegration";
 import AdminPanel             from "./AdminPanel";
+import CollegeConnections     from "./CollegeConnections";
+import HRApprovalQueue        from "./HRApprovalQueue";
+import TasksChallenges        from "./TasksChallenges";
 
 export default function RecruiterApp() {
   const [authState, setAuthState] = useState("loading");
@@ -59,6 +62,21 @@ export default function RecruiterApp() {
         if (error) throw error;
         if (cancelled) return;
         setRecruiter(data);
+
+        // ensure_recruiter returns the raw `recruiters` row (snake_case columns,
+        // no company name). Fetch the company name separately so the UI can show
+        // it -- RecruiterLayout reads recruiter.displayName / recruiter.companyName.
+        let companyName = null;
+        if (data?.company_id) {
+          const { data: company } = await supabase
+            .from("companies")
+            .select("name")
+            .eq("id", data.company_id)
+            .single();
+          companyName = company?.name ?? null;
+        }
+        if (cancelled) return;
+        setRecruiter({ ...data, displayName: data.display_name, companyId: data.company_id, companyName });
         setAuthState("auth");
       } catch (err) {
         console.error("Failed to load recruiter record:", err);
@@ -141,6 +159,10 @@ export default function RecruiterApp() {
         <Route path="internal-mobility"       element={<InternalMobility />} />
         <Route path="company-integration"     element={<CompanyIntegration />} />
         <Route path="admin"                   element={<AdminPanel isPlatformAdmin={!!recruiter?.is_platform_admin} />} />
+        {/* College / HR / Tasks extension */}
+        <Route path="colleges"                element={<CollegeConnections />} />
+        <Route path="hr-approvals"            element={<HRApprovalQueue />} />
+        <Route path="tasks"                   element={<TasksChallenges />} />
         <Route path="*"                       element={<Navigate to="/recruiter" replace />} />
       </Route>
     </Routes>

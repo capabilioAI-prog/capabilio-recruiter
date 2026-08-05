@@ -60,7 +60,9 @@ const BACKEND = "https://capabilio-backend-production-60ab.up.railway.app/api/re
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STAGES = [
-  { id:"draft",      label:"Draft",      color:T.ink3,   icon:"📝" },
+  { id:"draft",              label:"Draft",             color:T.ink3,   icon:"📝" },
+  { id:"pending_hr_review",  label:"Pending HR Review", color:T.amber,  icon:"⏳" },
+  { id:"approved",           label:"Approved by HR",    color:T.blue,   icon:"👍" },
   { id:"sent",       label:"Sent",       color:T.indigo, icon:"📤" },
   { id:"negotiating",label:"Negotiating",color:T.amber,  icon:"💬" },
   { id:"accepted",   label:"Accepted",   color:T.green,  icon:"✅" },
@@ -432,7 +434,7 @@ function NegotiationModal({ offer, onClose, onSaved }) {
 }
 
 // ── Offer Card ────────────────────────────────────────────────────────────────
-function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate }) {
+function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate, onSubmitForReview }) {
   const stage = stageObj(offer.status)
   const totalComp = (Number(offer.baseSalary)||0) + (Number(offer.bonus)||0)
   const daysLeft = offer.expiryDate ? Math.ceil((new Date(offer.expiryDate) - new Date()) / (1000*60*60*24)) : null
@@ -519,6 +521,14 @@ function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate }) {
           </>
         )}
         {offer.status === "draft" && (
+          <button onClick={() => onSubmitForReview(offer)} style={{ padding:"6px 12px", background:T.amber2, border:`1px solid ${T.amber}44`, borderRadius:8, color:T.amber, fontSize:11, fontWeight:600, cursor:"pointer" }}>⏳ Submit for HR Review</button>
+        )}
+        {offer.status === "pending_hr_review" && (
+          <span style={{ padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, fontSize:11 }}>
+            Awaiting HR sign-off in the HR Approval Queue
+          </span>
+        )}
+        {offer.status === "approved" && (
           <button onClick={() => onStatusChange(offer.id,"sent")} style={{ padding:"6px 12px", background:T.indigo3, border:`1px solid ${T.indigo}44`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer" }}>📤 Send</button>
         )}
         <button onClick={() => onEdit(offer)} style={{ padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, fontSize:11, cursor:"pointer" }}>✏️ Edit</button>
@@ -571,6 +581,23 @@ export default function OfferManagement() {
   async function handleStatusChange(id, status) {
     const { error } = await supabase.from("offers").update({ status }).eq("id", id)
     if (error) console.error("Failed to update offer status:", error)
+  }
+
+  // Offers can never go straight from draft to sent -- they must pass through
+  // an offer_reviews row that HR resolves in the HR Approval Queue page.
+  async function handleSubmitForReview(offer) {
+    try {
+      const { error: reviewError } = await supabase.from("offer_reviews").insert({ offer_id: offer.id, status: "pending" })
+      if (reviewError) throw reviewError
+      const { error: offerError } = await supabase.from("offers").update({ status: "pending_hr_review" }).eq("id", offer.id)
+      if (offerError) throw offerError
+      await supabase.rpc("write_audit_log", {
+        p_action: "offer.submitted_for_hr_review", p_entity_type: "offer", p_entity_id: offer.id,
+        p_before: { status: "draft" }, p_after: { status: "pending_hr_review" },
+      })
+    } catch (err) {
+      console.error("Failed to submit offer for HR review:", err)
+    }
   }
 
   async function handleDelete(id) {
@@ -657,6 +684,7 @@ export default function OfferManagement() {
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
               onNegotiate={o => setNegotiateTarget(o)}
+              onSubmitForReview={handleSubmitForReview}
             />
           ))}
         </div>
