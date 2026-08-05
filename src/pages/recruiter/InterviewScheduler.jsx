@@ -1,8 +1,4 @@
 import { useState, useEffect } from "react"
-// NOTE: `interviews` has moved to Supabase; `users` (candidate list) stays on
-// Firestore for now — see the "candidate/ELO source" decision from Phase 3 planning.
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
 import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
@@ -588,10 +584,15 @@ export default function InterviewScheduler() {
     return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
+  // Candidate picker sources real applicants from this company's applications
+  // table (the same data ApplicationsView/CandidateCompare use) instead of
+  // the old Firestore "users" collection. If there are no applications yet,
+  // the modal falls back to a free-text name field automatically.
   useEffect(() => {
-    getDocs(collection(db,"users")).then(snap => {
-      setCandidates(snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>!u.isRecruiter))
-    }).catch(()=>{})
+    supabase.from("applications").select("id,name,email").then(({ data, error }) => {
+      if (error) { console.error("Failed to load candidates for scheduler:", error); return }
+      setCandidates((data || []).map((a) => ({ id: a.id, displayName: a.name, email: a.email })))
+    })
   }, [])
 
   async function handleStatusChange(id, status) {

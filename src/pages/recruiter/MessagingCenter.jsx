@@ -1,8 +1,4 @@
 import { useState, useEffect, useRef } from "react"
-// `threads`/`messages` have moved to Supabase; `users` (candidate list for
-// bulk outreach) stays on Firestore for now — see Phase 3 candidate/ELO note.
-import { collection, query, limit, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
 import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
@@ -347,111 +343,6 @@ function NewThreadModal({ onClose, onCreated }) {
   )
 }
 
-// ── Bulk Outreach Modal ───────────────────────────────────────────────────────
-function BulkOutreachModal({ onClose }) {
-  const [jobTitle,  setJobTitle]   = useState("")
-  const [template,  setTemplate]   = useState(TEMPLATES[0].body)
-  const [sending,   setSending]    = useState(false)
-  const [done,      setDone]       = useState(false)
-  const [count,     setCount]      = useState(0)
-
-  async function handleSend() {
-    setSending(true)
-    let sent = 0
-    const candidates = await getDocs(query(collection(db, "users"), limit(20)))
-    for (const cdoc of candidates.docs) {
-      const c = cdoc.data()
-      if (c.isRecruiter) continue
-      try {
-        const { data: thread, error: threadErr } = await supabase.from("threads").insert(toDbThread({
-          candidateId: cdoc.id,
-          candidateName: c.displayName || c.name || "Candidate",
-          candidateEmail: c.email || "",
-          jobTitle,
-          lastMessage: template.slice(0,80),
-          lastMessageAt: new Date().toISOString(),
-          unread: false,
-          isBulk: true,
-        })).select().single()
-        if (threadErr) throw threadErr
-        const { error: msgErr } = await supabase.from("messages").insert({
-          thread_id: thread.id,
-          body: template.replace("[Name]", c.displayName || c.name || "there"),
-          sender_type: "recruiter",
-          sender_name: "You",
-          read: false,
-        })
-        if (msgErr) throw msgErr
-        sent++
-        setCount(sent)
-      } catch (e) { console.error("Bulk outreach failed for candidate:", e) }
-    }
-    setSending(false)
-    setDone(true)
-  }
-
-  const iStyle = {
-    width:"100%", padding:"10px 12px",
-    background:T.cream3, border:`1px solid ${T.border}`,
-    borderRadius:10, color:T.ink, fontSize:13,
-    fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box",
-  }
-
-  return (
-    <div style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(26,26,24,0.5)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:T.cream, border:`1px solid ${T.indigo}33`, borderRadius:20, padding:28, width:"100%", maxWidth:580, maxHeight:"85vh", overflowY:"auto", fontFamily:"'DM Sans',sans-serif", boxShadow:T.shadow2 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div>
-            <div style={{ fontSize:11, color:T.indigo, fontWeight:700, letterSpacing:"0.08em", marginBottom:4 }}>BULK OUTREACH</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Message All Candidates</h2>
-          </div>
-          <button onClick={onClose} style={{ background:T.cream3, border:`1px solid ${T.border}`, color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer" }}>✕</button>
-        </div>
-
-        {done ? (
-          <div style={{ textAlign:"center", padding:"40px 0" }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>🚀</div>
-            <div style={{ fontSize:20, fontWeight:700, color:T.green, marginBottom:8 }}>Sent to {count} candidates!</div>
-            <div style={{ fontSize:13, color:T.ink3, marginBottom:24 }}>All conversations have been created in your inbox.</div>
-            <button onClick={onClose} style={{ padding:"10px 24px", background:T.indigo, border:"none", borderRadius:10, color:"#1A1A18", fontSize:13, fontWeight:700, cursor:"pointer" }}>Done</button>
-          </div>
-        ) : (
-          <>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:12, color:T.ink4, marginBottom:6 }}>Job Title / Role</div>
-              <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Senior React Developer" style={iStyle} />
-            </div>
-            <div style={{ marginBottom:8 }}>
-              <div style={{ fontSize:12, color:T.ink4, marginBottom:6 }}>Quick Templates</div>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:10 }}>
-                {TEMPLATES.map(t => (
-                  <button key={t.id} onClick={() => setTemplate(t.body)} style={{ padding:"5px 12px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:20, color:T.ink3, fontSize:11, cursor:"pointer" }}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom:20 }}>
-              <div style={{ fontSize:12, color:T.ink4, marginBottom:6 }}>Message Template</div>
-              <textarea value={template} onChange={e => setTemplate(e.target.value)} rows={10} style={{ ...iStyle, lineHeight:1.7, resize:"vertical" }} />
-              <div style={{ fontSize:10, color:T.ink4, marginTop:4 }}>Use [Name] to personalise for each candidate.</div>
-            </div>
-            <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}33`, borderRadius:10, padding:"10px 14px", marginBottom:16, fontSize:12, color:T.ink2 }}>
-              ⚡ This will send a personalised message to all active candidates in your database.
-            </div>
-            <div style={{ display:"flex", gap:10 }}>
-              <button onClick={onClose} style={{ flex:1, padding:"11px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10, color:T.ink3, fontSize:13, fontWeight:600, cursor:"pointer" }}>Cancel</button>
-              <button onClick={handleSend} disabled={sending} style={{ flex:2, padding:"11px", background: sending ? T.indigo3 : T.indigo, border:"none", borderRadius:10, color: sending ? T.indigo : "#1A1A18", fontSize:13, fontWeight:700, cursor:"pointer" }}>
-                {sending ? `🚀 Sending… ${count} done` : "🚀 Send to All Candidates"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function MessagingCenter() {
   const [threads,       setThreads]       = useState([])
@@ -459,7 +350,6 @@ export default function MessagingCenter() {
   const [messages,      setMessages]      = useState([])
   const [loadingMsgs,   setLoadingMsgs]   = useState(false)
   const [showNew,       setShowNew]       = useState(false)
-  const [showBulk,      setShowBulk]      = useState(false)
   const [search,        setSearch]        = useState("")
   const bottomRef = useRef()
 
@@ -558,9 +448,6 @@ export default function MessagingCenter() {
           </div>
         </div>
         <div style={{ display:"flex", gap:10 }}>
-          <button onClick={() => setShowBulk(true)} style={{ padding:"9px 16px", background:T.indigo3, border:`1px solid ${T.indigo}44`, borderRadius:10, color:T.indigo, fontSize:13, fontWeight:600, cursor:"pointer" }}>
-            🚀 Bulk Outreach
-          </button>
           <button onClick={() => setShowNew(true)} style={{ padding:"9px 20px", background:T.indigo, border:"none", borderRadius:10, color:"#1A1A18", fontSize:13, fontWeight:700, cursor:"pointer", boxShadow:T.shadow }}>
             + New Message
           </button>
@@ -663,7 +550,6 @@ export default function MessagingCenter() {
       </div>
 
       {showNew && <NewThreadModal onClose={() => setShowNew(false)} onCreated={t => { setShowNew(false); setActiveThread(t) }} />}
-      {showBulk && <BulkOutreachModal onClose={() => setShowBulk(false)} />}
     </div>
   )
 }
