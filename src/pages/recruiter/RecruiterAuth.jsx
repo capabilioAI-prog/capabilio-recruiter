@@ -1,11 +1,5 @@
 import { useState } from "react";
-import { auth, db, googleProvider } from "./firebase";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-} from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { supabase } from "../../lib/supabaseClient";
 
 const T = {
   bg:     "#FAF8F5",
@@ -25,25 +19,7 @@ const T = {
   shadow2:"0 12px 48px rgba(12,12,16,0.12), 0 4px 16px rgba(12,12,16,0.07)",
 };
 
-const ensureRecruiterDoc = async (user, extra = {}) => {
-  const ref = doc(db, "recruiters", user.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      uid: user.uid,
-      email: user.email,
-      displayName: extra.name || user.displayName || "",
-      companyName: extra.company || "",
-      plan: "free",
-      teamMembers: [],
-      createdAt: new Date().toISOString(),
-      role: "recruiter",
-    });
-  }
-  return (await getDoc(ref)).data();
-};
-
-export default function RecruiterAuth({ onAuth }) {
+export default function RecruiterAuth() {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,35 +28,46 @@ export default function RecruiterAuth({ onAuth }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Sign-in/sign-up only *start* the auth flow here. The resulting session
+  // (including the Google OAuth redirect round-trip, which has no synchronous
+  // callback) is picked up centrally by the supabase.auth.onAuthStateChange
+  // listener in RecruiterApp, which also calls the ensure_recruiter RPC.
   const handleGoogle = async () => {
     setLoading(true);
     setError("");
     try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      const recruiter = await ensureRecruiterDoc(cred.user);
-      onAuth(cred.user, recruiter);
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/recruiter` },
+      });
+      if (err) throw err;
+      // Browser navigates away here; loading state intentionally left on.
     } catch (err) {
-      setError(err.message.replace("Firebase: ", "").replace(/\(.*\)/, ""));
-    } finally {
+      setError(err.message || "Google sign-in failed.");
       setLoading(false);
     }
   };
 
   const handleEmail = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError("");
     try {
-      let cred;
       if (mode === "login") {
-        cred = await signInWithEmailAndPassword(auth, email, password);
+        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (err) throw err;
       } else {
-        cred = await createUserWithEmailAndPassword(auth, email, password);
+        const { error: err } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: name, company_name: company } },
+        });
+        if (err) throw err;
       }
-      const recruiter = await ensureRecruiterDoc(cred.user, { name, company });
-      onAuth(cred.user, recruiter);
+      // onAuthStateChange in RecruiterApp handles the rest.
     } catch (err) {
-      setError(err.message.replace("Firebase: ", "").replace(/\(.*\)/, ""));
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,7 +83,6 @@ export default function RecruiterAuth({ onAuth }) {
         @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-30px)} }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
         input { font-family: 'Inter', sans-serif !important; }
         input::placeholder { color: ${T.dark4}; }
         input:focus { outline: none; border-color: ${T.orange} !important; box-shadow: 0 0 0 3px ${T.orange2} !important; }

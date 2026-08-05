@@ -170,7 +170,7 @@ export default function FairnessLedger() {
               {/* Timeline */}
               <div>
                 {displayLedger.map((ev, i) => (
-                  <TimelineEvent key={i} ev={ev} index={i} />
+                  <TimelineEvent key={`${showPublic ? "pub" : "priv"}-${ev.type}-${ev.day ?? i}`} ev={ev} index={i} />
                 ))}
               </div>
             </>

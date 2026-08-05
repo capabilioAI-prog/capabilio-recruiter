@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
-import { doc, getDoc } from "firebase/firestore"
-import { db } from "./recruiter/firebase"
+import { supabase } from "../lib/supabaseClient"
 
-const BACKEND = "https://capabilio-backend-production-60ab.up.railway.app/api"
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
 // ── Upload Zone ───────────────────────────────────────────────────────────────
 function UploadZone({ file, onFile, disabled }) {
@@ -67,20 +66,37 @@ export default function ApplyPage() {
   const set = (k,v) => setForm(f => ({...f, [k]:v}))
 
   // Load job
+  // NOTE: this `status === "closed"` check is a pre-existing mismatch with
+  // JobBoard.jsx, which writes capitalized status values ("Open"/"Draft"/
+  // "Closed") — so this check never actually fires for jobs created there.
+  // Left as-is (not introduced by this migration); flagged separately.
   useEffect(() => {
     if (!jobId) { setNotFound(true); setLoading(false); return }
-    getDoc(doc(db, "jobs", jobId))
-      .then(snap => {
-        if (!snap.exists()) { setNotFound(true); return }
-        const data = snap.data()
+    let cancelled = false
+    setLoading(true)
+    supabase.from("jobs").select("*").eq("id", jobId).maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error || !data) { setNotFound(true); return }
         if (data.status === "closed") { setNotFound(true); return }
-        setJob({ id:snap.id, ...data })
+        setJob(data)
       })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) setNotFound(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [jobId])
 
+  const progressIntervalRef = useRef(null)
+
+  // Ensure the progress-simulation interval is always cleared on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
+    }
+  }, [])
+
   async function handleSubmit() {
+    if (stage === "submitting") return
     if (!form.name || !form.email || !file) {
       setError("Please fill all required fields and upload your resume.")
       return
@@ -107,6 +123,7 @@ export default function ApplyPage() {
         stepIndex++
       }
     }, 1200)
+    progressIntervalRef.current = progressInterval
 
     try {
       const formData = new FormData()
@@ -123,6 +140,7 @@ export default function ApplyPage() {
       })
 
       clearInterval(progressInterval)
+      progressIntervalRef.current = null
       setProgress(100)
 
       if (!res.ok) {
@@ -134,6 +152,7 @@ export default function ApplyPage() {
       setStage("done")
     } catch (err) {
       clearInterval(progressInterval)
+      progressIntervalRef.current = null
       setProgress(0)
       setStage("error")
       setError(err.message || "Something went wrong. Please try again.")
@@ -255,8 +274,8 @@ export default function ApplyPage() {
 
             <button
               onClick={handleSubmit}
-              disabled={!form.name || !form.email || !file}
-              style={{ width:"100%", padding:"14px", marginTop:20, background: (!form.name||!form.email||!file) ? "rgba(99,102,241,0.3)" : "linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", borderRadius:12, color:"#fff", fontSize:15, fontWeight:700, cursor: (!form.name||!form.email||!file)?"not-allowed":"pointer", boxShadow: (!form.name||!form.email||!file)?"none":"0 4px 20px rgba(99,102,241,0.4)" }}
+              disabled={!form.name || !form.email || !file || stage === "submitting"}
+              style={{ width:"100%", padding:"14px", marginTop:20, background: (!form.name||!form.email||!file||stage==="submitting") ? "rgba(99,102,241,0.3)" : "linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", borderRadius:12, color:"#fff", fontSize:15, fontWeight:700, cursor: (!form.name||!form.email||!file||stage==="submitting")?"not-allowed":"pointer", boxShadow: (!form.name||!form.email||!file||stage==="submitting")?"none":"0 4px 20px rgba(99,102,241,0.4)" }}
             >
               Submit Application →
             </button>

@@ -1,8 +1,20 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+function fromDbSession(row) {
+  return {
+    id: row.id,
+    role: row.role,
+    difficulty: row.difficulty,
+    questions: row.questions,
+    candidateUid: row.candidate_uid,
+    candidateName: row.candidate_name,
+    status: row.status,
+    transcript: row.transcript || [],
+  }
+}
 
 
 const scoreColor = (s) => {
@@ -24,21 +36,25 @@ export default function CandidateInterview() {
   const [followUp, setFollowUp] = useState(null)
   const bottomRef = useRef(null)
 
-  // Load session from Firestore
+  // Load session from Supabase
   useEffect(() => {
-    getDoc(doc(db, "interviewSessions", sessionId)).then((snap) => {
-      if (!snap.exists()) {
-        setError("Interview link not found or has expired.")
-      } else {
-        const data = snap.data()
-        if (data.status === "completed") {
-          setPhase("done")
-          setTranscript(data.transcript || [])
+    let cancelled = false
+    supabase.from("interview_sessions").select("*").eq("id", sessionId).maybeSingle()
+      .then(({ data, error: err }) => {
+        if (cancelled) return
+        if (err || !data) {
+          setError("Interview link not found or has expired.")
+        } else {
+          const session = fromDbSession(data)
+          if (session.status === "completed") {
+            setPhase("done")
+            setTranscript(session.transcript)
+          }
+          setSession(session)
         }
-        setSession({ id: snap.id, ...data })
-      }
-      setLoading(false)
-    })
+        setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [sessionId])
 
   useEffect(() => {
@@ -89,17 +105,12 @@ export default function CandidateInterview() {
 
     const isLast = qIndex + 1 >= total
 
-    // Save progress to Firestore
-    try {
-      await updateDoc(doc(db, "interviewSessions", sessionId), {
-        transcript:  newTranscript,
-        status:      isLast ? "completed" : "in_progress",
-        completedAt: isLast ? serverTimestamp() : null,
-        lastUpdated: serverTimestamp(),
-      })
-    } catch (e) {
-      console.error("Failed to save progress", e)
-    }
+    // Save progress to Supabase
+    const { error: saveErr } = await supabase.from("interview_sessions").update({
+      transcript: newTranscript,
+      status: isLast ? "completed" : "in_progress",
+    }).eq("id", sessionId)
+    if (saveErr) console.error("Failed to save progress", saveErr)
 
     if (isLast) {
       setPhase("done")
@@ -199,12 +210,9 @@ export default function CandidateInterview() {
         <button
           onClick={async () => {
             // Mark session as started
-            try {
-              await updateDoc(doc(db, "interviewSessions", sessionId), {
-                status:    "in_progress",
-                startedAt: serverTimestamp(),
-              })
-            } catch (e) {}
+            const { error: err } = await supabase.from("interview_sessions")
+              .update({ status: "in_progress" }).eq("id", sessionId)
+            if (err) console.error("Failed to mark interview started:", err)
             setPhase("interview")
           }}
           style={S.startBtn}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { collection, getDocs } from "firebase/firestore"
 import { db } from "./firebase"
@@ -90,11 +90,11 @@ const AC = {
 }
 
 // ── Poach Risk Row ────────────────────────────────────────────────────────────
-function PoachRiskRow({ candidate }) {
+function PoachRiskRow({ candidate, risk }) {
   const navigate = useNavigate()
   const col      = domainColor(candidate.keyword || "")
   const lvl      = eloLevel(candidate.eloRating || 800)
-  const risk     = poachRisk(candidate)
+  risk = risk || poachRisk(candidate)
 
   return (
     <div style={PR.row}
@@ -239,6 +239,9 @@ export default function CompetitiveIntelligence() {
     getDocs(collection(db, "users")).then((snap) => {
       setCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
       setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidates:", err)
+      setLoading(false)
     })
   }, [])
 
@@ -260,13 +263,18 @@ export default function CompetitiveIntelligence() {
     time: ["2m ago", "15m ago", "1h ago", "3h ago", "Yesterday", "2d ago"][i] || "1d ago",
   }))
 
-  const highRiskCandidates = candidates
-    .map((c) => ({ ...c, _risk: poachRisk(c) }))
+  // Compute poach risk once per candidate so the bucket lists and the row
+  // display always agree on the same score (poachRisk uses Math.random()).
+  const candidatesWithRisk = useMemo(
+    () => candidates.map((c) => ({ ...c, _risk: poachRisk(c) })),
+    [candidates]
+  )
+
+  const highRiskCandidates = candidatesWithRisk
     .filter((c) => c._risk.level === "High")
     .slice(0, 8)
 
-  const medRiskCandidates = candidates
-    .map((c) => ({ ...c, _risk: poachRisk(c) }))
+  const medRiskCandidates = candidatesWithRisk
     .filter((c) => c._risk.level === "Medium")
     .slice(0, 8)
 
@@ -394,7 +402,7 @@ export default function CompetitiveIntelligence() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fca5a5" }}>🚨 High Risk — Act Now</div>
                 <span style={{ fontSize: 11, color: "#EFEFE9" }}>{highRiskCandidates.length} candidates</span>
               </div>
-              {highRiskCandidates.map((c) => <PoachRiskRow key={c.uid} candidate={c} />)}
+              {highRiskCandidates.map((c) => <PoachRiskRow key={c.uid} candidate={c} risk={c._risk} />)}
             </div>
           )}
           {medRiskCandidates.length > 0 && (
@@ -403,7 +411,7 @@ export default function CompetitiveIntelligence() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>⚠️ Medium Risk — Monitor</div>
                 <span style={{ fontSize: 11, color: "#EFEFE9" }}>{medRiskCandidates.length} candidates</span>
               </div>
-              {medRiskCandidates.map((c) => <PoachRiskRow key={c.uid} candidate={c} />)}
+              {medRiskCandidates.map((c) => <PoachRiskRow key={c.uid} candidate={c} risk={c._risk} />)}
             </div>
           )}
           {highRiskCandidates.length === 0 && medRiskCandidates.length === 0 && (

@@ -211,6 +211,9 @@ function AddCandidateModal({ onClose, onAdd, existing }) {
     getDocs(collection(db, "users")).then((snap) => {
       setCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
       setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidates:", err)
+      setLoading(false)
     })
   }, [])
 

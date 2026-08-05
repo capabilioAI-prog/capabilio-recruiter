@@ -47,6 +47,13 @@ function BucketCard({ bucket, candidates, onBulkAction }) {
   const count  = candidates.length
   const avgElo = count ? Math.round(candidates.reduce((s, c) => s + (c.eloRating || 800), 0) / count) : 0
 
+  // Keep `selected` in sync with the current candidates list — drop any
+  // selected uids that are no longer present in this bucket.
+  useEffect(() => {
+    const validUids = new Set(candidates.map((c) => c.uid))
+    setSelected((prev) => prev.filter((uid) => validUids.has(uid)))
+  }, [candidates])
+
   return (
     <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderLeft:`4px solid ${bucket.color}`, borderRadius:16, overflow:"hidden", boxShadow:T.shadow }}>
       {/* Bucket header */}

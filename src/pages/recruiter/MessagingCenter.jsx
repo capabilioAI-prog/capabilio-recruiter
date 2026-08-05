@@ -1,10 +1,52 @@
 import { useState, useEffect, useRef } from "react"
-import {
-  collection, addDoc, onSnapshot, query, where,
-  orderBy, doc, updateDoc, serverTimestamp, getDocs, limit
-} from "firebase/firestore"
+// `threads`/`messages` have moved to Supabase; `users` (candidate list for
+// bulk outreach) stays on Firestore for now — see Phase 3 candidate/ELO note.
+import { collection, query, limit, getDocs } from "firebase/firestore"
 import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+function fromDbThread(row) {
+  return {
+    id: row.id,
+    candidateId: row.candidate_id,
+    candidateName: row.candidate_name,
+    candidateEmail: row.candidate_email,
+    jobTitle: row.job_title,
+    background: row.background,
+    lastMessage: row.last_message,
+    lastMessageAt: row.last_message_at,
+    unread: row.unread,
+    isBulk: row.is_bulk,
+    createdAt: row.created_at,
+  }
+}
+
+function toDbThread(payload) {
+  return {
+    candidate_id: payload.candidateId,
+    candidate_name: payload.candidateName,
+    candidate_email: payload.candidateEmail,
+    job_title: payload.jobTitle,
+    background: payload.background,
+    last_message: payload.lastMessage,
+    last_message_at: payload.lastMessageAt,
+    unread: payload.unread,
+    is_bulk: payload.isBulk,
+  }
+}
+
+function fromDbMessage(row) {
+  return {
+    id: row.id,
+    threadId: row.thread_id,
+    body: row.body,
+    senderType: row.sender_type,
+    senderName: row.sender_name,
+    read: row.read,
+    createdAt: row.created_at,
+  }
+}
 
 
 
@@ -100,7 +142,7 @@ Return ONLY the message body text (no subject line, no JSON). Use \\n for line b
 
 // ── Message Bubble ────────────────────────────────────────────────────────────
 function Bubble({ msg, isOwn }) {
-  const time = msg.createdAt?.toDate?.()?.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" }) || ""
+  const time = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit" }) : ""
   return (
     <div style={{ display:"flex", flexDirection: isOwn ? "row-reverse" : "row", alignItems:"flex-end", gap:8, marginBottom:12 }}>
       {!isOwn && (
@@ -143,19 +185,20 @@ function ComposeArea({ threadId, recipientName, recipientBackground, jobTitle, o
     if (!body.trim()) return
     setSending(true)
     try {
-      await addDoc(collection(db, "messages"), {
-        threadId,
+      const { error: msgErr } = await supabase.from("messages").insert({
+        thread_id: threadId,
         body: body.trim(),
-        senderType: "recruiter",
-        senderName: "You",
+        sender_type: "recruiter",
+        sender_name: "You",
         read: false,
-        createdAt: serverTimestamp(),
       })
-      await updateDoc(doc(db, "threads", threadId), {
-        lastMessage: body.trim().slice(0,80),
-        lastMessageAt: serverTimestamp(),
+      if (msgErr) throw msgErr
+      const { error: threadErr } = await supabase.from("threads").update({
+        last_message: body.trim().slice(0,80),
+        last_message_at: new Date().toISOString(),
         unread: false,
-      })
+      }).eq("id", threadId)
+      if (threadErr) throw threadErr
       setBody("")
       onSent?.()
     } catch(e) { console.error(e) }
@@ -224,7 +267,7 @@ function ComposeArea({ threadId, recipientName, recipientBackground, jobTitle, o
 
 // ── Thread List Item ──────────────────────────────────────────────────────────
 function ThreadItem({ thread, active, onClick }) {
-  const time = thread.lastMessageAt?.toDate?.()?.toLocaleDateString("en-US", { month:"short", day:"numeric" }) || ""
+  const time = thread.lastMessageAt ? new Date(thread.lastMessageAt).toLocaleDateString("en-US", { month:"short", day:"numeric" }) : ""
   return (
     <div onClick={onClick} style={{ padding:"12px 16px", cursor:"pointer", background: active ? T.indigo3 : "transparent", borderLeft: active ? `2px solid ${T.indigo}` : "2px solid transparent", borderBottom:`1px solid ${T.border}`, transition:"all 0.15s" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
@@ -257,14 +300,14 @@ function NewThreadModal({ onClose, onCreated }) {
   async function handleCreate() {
     if (!form.candidateName) return
     setSaving(true)
-    const ref = await addDoc(collection(db, "threads"), {
+    const { data, error } = await supabase.from("threads").insert(toDbThread({
       ...form,
       lastMessage: "",
-      lastMessageAt: serverTimestamp(),
-      createdAt: serverTimestamp(),
+      lastMessageAt: new Date().toISOString(),
       unread: false,
-    })
-    onCreated({ id: ref.id, ...form })
+    })).select().single()
+    if (error) { console.error("Failed to create thread:", error); setSaving(false); return }
+    onCreated(fromDbThread(data))
     setSaving(false)
   }
 
@@ -320,28 +363,28 @@ function BulkOutreachModal({ onClose }) {
       const c = cdoc.data()
       if (c.isRecruiter) continue
       try {
-        const threadRef = await addDoc(collection(db, "threads"), {
+        const { data: thread, error: threadErr } = await supabase.from("threads").insert(toDbThread({
           candidateId: cdoc.id,
           candidateName: c.displayName || c.name || "Candidate",
           candidateEmail: c.email || "",
           jobTitle,
           lastMessage: template.slice(0,80),
-          lastMessageAt: serverTimestamp(),
-          createdAt: serverTimestamp(),
+          lastMessageAt: new Date().toISOString(),
           unread: false,
           isBulk: true,
-        })
-        await addDoc(collection(db, "messages"), {
-          threadId: threadRef.id,
+        })).select().single()
+        if (threadErr) throw threadErr
+        const { error: msgErr } = await supabase.from("messages").insert({
+          thread_id: thread.id,
           body: template.replace("[Name]", c.displayName || c.name || "there"),
-          senderType: "recruiter",
-          senderName: "You",
+          sender_type: "recruiter",
+          sender_name: "You",
           read: false,
-          createdAt: serverTimestamp(),
         })
+        if (msgErr) throw msgErr
         sent++
         setCount(sent)
-      } catch {}
+      } catch (e) { console.error("Bulk outreach failed for candidate:", e) }
     }
     setSending(false)
     setDone(true)
@@ -421,25 +464,70 @@ export default function MessagingCenter() {
   const bottomRef = useRef()
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "threads"), orderBy("lastMessageAt","desc")),
-      snap => setThreads(snap.docs.map(d => ({ id:d.id, ...d.data() })))
-    )
-    return unsub
+    let cancelled = false
+    supabase.from("threads").select("*").order("last_message_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load threads:", error); return }
+        setThreads((data || []).map(fromDbThread))
+      })
+    const channel = supabase
+      .channel("threads-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "threads" }, (payload) => {
+        setThreads((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbThread(payload.new)]
+            next.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            const next = prev.map((t) => (t.id === payload.new.id ? fromDbThread(payload.new) : t))
+            next.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
+            return next
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((t) => t.id !== payload.old.id)
+          }
+          return prev
+        })
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
   useEffect(() => {
     if (!activeThread) return
     setLoadingMsgs(true)
-    const unsub = onSnapshot(
-      query(collection(db,"messages"), where("threadId","==",activeThread.id), orderBy("createdAt","asc")),
-      snap => {
-        setMessages(snap.docs.map(d => ({ id:d.id, ...d.data() })))
+    let cancelled = false
+    supabase.from("messages").select("*").eq("thread_id", activeThread.id).order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load messages:", error); setLoadingMsgs(false); return }
+        setMessages((data || []).map(fromDbMessage))
         setLoadingMsgs(false)
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior:"smooth" }), 100)
-      }
-    )
-    return unsub
+      })
+    const channel = supabase
+      .channel(`messages-changes-${activeThread.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `thread_id=eq.${activeThread.id}` }, (payload) => {
+        setMessages((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbMessage(payload.new)]
+            next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((m) => (m.id === payload.new.id ? fromDbMessage(payload.new) : m))
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((m) => m.id !== payload.old.id)
+          }
+          return prev
+        })
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior:"smooth" }), 100)
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [activeThread?.id])
 
   const filtered = threads.filter(t =>

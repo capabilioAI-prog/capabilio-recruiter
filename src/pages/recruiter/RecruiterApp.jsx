@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { getApps } from "firebase/app";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
+import { supabase } from "../../lib/supabaseClient";
 
 // ── Core Pages ─────────────────────────────────────────────────────────────────
 import RecruiterAuth          from "./RecruiterAuth";
@@ -40,46 +37,58 @@ import ResumeScreening        from "./ResumeScreening";
 import Applications           from "./Applications";
 import InternalMobility       from "./InternalMobility";
 import CompanyIntegration     from "./CompanyIntegration";
-
-// ── Auth ───────────────────────────────────────────────────────────────────────
-const auth = getAuth(getApps()[0]);
+import AdminPanel             from "./AdminPanel";
 
 export default function RecruiterApp() {
   const [authState, setAuthState] = useState("loading");
-  const [user,      setUser]      = useState(null);
   const [recruiter, setRecruiter] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        try {
-          const snap = await getDoc(doc(db, "recruiters", fbUser.uid));
-          if (snap.exists()) {
-            setUser(fbUser);
-            setRecruiter({ uid: fbUser.uid, ...snap.data() });
-            setAuthState("auth");
-          } else {
-            setAuthState("no-auth");
-          }
-        } catch {
-          setAuthState("no-auth");
-        }
-      } else {
+    let cancelled = false;
+
+    // ensure_recruiter is idempotent: creates the company+recruiter row on
+    // first sign-in, or just returns the existing row on every subsequent
+    // auth event (including token refreshes), so it's safe to call every time.
+    const syncRecruiter = async (sbUser) => {
+      try {
+        const { data, error } = await supabase.rpc("ensure_recruiter", {
+          p_company_name: sbUser.user_metadata?.company_name ?? null,
+          p_display_name: sbUser.user_metadata?.display_name ?? sbUser.user_metadata?.full_name ?? "",
+          p_email: sbUser.email,
+        });
+        if (error) throw error;
+        if (cancelled) return;
+        setRecruiter(data);
+        setAuthState("auth");
+      } catch (err) {
+        console.error("Failed to load recruiter record:", err);
+        if (!cancelled) setAuthState("no-auth");
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      if (session?.user) syncRecruiter(session.user);
+      else setAuthState("no-auth");
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) syncRecruiter(session.user);
+      else {
+        setRecruiter(null);
         setAuthState("no-auth");
       }
     });
-    return unsub;
+
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
-  const handleAuth = (fbUser, recruiterData) => {
-    setUser(fbUser);
-    setRecruiter(recruiterData);
-    setAuthState("auth");
-  };
-
   const handleSignOut = async () => {
-    await signOut(auth);
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Failed to sign out:", err);
+    }
     setRecruiter(null);
     setAuthState("no-auth");
   };
@@ -94,7 +103,7 @@ export default function RecruiterApp() {
   }
 
   if (authState === "no-auth") {
-    return <RecruiterAuth onAuth={handleAuth} />;
+    return <RecruiterAuth />;
   }
 
   return (
@@ -131,6 +140,7 @@ export default function RecruiterApp() {
         <Route path="applications"            element={<Applications />} />
         <Route path="internal-mobility"       element={<InternalMobility />} />
         <Route path="company-integration"     element={<CompanyIntegration />} />
+        <Route path="admin"                   element={<AdminPanel isPlatformAdmin={!!recruiter?.is_platform_admin} />} />
         <Route path="*"                       element={<Navigate to="/recruiter" replace />} />
       </Route>
     </Routes>

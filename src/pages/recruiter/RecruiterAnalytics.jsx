@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, Fragment } from "react"
 import { collection, getDocs } from "firebase/firestore"
 import { db } from "./firebase"
 import { T, card, cardLg, tag, btn } from "./theme"
@@ -148,6 +148,9 @@ export default function RecruiterAnalytics() {
     getDocs(collection(db, "users")).then((snap) => {
       setCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
       setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidates:", err)
+      setLoading(false)
     })
   }, [])
 
@@ -212,10 +215,10 @@ export default function RecruiterAnalytics() {
 
   // Domain monthly simulated trend
   const months = ["Oct","Nov","Dec","Jan","Feb","Mar"]
-  const trendData = months.map((m, i) => ({
+  const trendData = useMemo(() => months.map((m, i) => ({
     label: m,
     value: Math.max(1, Math.round(total * (0.6 + i * 0.08) + Math.random() * 3)),
-  }))
+  })), [total])
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18" }}>
@@ -452,7 +455,7 @@ export default function RecruiterAnalytics() {
                   const col = domainColor(c.keyword || "")
                   const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}`
                   return (
-                    <>
+                    <Fragment key={c.uid}>
                       <div key={`rank-${c.uid}`} style={P.cell}>
                         <span style={{ fontSize: i < 3 ? 16 : 12, color: "#E8E8E1" }}>{medal}</span>
                       </div>
@@ -479,7 +482,7 @@ export default function RecruiterAnalytics() {
                       <div key={`streak-${c.uid}`} style={P.cell}>
                         <span style={{ fontSize: 12, color: "#f87171" }}>🔥 {c.arenaStreak||0}d</span>
                       </div>
-                    </>
+                    </Fragment>
                   )
                 })}
               </div>

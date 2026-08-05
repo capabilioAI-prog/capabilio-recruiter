@@ -295,6 +295,9 @@ export default function TalentIncubator() {
     getDocs(collection(db, "users")).then((snap) => {
       setAllCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
       setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidates:", err)
+      setLoading(false)
     })
   }, [])
 

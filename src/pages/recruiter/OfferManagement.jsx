@@ -1,10 +1,57 @@
 import { useState, useEffect } from "react"
-import {
-  collection, addDoc, onSnapshot, query, orderBy,
-  doc, updateDoc, deleteDoc, serverTimestamp
-} from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+function fromDbOffer(row) {
+  return {
+    id: row.id,
+    candidateName: row.candidate_name,
+    candidateEmail: row.candidate_email,
+    jobTitle: row.job_title,
+    department: row.department,
+    currency: row.currency,
+    baseSalary: row.base_salary,
+    bonus: row.bonus,
+    equity: row.equity,
+    equityAmount: row.equity_amount,
+    signingBonus: row.signing_bonus,
+    startDate: row.start_date,
+    expiryDate: row.expiry_date,
+    workLocation: row.work_location,
+    notes: row.notes,
+    letterText: row.letter_text,
+    status: row.status,
+    counterSalary: row.counter_salary,
+    counterBonus: row.counter_bonus,
+    negotiationHistory: row.negotiation_history || [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toDbOffer(payload) {
+  return {
+    candidate_name: payload.candidateName,
+    candidate_email: payload.candidateEmail,
+    job_title: payload.jobTitle,
+    department: payload.department,
+    currency: payload.currency,
+    base_salary: payload.baseSalary || null,
+    bonus: payload.bonus || null,
+    equity: payload.equity,
+    equity_amount: payload.equityAmount,
+    signing_bonus: payload.signingBonus || null,
+    start_date: payload.startDate || null,
+    expiry_date: payload.expiryDate || null,
+    work_location: payload.workLocation,
+    notes: payload.notes,
+    letter_text: payload.letterText,
+    status: payload.status,
+    counter_salary: payload.counterSalary || null,
+    counter_bonus: payload.counterBonus || null,
+    negotiation_history: payload.negotiationHistory,
+  }
+}
 
 
 
@@ -128,12 +175,13 @@ function OfferModal({ offer, onClose, onSaved }) {
   async function handleSave(status = "draft") {
     setSaving(true)
     try {
-      const payload = { ...form, status, updatedAt: serverTimestamp() }
+      const payload = toDbOffer({ ...form, status })
       if (isEdit) {
-        await updateDoc(doc(db, "offers", offer.id), payload)
+        const { error } = await supabase.from("offers").update(payload).eq("id", offer.id)
+        if (error) throw error
       } else {
-        payload.createdAt = serverTimestamp()
-        await addDoc(collection(db, "offers"), payload)
+        const { error } = await supabase.from("offers").insert(payload)
+        if (error) throw error
       }
       onSaved()
     } catch(e) { console.error(e) }
@@ -313,21 +361,20 @@ function NegotiationModal({ offer, onClose, onSaved }) {
 
   async function handleSave() {
     setSaving(true)
-    const history = offer.negotiationHistory || []
-    history.push({
+    const history = [...(offer.negotiationHistory || []), {
       date: new Date().toISOString(),
       originalSalary: offer.baseSalary,
       counterSalary: form.counterSalary,
       counterBonus: form.counterBonus,
       notes: form.notes,
-    })
-    await updateDoc(doc(db, "offers", offer.id), {
+    }]
+    const { error } = await supabase.from("offers").update({
       status: "negotiating",
-      counterSalary: form.counterSalary,
-      counterBonus: form.counterBonus,
-      negotiationHistory: history,
-      updatedAt: serverTimestamp(),
-    })
+      counter_salary: form.counterSalary || null,
+      counter_bonus: form.counterBonus || null,
+      negotiation_history: history,
+    }).eq("id", offer.id)
+    if (error) console.error("Failed to log negotiation:", error)
     setSaving(false)
     onSaved()
   }
@@ -491,19 +538,45 @@ export default function OfferManagement() {
   const [filterStage, setFilterStage] = useState("all")
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "offers"), orderBy("createdAt", "desc")),
-      snap => { setOffers(snap.docs.map(d => ({ id:d.id, ...d.data() }))); setLoading(false) }
-    )
-    return unsub
+    let cancelled = false
+    supabase.from("offers").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load offers:", error); setLoading(false); return }
+        setOffers((data || []).map(fromDbOffer))
+        setLoading(false)
+      })
+    const channel = supabase
+      .channel("offers-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, (payload) => {
+        setOffers((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbOffer(payload.new)]
+            next.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((o) => (o.id === payload.new.id ? fromDbOffer(payload.new) : o))
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((o) => o.id !== payload.old.id)
+          }
+          return prev
+        })
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
   async function handleStatusChange(id, status) {
-    await updateDoc(doc(db, "offers", id), { status, updatedAt: serverTimestamp() })
+    const { error } = await supabase.from("offers").update({ status }).eq("id", id)
+    if (error) console.error("Failed to update offer status:", error)
   }
 
   async function handleDelete(id) {
-    if (window.confirm("Delete this offer?")) await deleteDoc(doc(db, "offers", id))
+    if (!window.confirm("Delete this offer?")) return
+    const { error } = await supabase.from("offers").delete().eq("id", id)
+    if (error) console.error("Failed to delete offer:", error)
   }
 
   const stats = STAGES.map(s => ({ ...s, count: offers.filter(o => o.status === s.id).length }))

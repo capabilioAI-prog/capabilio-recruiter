@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react"
-import { auth, db } from "./firebase"
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore"
-import { updateProfile } from "firebase/auth"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
 
@@ -140,12 +138,24 @@ const PC = {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function RecruiterSettings() {
-  const user = auth.currentUser
+  const [user, setUser] = useState(null)
   const [tab, setTab] = useState("profile")
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (cancelled) return
+      if (error) { console.error("Failed to load auth user:", error); return }
+      setUser(data.user)
+      setDisplayName(data.user?.user_metadata?.display_name || "")
+    })
+    return () => { cancelled = true }
+  }, [])
 
   // Profile
-  const [displayName, setDisplayName] = useState(user?.displayName || "")
+  const [displayName, setDisplayName] = useState("")
   const [company,     setCompany]     = useState("")
   const [role,        setRole]        = useState("")
   const [bio,         setBio]         = useState("")
@@ -178,6 +188,13 @@ export default function RecruiterSettings() {
   const [inviteRole,  setInviteRole]    = useState("Recruiter")
   const [inviteSent,  setInviteSent]    = useState(false)
 
+  // user loads asynchronously (unlike Firebase's synchronous auth.currentUser),
+  // so backfill the "You" row's email once it's available.
+  useEffect(() => {
+    if (!user?.email) return
+    setTeamMembers((p) => p.map((m, i) => (i === 0 ? { ...m, email: user.email } : m)))
+  }, [user])
+
   // Integration toggles
   const [integrations, setIntegrations] = useState({
     slack:     false,
@@ -190,40 +207,57 @@ export default function RecruiterSettings() {
 
   useEffect(() => {
     if (!user) return
-    getDoc(doc(db, "recruiterProfiles", user.uid)).then((snap) => {
-      if (snap.exists()) {
-        const d = snap.data()
-        setCompany(d.company     || "")
-        setRole(d.role           || "")
-        setBio(d.bio             || "")
-        setWebsite(d.website     || "")
-        setDomains(d.domains     || [])
-        setKeywords(d.keywords   || [])
-        setMinElo(String(d.minElo           || 900))
-        setMinReadiness(String(d.minReadiness || 60))
-        setHiringCount(String(d.hiringCount  || 5))
-        if (d.notifs)       setNotifs((p) => ({ ...p, ...d.notifs }))
-        if (d.integrations) setIntegrations((p) => ({ ...p, ...d.integrations }))
-      }
-    })
+    let cancelled = false
+    supabase
+      .from("recruiter_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data: d, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load recruiter profile:", error); return }
+        if (d) {
+          setCompany(d.company_display || "")
+          setRole(d.title              || "")
+          setBio(d.bio                 || "")
+          setWebsite(d.website         || "")
+          setDomains(d.domains         || [])
+          setKeywords(d.keywords       || [])
+          setMinElo(String(d.min_elo        ?? 900))
+          setMinReadiness(String(d.min_readiness ?? 60))
+          setHiringCount(String(d.hiring_count  ?? 5))
+          if (d.notifs)       setNotifs((p) => ({ ...p, ...d.notifs }))
+          if (d.integrations) setIntegrations((p) => ({ ...p, ...d.integrations }))
+        }
+      })
+    return () => { cancelled = true }
   }, [user])
 
   const save = async () => {
-    if (!user) return
+    if (!user || saving) return
+    setSaving(true)
     try {
-      await updateProfile(user, { displayName })
-      await setDoc(doc(db, "recruiterProfiles", user.uid), {
-        displayName, company, role, bio, website,
-        domains, keywords, minElo: Number(minElo),
-        minReadiness: Number(minReadiness),
-        hiringCount: Number(hiringCount),
+      const { error: authErr } = await supabase.auth.updateUser({ data: { display_name: displayName } })
+      if (authErr) throw authErr
+      const { error: profileErr } = await supabase.from("recruiter_profiles").upsert({
+        id: user.id,
+        company_display: company,
+        title: role,
+        bio, website,
+        domains, keywords,
+        min_elo: Number(minElo),
+        min_readiness: Number(minReadiness),
+        hiring_count: Number(hiringCount),
         notifs, integrations,
-        updatedAt: new Date(),
-      }, { merge: true })
+        updated_at: new Date().toISOString(),
+      })
+      if (profileErr) throw profileErr
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch (err) {
       console.error(err)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -266,16 +300,18 @@ export default function RecruiterSettings() {
         </div>
         <button
           onClick={save}
+          disabled={saving}
           style={{
             padding: "9px 20px",
             background: saved ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
             border: saved ? "1px solid rgba(34,197,94,0.3)" : "none",
             borderRadius: 10, color: saved ? "#1A7A4A" : "#1A1A18",
-            fontSize: 13, fontWeight: 600, cursor: "pointer",
+            fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer",
+            opacity: saving ? 0.7 : 1,
             fontFamily: "'DM Sans',sans-serif", transition: "all 0.3s",
           }}
         >
-          {saved ? "✓ Saved!" : "💾 Save Changes"}
+          {saving ? "Saving…" : saved ? "✓ Saved!" : "💾 Save Changes"}
         </button>
       </div>
 
@@ -423,7 +459,7 @@ export default function RecruiterSettings() {
         <div>
           <Section title="Team Members" icon="👥">
             {teamMembers.map((m, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+              <div key={m.email ?? i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 14, color: "#1A1A18", flexShrink: 0 }}>
                   {m.avatar}
                 </div>

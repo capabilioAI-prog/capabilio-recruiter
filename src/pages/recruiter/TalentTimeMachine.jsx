@@ -463,6 +463,9 @@ export default function TalentTimeMachine() {
       const doms = ["All", ...new Set(data.map((c) => c.keyword).filter(Boolean))]
       setDomains(doms)
       setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidates:", err)
+      setLoading(false)
     })
   }, [])
 
