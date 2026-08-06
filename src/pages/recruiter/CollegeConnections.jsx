@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
 import { supabase } from "../../lib/supabaseClient"
 import { T } from "./theme"
 
@@ -17,7 +18,14 @@ function StatusPill({ status }) {
   return <span style={{ fontSize:11, fontWeight:700, color:m.color, background:m.bg, border:`1px solid ${m.color}30`, borderRadius:7, padding:"3px 9px" }}>{m.label}</span>
 }
 
+const COLUMN_LABELS = {
+  name: "Name", role: "Role/Branch", department: "Department", batch: "Batch",
+  status: "Status", elo_rating: "ELO", placement_company: "Placement", placement_ctc: "CTC", joined_at: "Joined",
+}
+const ROSTER_ROW_ORDER = ["name", "department", "batch", "status", "elo_rating", "placement_company", "placement_ctc", "joined_at"]
+
 export default function CollegeConnections() {
+  const navigate = useNavigate()
   const [institutions, setInstitutions] = useState([])
   const [connections, setConnections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,6 +43,92 @@ export default function CollegeConnections() {
   const [invitesError, setInvitesError] = useState(null)
   const [identity, setIdentity] = useState(null) // { email, companyId }
   const [actioningId, setActioningId] = useState(null)
+
+  // ── Connected-college performance roster + per-student access requests
+  // (2026-08-06) — once a college invite is ACCEPTED (see invites above),
+  // this recruiter can view that college's aggregate, tier-scoped student
+  // roster and request contact access to one specific student at a time.
+  // Nothing here grants contact by itself — the college's placement cell
+  // decides (capabilio-web, InstitutionOS.jsx's Access Requests panel).
+  const [activeLinks, setActiveLinks] = useState([])
+  const [activeLinksLoading, setActiveLinksLoading] = useState(true)
+  const [selectedLinkId, setSelectedLinkId] = useState(null)
+  const [roster, setRoster] = useState([])
+  const [rosterLoading, setRosterLoading] = useState(false)
+  const [rosterError, setRosterError] = useState(null)
+  const [accessByStudent, setAccessByStudent] = useState({}) // studentId -> status
+  const [requestingId, setRequestingId] = useState(null)
+
+  const fetchActiveLinks = useCallback(async (email) => {
+    if (!email) { setActiveLinksLoading(false); return }
+    setActiveLinksLoading(true)
+    try {
+      const res = await fetch(`${BACKEND}/partner/company-links?email=${encodeURIComponent(email)}`)
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      setActiveLinks(body.links || [])
+    } catch (err) {
+      console.error("Failed to load connected colleges:", err)
+    } finally {
+      setActiveLinksLoading(false)
+    }
+  }, [])
+
+  const fetchRosterAndRequests = useCallback(async (linkId) => {
+    setRosterLoading(true)
+    setRosterError(null)
+    try {
+      const [rosterRes, reqRes] = await Promise.all([
+        fetch(`${BACKEND}/partner/company-links/${linkId}/students`).then(async (r) => {
+          const b = await r.json(); if (!r.ok) throw new Error(b.error || `Request failed (${r.status})`); return b
+        }),
+        fetch(`${BACKEND}/partner/company-links/${linkId}/access-requests`).then(async (r) => {
+          const b = await r.json(); if (!r.ok) throw new Error(b.error || `Request failed (${r.status})`); return b
+        }),
+      ])
+      setRoster(rosterRes.students || [])
+      setAccessByStudent(Object.fromEntries((reqRes.requests || []).map((r) => [r.student_id, r.status])))
+    } catch (err) {
+      console.error("Failed to load college roster:", err)
+      setRosterError(err.message)
+    } finally {
+      setRosterLoading(false)
+    }
+  }, [])
+
+  const selectLink = (linkId) => {
+    setSelectedLinkId(linkId)
+    fetchRosterAndRequests(linkId)
+  }
+
+  const requestAccess = async (studentUserId) => {
+    if (!identity?.companyId) return
+    setRequestingId(studentUserId)
+    try {
+      const res = await fetch(`${BACKEND}/partner/company-links/${selectedLinkId}/students/${studentUserId}/request-access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ partnerCompanyId: identity.companyId, requestedByEmail: identity.email }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      setAccessByStudent((m) => ({ ...m, [studentUserId]: body.request?.status || "pending" }))
+    } catch (err) {
+      console.error("Failed to request access:", err)
+    } finally {
+      setRequestingId(null)
+    }
+  }
+
+  const sendTask = (student) => {
+    navigate("/recruiter/tasks", {
+      state: {
+        candidateId: student.user_id,
+        candidateName: student.name,
+        companyLinkId: selectedLinkId,
+      },
+    })
+  }
 
   const fetchIdentity = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -118,8 +212,8 @@ export default function CollegeConnections() {
 
   useEffect(() => {
     fetchData()
-    fetchIdentity().then((id) => fetchInvites(id?.email))
-  }, [fetchData, fetchIdentity, fetchInvites])
+    fetchIdentity().then((id) => { fetchInvites(id?.email); fetchActiveLinks(id?.email) })
+  }, [fetchData, fetchIdentity, fetchInvites, fetchActiveLinks])
 
   const connectionFor = (institutionId) => connections.find((c) => c.external_institution_id === institutionId)
 
@@ -208,6 +302,99 @@ export default function CollegeConnections() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Connected colleges: performance roster + per-student access
+          requests (2026-08-06). This is the actual placement workflow —
+          browse a connected college's aggregate performance, request
+          contact with a specific student, wait on placement-cell approval,
+          then send tasks/messages only once approved. ────────────────── */}
+      <div style={{ display:"flex", flexDirection:"column", gap:18, borderTop:`1px solid ${T.border}`, paddingTop:24 }}>
+        <div>
+          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Connected Colleges — Performance</h2>
+          <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
+            Aggregate, anonymized performance for colleges you're connected to. Contacting a specific student — messaging, sending a task, or viewing their full portfolio — requires that college's placement cell to approve your request first.
+          </p>
+        </div>
+
+        {activeLinksLoading ? (
+          <div style={{ color:T.ink3, fontSize:13, padding:"24px 0", textAlign:"center" }}>Loading...</div>
+        ) : activeLinks.length === 0 ? (
+          <div style={{ color:T.ink4, fontSize:14, textAlign:"center", padding:"32px 0" }}>
+            No connected colleges yet — accept an invitation above to see a college's performance here.
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {activeLinks.map((link) => (
+                <button key={link.id} onClick={() => selectLink(link.id)}
+                  style={{
+                    fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:9, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+                    background: selectedLinkId === link.id ? T.ink : T.cream2,
+                    color: selectedLinkId === link.id ? T.cream : T.ink3,
+                    border: `1px solid ${selectedLinkId === link.id ? T.ink : T.border}`,
+                  }}>
+                  {link.institution_name}
+                </button>
+              ))}
+            </div>
+
+            {selectedLinkId && (
+              rosterLoading ? (
+                <div style={{ color:T.ink3, fontSize:13, padding:"24px 0", textAlign:"center" }}>Loading roster...</div>
+              ) : rosterError ? (
+                <div style={{ color:T.red, fontSize:13, textAlign:"center", padding:"20px", background:T.red2, border:`1px solid ${T.red}30`, borderRadius:12 }}>
+                  Couldn't load this roster: {rosterError}
+                </div>
+              ) : roster.length === 0 ? (
+                <div style={{ color:T.ink4, fontSize:13, textAlign:"center", padding:"24px 0" }}>No students in this college's shared roster yet.</div>
+              ) : (
+                <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", boxShadow:T.shadow }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
+                    <thead>
+                      <tr style={{ background:T.cream2 }}>
+                        {ROSTER_ROW_ORDER.filter((k) => roster[0]?.[k] !== undefined).map((k) => (
+                          <th key={k} style={{ textAlign:"left", padding:"10px 14px", fontSize:10, fontWeight:700, color:T.ink4, letterSpacing:"0.06em", textTransform:"uppercase" }}>{COLUMN_LABELS[k] || k}</th>
+                        ))}
+                        <th style={{ padding:"10px 14px" }} />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roster.map((student) => {
+                        const access = accessByStudent[student.user_id] || "none"
+                        return (
+                          <tr key={student.id} style={{ borderTop:`1px solid ${T.border}` }}>
+                            {ROSTER_ROW_ORDER.filter((k) => roster[0]?.[k] !== undefined).map((k) => (
+                              <td key={k} style={{ padding:"10px 14px", color:T.ink2 }}>{student[k] ?? "—"}</td>
+                            ))}
+                            <td style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap" }}>
+                              {access === "approved" ? (
+                                <button onClick={() => sendTask(student)} style={{ fontSize:11, fontWeight:700, padding:"6px 12px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:7, cursor:"pointer" }}>
+                                  ✓ Send Task
+                                </button>
+                              ) : access === "pending" ? (
+                                <span style={{ fontSize:11, fontWeight:700, color:T.amber, background:T.amber2, border:`1px solid ${T.amber}30`, borderRadius:7, padding:"5px 10px" }}>Pending approval</span>
+                              ) : access === "denied" ? (
+                                <span style={{ fontSize:11, fontWeight:700, color:T.red, background:T.red2, border:`1px solid ${T.red}30`, borderRadius:7, padding:"5px 10px" }}>Declined</span>
+                              ) : (
+                                <button
+                                  disabled={requestingId === student.user_id || !student.user_id}
+                                  onClick={() => requestAccess(student.user_id)}
+                                  style={{ fontSize:11, fontWeight:600, padding:"6px 12px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:7, cursor: student.user_id ? "pointer" : "default", opacity: requestingId === student.user_id ? 0.6 : 1, fontFamily:"'DM Sans',sans-serif" }}>
+                                  {requestingId === student.user_id ? "Requesting..." : "Request Access"}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>

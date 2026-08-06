@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom"
 import { supabase } from "../../lib/supabaseClient"
 import { T } from "./theme"
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
+
 const STAGES = ["assigned", "started", "submitted", "evaluated", "passed", "failed", "needs_review"]
 const STAGE_META = {
   assigned:     { label: "Assigned",     color: T.ink4,   bg: T.cream3 },
@@ -14,25 +16,47 @@ const STAGE_META = {
   needs_review: { label: "Needs Review", color: T.amber,  bg: T.amber2 },
 }
 
-function NewTaskForm({ defaultCandidateId, defaultCandidateName, onCreated }) {
+// 2026-08-06: task creation now goes through the recruiter-backend's gated
+// POST /tasks route instead of a direct Supabase insert. A candidate reached
+// via a college roster connection (companyLinkId set) has NEVER opted into
+// recruiter contact themselves -- the backend re-checks with capabilio-web
+// that the college's placement cell approved contact for this exact student
+// before the task is created, and 403s with a clear reason if not. Candidates
+// from general Candidate Search (no companyLinkId) skip that check since
+// they're already recruiter_discoverable=true (self-consented).
+function NewTaskForm({ defaultCandidateId, defaultCandidateName, companyLinkId, companyId, onCreated }) {
   const [candidateId, setCandidateId] = useState(defaultCandidateId || "")
   const [candidateName, setCandidateName] = useState(defaultCandidateName || "")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   const submit = async () => {
     if (!candidateName || !title) return
     setSaving(true)
+    setError(null)
     try {
-      const { error } = await supabase.from("tasks_challenges").insert({
-        candidate_id: candidateId || null, candidate_name: candidateName, title, description, status: "assigned",
+      if (!companyId) throw new Error("Couldn't determine your company — please refresh and try again.")
+      const res = await fetch(`${BACKEND}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidateId: candidateId || null,
+          candidateName,
+          title,
+          description,
+          companyLinkId: companyLinkId || null,
+          companyId,
+        }),
       })
-      if (error) throw error
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setTitle(""); setDescription("")
       onCreated()
     } catch (err) {
       console.error("Failed to create task:", err)
+      setError(err.message)
     } finally {
       setSaving(false)
     }
@@ -47,6 +71,9 @@ function NewTaskForm({ defaultCandidateId, defaultCandidateName, onCreated }) {
         style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif" }} />
       <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description / instructions..."
         style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif", minHeight:60, resize:"vertical" }} />
+      {error && (
+        <div style={{ fontSize:12, color:T.red, background:T.red2, border:`1px solid ${T.red}30`, borderRadius:8, padding:"8px 12px" }}>{error}</div>
+      )}
       <button onClick={submit} disabled={saving || !candidateName || !title}
         style={{ alignSelf:"flex-start", fontSize:12, fontWeight:700, padding:"8px 18px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", opacity: saving || !candidateName || !title ? 0.5 : 1 }}>
         {saving ? "Assigning..." : "Assign Task"}
@@ -134,6 +161,18 @@ export default function TasksChallenges() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(!!seed.candidateName)
+  const [companyId, setCompanyId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || cancelled) return
+      const { data: recruiterRow } = await supabase.from("recruiters").select("company_id").eq("id", user.id).single()
+      if (!cancelled) setCompanyId(recruiterRow?.company_id || null)
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const fetchData = useCallback(async () => {
     try {
@@ -187,7 +226,15 @@ export default function TasksChallenges() {
         </button>
       </div>
 
-      {showForm && <NewTaskForm defaultCandidateId={seed.candidateId} defaultCandidateName={seed.candidateName} onCreated={() => { fetchData(); setShowForm(false) }} />}
+      {showForm && (
+        <NewTaskForm
+          defaultCandidateId={seed.candidateId}
+          defaultCandidateName={seed.candidateName}
+          companyLinkId={seed.companyLinkId}
+          companyId={companyId}
+          onCreated={() => { fetchData(); setShowForm(false) }}
+        />
+      )}
 
       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
         {STAGES.map((s) => (
