@@ -1,12 +1,40 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
+// NOTE: `applications` (per-job listener, status updates, appCounts below)
+// intentionally stays on Firestore for now — new applications are created by
+// an external Railway backend that still writes to Firestore, so migrating
+// the read side here would make new applicants invisible to recruiters.
+// Only `jobs` (created directly by this app) has moved to Supabase.
 import {
-  collection, addDoc, onSnapshot, serverTimestamp,
+  collection, onSnapshot, serverTimestamp,
   query, where, orderBy, doc, updateDoc, getDocs
 } from "firebase/firestore"
 import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import ApplicationsView from "./ApplicationsView"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+// Supabase `jobs` rows are snake_case; the rest of this file (and ApplyPage.jsx)
+// expects the camelCase/legacy field names below.
+function fromDbJob(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    domain: row.domain,
+    type: row.type,
+    experience: row.experience,
+    location: row.location,
+    salary: row.salary,
+    skills: row.skills,
+    status: row.status,
+    applicantCount: row.applicant_count,
+    description: row.description,
+    responsibilities: row.responsibilities,
+    requirements: row.requirements,
+    niceToHave: row.nice_to_have,
+    createdAt: row.created_at,
+  }
+}
 
 
 
@@ -321,14 +349,24 @@ function CreateJobModal({ onClose, onCreated }) {
   const save = async (status) => {
     setSaving(true)
     try {
-      const ref = await addDoc(collection(db, "jobs"), {
-        ...form,
-        ...generated,
+      const { data, error } = await supabase.from("jobs").insert({
+        title: form.title,
+        domain: form.domain,
+        type: form.type,
+        experience: form.experience,
+        skills: form.skills,
+        salary: form.salary,
+        location: form.location,
+        description: generated?.description,
+        responsibilities: generated?.responsibilities,
+        requirements: generated?.requirements,
+        nice_to_have: generated?.niceToHave,
         status,
-        applicantCount: 0,
-        createdAt: serverTimestamp(),
-      })
-      onCreated({ id: ref.id, ...form, ...generated, status, applicantCount: 0 })
+        applicant_count: 0,
+        // company_id is auto-stamped server-side (see stamp_company_id trigger)
+      }).select().single()
+      if (error) throw error
+      onCreated(fromDbJob(data))
     } catch (e) {
       console.error(e)
       setSaving(false)
@@ -472,22 +510,47 @@ export default function JobBoard() {
   const [showCreate,  setShowCreate]  = useState(false)
   const [newBadge,    setNewBadge]    = useState(null)
 
-  // ── Load jobs from Firestore ──────────────────────────────────────────────
+  // ── Load jobs from Supabase ────────────────────────────────────────────────
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "jobs"), (snap) => {
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-      setJobs(data)
-      if (!selectedJob && data.length > 0) setSelectedJob(data[0])
-      setLoadingJobs(false)
-    })
-    return unsub
+    let cancelled = false
+    supabase.from("jobs").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load jobs:", error); setLoadingJobs(false); return }
+        const rows = (data || []).map(fromDbJob)
+        setJobs(rows)
+        setSelectedJob((prev) => prev || rows[0] || null)
+        setLoadingJobs(false)
+      })
+    const channel = supabase
+      .channel("jobs-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, (payload) => {
+        setJobs((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbJob(payload.new)]
+            next.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((j) => (j.id === payload.new.id ? fromDbJob(payload.new) : j))
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((j) => j.id !== payload.old.id)
+          }
+          return prev
+        })
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
   // ── Live applications for selected job ───────────────────────────────────
+  const prevAppCountRef = useRef(0)
   useEffect(() => {
     if (!selectedJob) return
     setLoadingApps(true)
     setSelected([])
+    prevAppCountRef.current = 0
 
     const q = query(
       collection(db, "applications"),
@@ -495,8 +558,9 @@ export default function JobBoard() {
       orderBy("appliedAt", "desc")
     )
     const unsub = onSnapshot(q, (snap) => {
-      const prev = applications.length
+      const prev = prevAppCountRef.current
       const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      prevAppCountRef.current = data.length
       setApplications(data)
       setLoadingApps(false)
       if (prev > 0 && data.length > prev) {

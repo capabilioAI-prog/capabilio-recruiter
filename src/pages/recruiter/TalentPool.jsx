@@ -97,6 +97,21 @@ function PoolCard({ c, segment }) {
   )
 }
 
+// 2026-08-06: FLAGGED, NOT FIXED IN THIS PASS. This page reads from a
+// Firebase `users` collection that is disconnected from both this app's
+// Supabase project ("Capabilio Recruiter") AND capabilio-web's real
+// candidate/employment data. The "Reactivation Queue" numbers below
+// (matched counts, avgScore, "opened Xd ago") are hardcoded literals, not
+// live data — see the array a few dozen lines down. Building this into a
+// real segmentation + reactivation engine (backend logic, real learning-plan
+// integration, real role-match detection) is a bigger project than the
+// specific fixes approved in this pass (employment-status visibility,
+// offer-draft, rejection-workflow) — flagging honestly here rather than
+// quietly shipping fabricated numbers as if they were live, or attempting an
+// unverified rebuild in the same change as the safety-critical visibility
+// fix above it.
+const IS_DEMO_DATA = true
+
 export default function TalentPool() {
   const [candidates, setCandidates] = useState([])
   const [loading,    setLoading]    = useState(true)
@@ -124,6 +139,12 @@ export default function TalentPool() {
           <strong style={{ color:T.amber }}>"Strong but Not Selected"</strong> candidates stay warm with automated learning plans, get reactivated when a matching role opens, and are never ghosted. Reduces future sourcing time by up to 60%.
         </div>
       </div>
+
+      {IS_DEMO_DATA && (
+        <div style={{ background:T.red2, border:`1px solid ${T.red}30`, borderRadius:12, padding:"12px 16px", fontSize:12, color:T.red, fontWeight:600 }}>
+          ⚠ Preview data — this page isn't connected to your real candidate pipeline yet. Segment counts and the Reactivation Queue below are illustrative, not live numbers.
+        </div>
+      )}
 
       {/* Summary stats / segment tabs */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>

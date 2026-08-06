@@ -1,19 +1,72 @@
 import { useState, useEffect } from "react"
-import {
-  collection, addDoc, onSnapshot, query, orderBy,
-  doc, updateDoc, deleteDoc, serverTimestamp
-} from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
+function fromDbOffer(row) {
+  return {
+    id: row.id,
+    candidateName: row.candidate_name,
+    candidateEmail: row.candidate_email,
+    jobTitle: row.job_title,
+    department: row.department,
+    currency: row.currency,
+    baseSalary: row.base_salary,
+    bonus: row.bonus,
+    equity: row.equity,
+    equityAmount: row.equity_amount,
+    signingBonus: row.signing_bonus,
+    startDate: row.start_date,
+    expiryDate: row.expiry_date,
+    workLocation: row.work_location,
+    notes: row.notes,
+    letterText: row.letter_text,
+    status: row.status,
+    counterSalary: row.counter_salary,
+    counterBonus: row.counter_bonus,
+    negotiationHistory: row.negotiation_history || [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toDbOffer(payload) {
+  return {
+    candidate_name: payload.candidateName,
+    candidate_email: payload.candidateEmail,
+    job_title: payload.jobTitle,
+    department: payload.department,
+    currency: payload.currency,
+    base_salary: payload.baseSalary || null,
+    bonus: payload.bonus || null,
+    equity: payload.equity,
+    equity_amount: payload.equityAmount,
+    signing_bonus: payload.signingBonus || null,
+    start_date: payload.startDate || null,
+    expiry_date: payload.expiryDate || null,
+    work_location: payload.workLocation,
+    notes: payload.notes,
+    letter_text: payload.letterText,
+    status: payload.status,
+    counter_salary: payload.counterSalary || null,
+    counter_bonus: payload.counterBonus || null,
+    negotiation_history: payload.negotiationHistory,
+  }
+}
 
 
 
-const BACKEND = "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter"
+
+// Was previously a hardcoded, unused URL to an unrelated Railway deployment.
+// Replaced with the same VITE_BACKEND_URL convention every other page in
+// this app uses (CandidateSearch.jsx, CollegeConnections.jsx) so offer
+// letter generation actually goes through THIS app's real backend.
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STAGES = [
-  { id:"draft",      label:"Draft",      color:T.ink3,   icon:"📝" },
+  { id:"draft",              label:"Draft",             color:T.ink3,   icon:"📝" },
+  { id:"pending_hr_review",  label:"Pending HR Review", color:T.amber,  icon:"⏳" },
+  { id:"approved",           label:"Approved by HR",    color:T.blue,   icon:"👍" },
   { id:"sent",       label:"Sent",       color:T.indigo, icon:"📤" },
   { id:"negotiating",label:"Negotiating",color:T.amber,  icon:"💬" },
   { id:"accepted",   label:"Accepted",   color:T.green,  icon:"✅" },
@@ -27,40 +80,25 @@ const EQUITY_TYPES = ["None","Stock Options","RSUs","Phantom Equity"]
 function stageObj(id) { return STAGES.find(s => s.id === id) || STAGES[0] }
 
 // ── Offer Letter Builder (AI) ─────────────────────────────────────────────────
+// FIXED 2026-08-06: this used to call api.anthropic.com directly from the
+// browser with no auth header — every real call 401'd and silently fell
+// back to the static template below, so "AI-generated" letters were never
+// actually AI-generated. Now calls this app's own backend
+// (POST /api/generate-offer-letter, backend/src/routes/offers.js), which
+// holds the real ANTHROPIC_API_KEY server-side and does the same
+// graceful-degradation (falls back to this same template text if the
+// model call fails) so behavior on failure is unchanged, only the success
+// path is now real.
 async function generateOfferLetter(offer) {
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1200,
-        messages:[{ role:"user", content:
-`Write a warm, professional offer letter.
-Candidate: ${offer.candidateName}
-Role: ${offer.jobTitle}
-Department: ${offer.department || "Engineering"}
-Start Date: ${offer.startDate || "TBD"}
-Base Salary: ${offer.currency} ${Number(offer.baseSalary).toLocaleString()}
-Bonus: ${offer.bonus ? offer.currency + " " + Number(offer.bonus).toLocaleString() + " annual bonus" : "No bonus"}
-Equity: ${offer.equity || "None"}
-Location: ${offer.workLocation || "Remote"}
-Expiry: ${offer.expiryDate || "5 business days"}
-
-Write a complete, professional offer letter. Include:
-- Warm opening congratulating them
-- Role details and responsibilities overview
-- Compensation breakdown
-- Benefits highlights
-- Clear next steps and signature deadline
-- Professional closing
-
-Tone: warm but professional. Make them excited to join.
-Return ONLY the plain letter text with \\n for line breaks. No JSON.` }]
-      })
+    const res = await fetch(`${BACKEND}/generate-offer-letter`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(offer),
     })
     const data = await res.json()
-    return data.content?.[0]?.text || ""
+    if (!res.ok || !data.letter) throw new Error(data.error || "No letter returned")
+    return data.letter
   } catch {
     return `Dear ${offer.candidateName},
 
@@ -128,12 +166,13 @@ function OfferModal({ offer, onClose, onSaved }) {
   async function handleSave(status = "draft") {
     setSaving(true)
     try {
-      const payload = { ...form, status, updatedAt: serverTimestamp() }
+      const payload = toDbOffer({ ...form, status })
       if (isEdit) {
-        await updateDoc(doc(db, "offers", offer.id), payload)
+        const { error } = await supabase.from("offers").update(payload).eq("id", offer.id)
+        if (error) throw error
       } else {
-        payload.createdAt = serverTimestamp()
-        await addDoc(collection(db, "offers"), payload)
+        const { error } = await supabase.from("offers").insert(payload)
+        if (error) throw error
       }
       onSaved()
     } catch(e) { console.error(e) }
@@ -313,21 +352,20 @@ function NegotiationModal({ offer, onClose, onSaved }) {
 
   async function handleSave() {
     setSaving(true)
-    const history = offer.negotiationHistory || []
-    history.push({
+    const history = [...(offer.negotiationHistory || []), {
       date: new Date().toISOString(),
       originalSalary: offer.baseSalary,
       counterSalary: form.counterSalary,
       counterBonus: form.counterBonus,
       notes: form.notes,
-    })
-    await updateDoc(doc(db, "offers", offer.id), {
+    }]
+    const { error } = await supabase.from("offers").update({
       status: "negotiating",
-      counterSalary: form.counterSalary,
-      counterBonus: form.counterBonus,
-      negotiationHistory: history,
-      updatedAt: serverTimestamp(),
-    })
+      counter_salary: form.counterSalary || null,
+      counter_bonus: form.counterBonus || null,
+      negotiation_history: history,
+    }).eq("id", offer.id)
+    if (error) console.error("Failed to log negotiation:", error)
     setSaving(false)
     onSaved()
   }
@@ -385,7 +423,7 @@ function NegotiationModal({ offer, onClose, onSaved }) {
 }
 
 // ── Offer Card ────────────────────────────────────────────────────────────────
-function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate }) {
+function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate, onSubmitForReview }) {
   const stage = stageObj(offer.status)
   const totalComp = (Number(offer.baseSalary)||0) + (Number(offer.bonus)||0)
   const daysLeft = offer.expiryDate ? Math.ceil((new Date(offer.expiryDate) - new Date()) / (1000*60*60*24)) : null
@@ -472,6 +510,14 @@ function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate }) {
           </>
         )}
         {offer.status === "draft" && (
+          <button onClick={() => onSubmitForReview(offer)} style={{ padding:"6px 12px", background:T.amber2, border:`1px solid ${T.amber}44`, borderRadius:8, color:T.amber, fontSize:11, fontWeight:600, cursor:"pointer" }}>⏳ Submit for HR Review</button>
+        )}
+        {offer.status === "pending_hr_review" && (
+          <span style={{ padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, fontSize:11 }}>
+            Awaiting HR sign-off in the HR Approval Queue
+          </span>
+        )}
+        {offer.status === "approved" && (
           <button onClick={() => onStatusChange(offer.id,"sent")} style={{ padding:"6px 12px", background:T.indigo3, border:`1px solid ${T.indigo}44`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer" }}>📤 Send</button>
         )}
         <button onClick={() => onEdit(offer)} style={{ padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, fontSize:11, cursor:"pointer" }}>✏️ Edit</button>
@@ -491,19 +537,62 @@ export default function OfferManagement() {
   const [filterStage, setFilterStage] = useState("all")
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "offers"), orderBy("createdAt", "desc")),
-      snap => { setOffers(snap.docs.map(d => ({ id:d.id, ...d.data() }))); setLoading(false) }
-    )
-    return unsub
+    let cancelled = false
+    supabase.from("offers").select("*").order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load offers:", error); setLoading(false); return }
+        setOffers((data || []).map(fromDbOffer))
+        setLoading(false)
+      })
+    const channel = supabase
+      .channel("offers-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "offers" }, (payload) => {
+        setOffers((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbOffer(payload.new)]
+            next.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((o) => (o.id === payload.new.id ? fromDbOffer(payload.new) : o))
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((o) => o.id !== payload.old.id)
+          }
+          return prev
+        })
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
   async function handleStatusChange(id, status) {
-    await updateDoc(doc(db, "offers", id), { status, updatedAt: serverTimestamp() })
+    const { error } = await supabase.from("offers").update({ status }).eq("id", id)
+    if (error) console.error("Failed to update offer status:", error)
+  }
+
+  // Offers can never go straight from draft to sent -- they must pass through
+  // an offer_reviews row that HR resolves in the HR Approval Queue page.
+  async function handleSubmitForReview(offer) {
+    try {
+      const { error: reviewError } = await supabase.from("offer_reviews").insert({ offer_id: offer.id, status: "pending" })
+      if (reviewError) throw reviewError
+      const { error: offerError } = await supabase.from("offers").update({ status: "pending_hr_review" }).eq("id", offer.id)
+      if (offerError) throw offerError
+      await supabase.rpc("write_audit_log", {
+        p_action: "offer.submitted_for_hr_review", p_entity_type: "offer", p_entity_id: offer.id,
+        p_before: { status: "draft" }, p_after: { status: "pending_hr_review" },
+      })
+    } catch (err) {
+      console.error("Failed to submit offer for HR review:", err)
+    }
   }
 
   async function handleDelete(id) {
-    if (window.confirm("Delete this offer?")) await deleteDoc(doc(db, "offers", id))
+    if (!window.confirm("Delete this offer?")) return
+    const { error } = await supabase.from("offers").delete().eq("id", id)
+    if (error) console.error("Failed to delete offer:", error)
   }
 
   const stats = STAGES.map(s => ({ ...s, count: offers.filter(o => o.status === s.id).length }))
@@ -584,6 +673,7 @@ export default function OfferManagement() {
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
               onNegotiate={o => setNegotiateTarget(o)}
+              onSubmitForReview={handleSubmitForReview}
             />
           ))}
         </div>

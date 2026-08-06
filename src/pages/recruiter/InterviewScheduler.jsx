@@ -1,10 +1,51 @@
 import { useState, useEffect } from "react"
-import {
-  collection, addDoc, onSnapshot, query,
-  orderBy, doc, updateDoc, deleteDoc, serverTimestamp, getDocs
-} from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+function fromDbInterview(row) {
+  return {
+    id: row.id,
+    candidateId: row.candidate_id,
+    candidateName: row.candidate_name,
+    candidateEmail: row.candidate_email,
+    jobTitle: row.job_title,
+    date: row.date,
+    time: row.time,
+    duration: row.duration,
+    type: row.type,
+    platform: row.platform,
+    interviewers: row.interviewers,
+    notes: row.notes,
+    meetLink: row.meet_link,
+    syncToGcal: row.sync_to_gcal,
+    status: row.status,
+    gcalEventId: row.gcal_event_id,
+    gcalEventLink: row.gcal_event_link,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toDbInterview(payload) {
+  return {
+    candidate_id: payload.candidateId,
+    candidate_name: payload.candidateName,
+    candidate_email: payload.candidateEmail,
+    job_title: payload.jobTitle,
+    date: payload.date,
+    time: payload.time,
+    duration: payload.duration,
+    type: payload.type,
+    platform: payload.platform,
+    interviewers: payload.interviewers,
+    notes: payload.notes,
+    meet_link: payload.meetLink,
+    sync_to_gcal: payload.syncToGcal,
+    status: payload.status,
+    gcal_event_id: payload.gcalEventId,
+    gcal_event_link: payload.gcalEventLink,
+  }
+}
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -266,12 +307,13 @@ function ScheduleModal({ interview, candidates, onClose, onSaved, gcalStatus, on
         setGcalSyncing(false)
       }
 
-      const payload = { ...form, ...gcalData, status:"pending", updatedAt: serverTimestamp() }
+      const payload = toDbInterview({ ...form, ...gcalData, status: "pending" })
       if (isEdit) {
-        await updateDoc(doc(db, "interviews", interview.id), payload)
+        const { error } = await supabase.from("interviews").update(payload).eq("id", interview.id)
+        if (error) throw error
       } else {
-        payload.createdAt = serverTimestamp()
-        await addDoc(collection(db, "interviews"), payload)
+        const { error } = await supabase.from("interviews").insert(payload)
+        if (error) throw error
       }
       onSaved()
     } catch (e) { console.error(e) }
@@ -512,28 +554,58 @@ export default function InterviewScheduler() {
   const { gcalStatus, connect, disconnect, createEvent, deleteEvent } = useGoogleCalendar()
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db,"interviews"), orderBy("date","asc")),
-      snap => { setInterviews(snap.docs.map(d=>({id:d.id,...d.data()}))); setLoading(false) }
-    )
-    return unsub
+    let cancelled = false
+    supabase.from("interviews").select("*").order("date", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load interviews:", error); setLoading(false); return }
+        setInterviews((data || []).map(fromDbInterview))
+        setLoading(false)
+      })
+    const channel = supabase
+      .channel("interviews-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "interviews" }, (payload) => {
+        setInterviews((prev) => {
+          if (payload.eventType === "INSERT") {
+            const next = [...prev, fromDbInterview(payload.new)]
+            next.sort((a, b) => a.date.localeCompare(b.date))
+            return next
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((iv) => (iv.id === payload.new.id ? fromDbInterview(payload.new) : iv))
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((iv) => iv.id !== payload.old.id)
+          }
+          return prev
+        })
+      })
+      .subscribe()
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [])
 
+  // Candidate picker sources real applicants from this company's applications
+  // table (the same data ApplicationsView/CandidateCompare use) instead of
+  // the old Firestore "users" collection. If there are no applications yet,
+  // the modal falls back to a free-text name field automatically.
   useEffect(() => {
-    getDocs(collection(db,"users")).then(snap => {
-      setCandidates(snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>!u.isRecruiter))
-    }).catch(()=>{})
+    supabase.from("applications").select("id,name,email").then(({ data, error }) => {
+      if (error) { console.error("Failed to load candidates for scheduler:", error); return }
+      setCandidates((data || []).map((a) => ({ id: a.id, displayName: a.name, email: a.email })))
+    })
   }, [])
 
   async function handleStatusChange(id, status) {
-    await updateDoc(doc(db,"interviews",id), { status, updatedAt:serverTimestamp() })
+    const { error } = await supabase.from("interviews").update({ status }).eq("id", id)
+    if (error) console.error("Failed to update interview status:", error)
   }
 
   async function handleDelete(id) {
     if (!window.confirm("Delete this interview?")) return
     const iv = interviews.find(i => i.id === id)
     if (iv?.gcalEventId) await deleteEvent(iv.gcalEventId)
-    await deleteDoc(doc(db,"interviews",id))
+    const { error } = await supabase.from("interviews").delete().eq("id", id)
+    if (error) console.error("Failed to delete interview:", error)
   }
 
   const today      = interviews.filter(iv => iv.date === todayStr())

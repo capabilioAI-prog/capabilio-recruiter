@@ -171,6 +171,9 @@ function AITab({ candidate }) {
           body: JSON.stringify({ candidateData: candidate }),
         }
       )
+      if (!res.ok) {
+        throw new Error(`Analysis request failed (${res.status})`)
+      }
       const data = await res.json()
       setAnalysis(data)
     } catch {
@@ -355,6 +358,9 @@ export default function CandidateProfile() {
   useEffect(() => {
     getDoc(doc(db, "users", uid)).then((snap) => {
       if (snap.exists()) setCandidate({ uid: snap.id, ...snap.data() })
+      setLoading(false)
+    }).catch((err) => {
+      console.error("Failed to load candidate:", err)
       setLoading(false)
     })
   }, [uid])
@@ -730,8 +736,8 @@ export default function CandidateProfile() {
             ) : (
               <div style={PP.empty}>No resume uploaded</div>
             )}
-            {(candidate.vaultFiles || []).map((f) => (
-              <div key={f.id} style={PP.docRow}>
+            {(candidate.vaultFiles || []).map((f, i) => (
+              <div key={f.id ?? f.name ?? i} style={PP.docRow}>
                 <span style={{ fontSize: 24 }}>📁</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.ink }}>{f.name}</div>

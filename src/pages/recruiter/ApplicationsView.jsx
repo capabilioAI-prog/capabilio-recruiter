@@ -1,20 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
-import { db } from "./firebase";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { supabase } from "../../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { T, card, cardLg, tag, btn } from "./theme"
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
 
-const BACKEND = "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter";
+// applications table (Supabase) <-> local camelCase shape used by this
+// component's render code. Scoring now happens automatically server-side
+// in POST /apply/:jobId, so every application loaded here already has a
+// score -- the old "Score All Resumes" manual step has been retired.
+function fromDbApplication(row) {
+  return {
+    id: row.id,
+    companyId: row.company_id,
+    jobId: row.job_id,
+    candidateId: row.candidate_id,
+    name: row.name,
+    email: row.email,
+    resumeText: row.resume_text,
+    resumeUrl: row.resume_url,
+    jobDescription: row.job_description,
+    score: row.score,
+    missingSkills: row.missing_skills || [],
+    skills: row.matched_skills || [],
+    atsSummary: row.ats_summary,
+    status: row.status,
+    feedbackSent: row.feedback_sent,
+    feedbackText: row.feedback_text,
+    appliedAt: row.created_at ? new Date(row.created_at) : null,
+  };
+}
 
 // ─── Score badge ───────────────────────────────────────────────────────────────
 function ScoreBadge({ score }) {
@@ -313,6 +328,7 @@ function FeedbackModal({ candidate, jobTitle, onClose, onSent }) {
   const [feedback, setFeedback] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   useEffect(() => {
     generateFeedback();
@@ -369,17 +385,21 @@ The Hiring Team`;
 
   async function handleSend() {
     setSending(true);
+    setSendError("");
     try {
       // Save feedback record & update application status
-      if (candidate.applicationId) {
-        await updateDoc(doc(db, "applications", candidate.applicationId), {
+      const { error: updateErr } = await supabase
+        .from("applications")
+        .update({
           status: "rejected",
-          feedbackSent: true,
-          feedbackText: feedback,
-          rejectedAt: serverTimestamp(),
-        });
-      }
-      // In production: trigger email via backend
+          feedback_sent: true,
+          feedback_text: feedback,
+          rejected_at: new Date().toISOString(),
+        })
+        .eq("id", candidate.id);
+      if (updateErr) throw updateErr;
+
+      // Trigger the actual email via backend
       await fetch(`${BACKEND}/send-feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -389,10 +409,14 @@ The Hiring Team`;
           feedback,
         }),
       }).catch(() => {});
-    } catch {}
-    setSending(false);
-    setSent(true);
-    setTimeout(() => onSent(), 1500);
+      setSending(false);
+      setSent(true);
+      setTimeout(() => onSent(), 1500);
+    } catch (err) {
+      console.error("Failed to send feedback:", err);
+      setSending(false);
+      setSendError("Failed to send feedback. Please try again.");
+    }
   }
 
   return (
@@ -520,6 +544,12 @@ The Hiring Team`;
                   />
                 </div>
 
+                {sendError && (
+                  <div style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>
+                    {sendError}
+                  </div>
+                )}
+
                 <div style={{ display: "flex", gap: 12 }}>
                   <button
                     onClick={handleSend}
@@ -582,77 +612,81 @@ The Hiring Team`;
 export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
+  const [jobsById, setJobsById] = useState({});
   const [loading, setLoading] = useState(true);
-  const [scoring, setScoring] = useState(false);
   const [filter, setFilter] = useState("all"); // all | strong | good | weak
   const [selected, setSelected] = useState(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
   const [feedbackTarget, setFeedbackTarget] = useState(null);
   const [toast, setToast] = useState(null);
+  const [bulkActionInFlight, setBulkActionInFlight] = useState(false);
 
-  // Load applications
+  // titleFor(app) resolves the right job title whether this view is scoped
+  // to one job (jobId/jobTitle props, drilled into from JobBoard) or showing
+  // every application across every job (no jobId -- the top-level
+  // /recruiter/applications route) -- in the latter case each row can belong
+  // to a different job, so the single jobTitle prop can't be trusted.
+  const titleFor = (app) => (jobId ? jobTitle : jobsById[app?.jobId] || app?.jobDescription?.slice(0, 40) || "—");
+
+  // Load applications + subscribe to realtime changes. Scoring is now done
+  // automatically server-side at apply time (POST /apply/:jobId), so every
+  // row loaded here already has a score -- there is no manual "Score All"
+  // step anymore. When jobId is omitted this loads every application across
+  // every job for the recruiter's own company (RLS-scoped server-side).
   useEffect(() => {
-    if (!jobId) return;
-    loadApplications();
-  }, [jobId]);
+    let cancelled = false;
 
-  async function loadApplications() {
-    setLoading(true);
-    try {
-      const q = query(
-        collection(db, "applications"),
-        where("jobId", "==", jobId)
-      );
-      const snap = await getDocs(q);
-      const apps = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setApplications(apps);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-  }
-
-  // Score all unscored applications
-  async function scoreAll() {
-    const unscored = applications.filter((a) => !a.score && a.resumeText);
-    if (unscored.length === 0) return showToast("All applications already scored", "info");
-    setScoring(true);
-    try {
-      const updated = [...applications];
-      for (const app of unscored) {
-        try {
-          const res = await fetch(`${BACKEND}/score-resume`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              resumeText: app.resumeText,
-              jobTitle: jobTitle || "this position",
-              jobDescription: app.jobDescription || "",
-            }),
-          });
-          const data = await res.json();
-          const score = data.score ?? Math.floor(Math.random() * 60 + 30);
-          const missingSkills = data.missingSkills || [];
-          const atsSummary = data.summary || "";
-          const skills = data.matchedSkills || [];
-
-          await updateDoc(doc(db, "applications", app.id), {
-            score,
-            missingSkills,
-            atsSummary,
-            skills,
-            scoredAt: serverTimestamp(),
-          });
-          const idx = updated.findIndex((u) => u.id === app.id);
-          if (idx !== -1)
-            updated[idx] = { ...updated[idx], score, missingSkills, atsSummary, skills };
-        } catch {}
+    async function load() {
+      setLoading(true);
+      let query = supabase.from("applications").select("*").order("created_at", { ascending: false });
+      if (jobId) query = query.eq("job_id", jobId);
+      const [appsRes, jobsRes] = await Promise.all([
+        query,
+        supabase.from("jobs").select("id,title"),
+      ]);
+      if (cancelled) return;
+      if (appsRes.error) {
+        console.error("Failed to load applications:", appsRes.error.message);
+      } else {
+        setApplications((appsRes.data || []).map(fromDbApplication));
       }
-      setApplications(updated);
-      showToast(`Scored ${unscored.length} resumes`, "success");
-    } catch {}
-    setScoring(false);
-  }
+      if (!jobsRes.error) {
+        setJobsById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.title])));
+      }
+      setLoading(false);
+    }
+    load();
+
+    const channel = supabase
+      .channel(jobId ? `applications-${jobId}` : "applications-all")
+      .on(
+        "postgres_changes",
+        jobId
+          ? { event: "*", schema: "public", table: "applications", filter: `job_id=eq.${jobId}` }
+          : { event: "*", schema: "public", table: "applications" },
+        (payload) => {
+          setApplications((prev) => {
+            if (payload.eventType === "INSERT") {
+              if (prev.some((a) => a.id === payload.new.id)) return prev;
+              return [fromDbApplication(payload.new), ...prev];
+            }
+            if (payload.eventType === "UPDATE") {
+              return prev.map((a) => (a.id === payload.new.id ? fromDbApplication(payload.new) : a));
+            }
+            if (payload.eventType === "DELETE") {
+              return prev.filter((a) => a.id !== payload.old.id);
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [jobId]);
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
@@ -684,24 +718,29 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   }
 
   async function shortlistSelected(candidatesArg) {
+    if (bulkActionInFlight) return;
     const targets = candidatesArg || filteredApps().filter((a) => selected.has(a.id));
     if (targets.length === 0) return;
+    setBulkActionInFlight(true);
     try {
       for (const c of targets) {
-        await updateDoc(doc(db, "applications", c.id), {
-          status: "shortlisted",
-          shortlistedAt: serverTimestamp(),
-        });
+        const { error: updateErr } = await supabase
+          .from("applications")
+          .update({ status: "shortlisted", shortlisted_at: new Date().toISOString() })
+          .eq("id", c.id);
+        if (updateErr) throw updateErr;
+
         // Add to pipeline
-        await addDoc(collection(db, "pipelineCandidates"), {
-          candidateId: c.candidateId || c.id,
+        const { error: pipelineErr } = await supabase.from("pipeline_candidates").insert({
+          company_id: c.companyId,
+          candidate_id: c.candidateId || c.id,
           name: c.name,
-          jobId,
-          jobTitle,
+          job_id: c.jobId,
+          job_title: titleFor(c),
           stage: "applied",
           score: c.score || 0,
-          addedAt: serverTimestamp(),
         });
+        if (pipelineErr) throw pipelineErr;
       }
       setApplications((prev) =>
         prev.map((a) =>
@@ -712,11 +751,15 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
       setCompareOpen(false);
       showToast(`${targets.length} candidate${targets.length > 1 ? "s" : ""} moved to pipeline`);
     } catch (e) {
+      console.error("shortlistSelected failed:", e.message);
       showToast("Failed to shortlist", "error");
+    } finally {
+      setBulkActionInFlight(false);
     }
   }
 
   function rejectSelected(candidatesArg) {
+    if (bulkActionInFlight) return;
     const targets = candidatesArg || filteredApps().filter((a) => selected.has(a.id));
     if (targets.length === 0) return;
     if (targets.length === 1) {
@@ -729,21 +772,26 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   }
 
   async function batchReject(targets) {
-    for (const c of targets) {
-      try {
-        await updateDoc(doc(db, "applications", c.id), {
-          status: "rejected",
-          rejectedAt: serverTimestamp(),
-        });
-      } catch {}
+    if (bulkActionInFlight) return;
+    setBulkActionInFlight(true);
+    try {
+      for (const c of targets) {
+        const { error } = await supabase
+          .from("applications")
+          .update({ status: "rejected", rejected_at: new Date().toISOString() })
+          .eq("id", c.id);
+        if (error) console.error(`batchReject: failed for ${c.id}:`, error.message);
+      }
+      setApplications((prev) =>
+        prev.map((a) =>
+          targets.find((t) => t.id === a.id) ? { ...a, status: "rejected" } : a
+        )
+      );
+      setSelected(new Set());
+      showToast(`${targets.length} candidates rejected`, "info");
+    } finally {
+      setBulkActionInFlight(false);
     }
-    setApplications((prev) =>
-      prev.map((a) =>
-        targets.find((t) => t.id === a.id) ? { ...a, status: "rejected" } : a
-      )
-    );
-    setSelected(new Set());
-    showToast(`${targets.length} candidates rejected`, "info");
   }
 
   const filtered = filteredApps();
@@ -807,47 +855,11 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
             Applications
           </h1>
           <p style={{ color: "#3A3A38", fontSize: 13, margin: "4px 0 0" }}>
-            {jobTitle} · {counts.all} active applicants
+            {jobId ? jobTitle : "All roles"} · {counts.all} active applicants
           </p>
         </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-          <button
-            onClick={scoreAll}
-            disabled={scoring}
-            style={{
-              background: scoring ? "#374151" : "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
-              border: "none",
-              color: "#1A1A18",
-              borderRadius: 10,
-              padding: "10px 18px",
-              cursor: scoring ? "not-allowed" : "pointer",
-              fontWeight: 700,
-              fontSize: 13,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            {scoring ? (
-              <>
-                <span
-                  style={{
-                    width: 14,
-                    height: 14,
-                    border: "2px solid #ffffff40",
-                    borderTop: "2px solid #fff",
-                    borderRadius: "50%",
-                    animation: "spin 0.8s linear infinite",
-                    display: "inline-block",
-                  }}
-                />
-                Scoring…
-              </>
-            ) : (
-              "⚡ Score All Resumes"
-            )}
-          </button>
-        </div>
+        {/* Scoring now happens automatically at apply time on the backend --
+            the manual "Score All Resumes" step has been retired. */}
       </div>
 
       {/* Filter tabs */}
@@ -929,13 +941,15 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
             )}
             <button
               onClick={() => shortlistSelected()}
+              disabled={bulkActionInFlight}
               style={{
                 background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
                 border: "none",
                 color: "#1A1A18",
                 borderRadius: 8,
                 padding: "8px 14px",
-                cursor: "pointer",
+                cursor: bulkActionInFlight ? "not-allowed" : "pointer",
+                opacity: bulkActionInFlight ? 0.6 : 1,
                 fontSize: 13,
                 fontWeight: 600,
               }}
@@ -944,13 +958,15 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
             </button>
             <button
               onClick={() => rejectSelected()}
+              disabled={bulkActionInFlight}
               style={{
                 background: "#ef444420",
                 border: "1px solid #ef444440",
                 color: "#ef4444",
                 borderRadius: 8,
                 padding: "8px 14px",
-                cursor: "pointer",
+                cursor: bulkActionInFlight ? "not-allowed" : "pointer",
+                opacity: bulkActionInFlight ? 0.6 : 1,
                 fontSize: 13,
                 fontWeight: 600,
               }}
@@ -1042,11 +1058,16 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
                   <div style={{ color: "#1A1A18", fontWeight: 600, fontSize: 14 }}>
                     {app.name || "Unknown"}
                   </div>
+                  {!jobId && (
+                    <div style={{ color: "#3D4EAC", fontSize: 11, fontWeight: 600, marginTop: 2 }}>
+                      {jobsById[app.jobId] || "—"}
+                    </div>
+                  )}
                   <div style={{ color: "#E8E8E1", fontSize: 12, marginTop: 2 }}>
                     {app.email || ""}
                   </div>
                   <div style={{ color: "#EFEFE9", fontSize: 11, marginTop: 2 }}>
-                    Applied {app.appliedAt?.toDate?.()?.toLocaleDateString?.() || "recently"}
+                    Applied {app.appliedAt instanceof Date && !isNaN(app.appliedAt) ? app.appliedAt.toLocaleDateString() : "recently"}
                   </div>
                 </div>
 
@@ -1115,13 +1136,15 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <button
                     onClick={() => shortlistSelected([app])}
+                    disabled={bulkActionInFlight}
                     style={{
                       background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
                       border: "none",
                       color: "#1A1A18",
                       borderRadius: 7,
                       padding: "7px 10px",
-                      cursor: "pointer",
+                      cursor: bulkActionInFlight ? "not-allowed" : "pointer",
+                      opacity: bulkActionInFlight ? 0.6 : 1,
                       fontSize: 11,
                       fontWeight: 700,
                     }}
@@ -1163,7 +1186,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
       {feedbackTarget && (
         <FeedbackModal
           candidate={feedbackTarget}
-          jobTitle={jobTitle}
+          jobTitle={titleFor(feedbackTarget)}
           onClose={() => setFeedbackTarget(null)}
           onSent={() => {
             setApplications((prev) =>

@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { doc, getDoc, collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
+// `interviewSessions` (the shareable AI-interview link) has moved to Supabase;
+// `users` (candidate lookup) stays on Firestore for now.
+import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
 
@@ -70,17 +73,17 @@ function SetupScreen({ candidate, onStart }) {
     setCreating(true)
     setError("")
     try {
-      const sessionRef = await addDoc(collection(db, "interviewSessions"), {
+      const { data, error } = await supabase.from("interview_sessions").insert({
         role,
-        difficulty:    diff,
-        questions:     qs,
-        candidateUid:  candidate?.uid         || null,
-        candidateName: candidate?.displayName || null,
-        status:        "pending",
-        transcript:    [],
-        createdAt:     serverTimestamp(),
-      })
-      setLink(`${window.location.origin}/interview/${sessionRef.id}`)
+        difficulty: diff,
+        questions: qs,
+        candidate_uid: candidate?.uid || null,
+        candidate_name: candidate?.displayName || null,
+        status: "pending",
+        transcript: [],
+      }).select().single()
+      if (error) throw error
+      setLink(`${window.location.origin}/interview/${data.id}`)
     } catch (e) {
       setError("Failed to create session: " + e.message)
     } finally {
@@ -804,6 +807,9 @@ export default function ShadowInterview() {
           setCandidate({ uid: snap.id, ...snap.data() })
           setPhase("setup")
         }
+        setLoading(false)
+      }).catch((err) => {
+        console.error("Failed to load candidate:", err)
         setLoading(false)
       })
     }

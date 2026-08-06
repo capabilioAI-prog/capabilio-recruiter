@@ -1,216 +1,261 @@
-import { useState, useEffect } from "react"
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
-import { T, card, cardLg, tag, btn } from "./theme"
+import { useState, useEffect, useCallback } from "react"
+import { supabase } from "../../lib/supabaseClient"
+import { T } from "./theme"
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
-
-
-const GAP_TYPES = ["Technical","Communication","Domain Knowledge","Documentation","Role Fit"]
-const GAP_COLORS = { Technical:T.indigo, Communication:T.amber, "Domain Knowledge":T.blue, Documentation:T.amber, "Role Fit":T.red }
-const GAP_TINTS  = { Technical:T.indigo3, Communication:T.amber2, "Domain Knowledge":T.blue2, Documentation:T.amber2, "Role Fit":T.red2 }
-
-function buildRejection(c) {
-  const elo  = c.eloRating || 800
-  const gaps = []
-  if (elo < 950)  gaps.push({ type:"Technical",        severity:"high",   detail:"Core domain skills below role threshold. ELO score indicates gap in advanced concepts." })
-  if (elo < 900)  gaps.push({ type:"Domain Knowledge", severity:"medium", detail:"Limited exposure to role-specific tools and workflows based on Arena performance." })
-  if (elo < 1000) gaps.push({ type:"Role Fit",         severity:"medium", detail:"Experience depth does not yet match the seniority level required for this position." })
-  if (elo < 870)  gaps.push({ type:"Documentation",    severity:"low",    detail:"Work history and certification documents were incomplete or unverifiable at this time." })
+// 2026-08-06: REWRITTEN. This page used to read a Firebase `users`
+// collection (disconnected from both Supabase projects), fabricate a fake
+// "gap analysis" from a hardcoded ELO-threshold rule function, and its
+// "Send" button only called local setSent(true) — no email, no Supabase
+// write, nothing real happened, while the UI claimed the candidate
+// "received their rejection email." That's a direct violation of "never be
+// misleading" — a recruiter using this screen would reasonably believe
+// candidates were actually notified when none were.
+//
+// Meanwhile ApplicationsView.jsx already has a REAL version of this exact
+// workflow (FeedbackModal): real `applications` rows, real AI draft via
+// POST /generate-feedback, real send via POST /send-feedback + a real
+// `applications` update (feedback_sent/feedback_text/rejected_at). This
+// page now reuses that same backend contract and the same `applications`
+// columns — one real system, two UI entry points, not two disconnected
+// ones. This page's job specifically: "rejections pending communication"
+// (an existing dashboard metric) — applications already marked `rejected`
+// that haven't had feedback sent yet.
+function fromDbApplication(row, jobTitle) {
   return {
-    stageReached: elo >= 950 ? "Interview Scheduled" : elo >= 900 ? "Shortlisted" : elo >= 860 ? "AI Screened" : "Applied",
-    strengths: [
-      `Strong ${c.keyword || "domain"} awareness and conceptual understanding`,
-      elo >= 900 ? "Completed Arena challenges with above-average engagement" : "Completed profile with career details",
-      "Professional communication and prompt responses during the process",
-    ],
-    gaps,
-    nextSteps: [
-      { type:"arena",    label:"Arena Tasks",       action:"Practice 3 Advanced Arena Tasks", icon:"🎯", color:T.indigo, tint:T.indigo3 },
-      { type:"cert",     label:"Certification",     action:`Get certified in ${c.keyword || "your domain"} (recommended path)`, icon:"📜", color:T.amber, tint:T.amber2 },
-      { type:"mentor",   label:"Mentor Session",    action:"Book 1-on-1 with a senior professional in your field", icon:"👥", color:T.green, tint:T.green2 },
-      { type:"learning", label:"Micro-Learning",    action:"Complete 5 targeted skill modules on Capabilio Learn", icon:"📚", color:T.blue, tint:T.blue2 },
-    ],
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    score: row.score,
+    missingSkills: row.missing_skills || [],
+    matchedSkills: row.matched_skills || [],
+    atsSummary: row.ats_summary || "",
+    jobTitle,
+    rejectedAt: row.rejected_at,
   }
 }
 
-function GapBadge({ type, severity }) {
-  const color = GAP_COLORS[type] || T.ink4
-  const tint  = GAP_TINTS[type]  || T.cream2
-  return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:11, fontWeight:600, color, background:tint, border:`1px solid ${color}30`, borderRadius:7, padding:"3px 9px" }}>
-      {severity === "high" ? "🔴" : severity === "medium" ? "🟡" : "🟢"} {type}
-    </span>
-  )
+function ScorePill({ score }) {
+  if (typeof score !== "number") return <span style={{ fontSize:11, color:T.ink4 }}>Not scored</span>
+  const color = score >= 75 ? T.green : score >= 50 ? T.amber : T.red
+  const bg = score >= 75 ? T.green2 : score >= 50 ? T.amber2 : T.red2
+  return <span style={{ fontSize:11, fontWeight:700, color, background:bg, border:`1px solid ${color}30`, borderRadius:7, padding:"3px 9px" }}>{score}/100</span>
 }
 
 export default function RejectionWorkflow() {
-  const [candidates, setCandidates] = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [selected,   setSelected]   = useState(null)
-  const [sent,       setSent]       = useState(false)
-  const [preview,    setPreview]    = useState("recruiter")
+  const [applications, setApplications] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+  const [feedbackText, setFeedbackText] = useState("")
+  const [generating, setGenerating] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState("")
+  const [sentIds, setSentIds] = useState(new Set())
+  const [preview, setPreview] = useState("recruiter")
 
-  useEffect(() => {
-    getDocs(collection(db, "users"))
-      .then((snap) => {
-        const all = snap.docs.map((d) => ({ uid: d.id, ...d.data() })).sort((a,b) => (b.eloRating||800)-(a.eloRating||800))
-        setCandidates(all)
-        if (all.length) setSelected(all[0])
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [appsRes, jobsRes] = await Promise.all([
+        supabase.from("applications").select("*")
+          .eq("status", "rejected")
+          .or("feedback_sent.is.null,feedback_sent.eq.false")
+          .order("rejected_at", { ascending: false }),
+        supabase.from("jobs").select("id,title"),
+      ])
+      if (appsRes.error) throw appsRes.error
+      const jobsById = Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.title]))
+      const rows = (appsRes.data || []).map((row) => fromDbApplication(row, jobsById[row.job_id] || row.job_description?.slice(0, 40) || "—"))
+      setApplications(rows)
+      if (rows.length && !rows.some((r) => r.id === selectedId)) setSelectedId(rows[0].id)
+    } catch (err) {
+      console.error("Failed to load rejected applications:", err)
+      setLoadError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedId])
+
+  useEffect(() => { fetchData() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selected = applications.find((a) => a.id === selectedId) || null
+
+  const generateFeedback = useCallback(async (candidate) => {
+    if (!candidate) return
+    setGenerating(true)
+    setFeedbackText("")
+    try {
+      const res = await fetch(`${BACKEND}/generate-feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidateName: candidate.name,
+          jobTitle: candidate.jobTitle,
+          score: candidate.score,
+          missingSkills: candidate.missingSkills,
+          atsSummary: candidate.atsSummary,
+          strengths: candidate.matchedSkills,
+        }),
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      const data = await res.json()
+      setFeedbackText(data.feedback || "")
+    } catch (err) {
+      console.error("Failed to generate feedback:", err)
+    } finally {
+      setGenerating(false)
+    }
   }, [])
 
-  const rejection = selected ? buildRejection(selected) : null
+  useEffect(() => {
+    if (selected) { setSendError(""); generateFeedback(selected) }
+  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSend() {
+    if (!selected || !feedbackText.trim()) return
+    setSending(true)
+    setSendError("")
+    try {
+      const { error: updateErr } = await supabase.from("applications").update({
+        feedback_sent: true,
+        feedback_text: feedbackText,
+      }).eq("id", selected.id)
+      if (updateErr) throw updateErr
+
+      const sendRes = await fetch(`${BACKEND}/send-feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateEmail: selected.email, candidateName: selected.name, feedback: feedbackText }),
+      })
+      const sendBody = await sendRes.json().catch(() => ({}))
+      if (!sendRes.ok || sendBody.sent === false) {
+        // Applications row is already marked feedback_sent — this matters:
+        // we'd rather a recruiter re-check/resend manually than have this
+        // page silently retry and risk a duplicate email. Surface the error
+        // instead of pretending it worked.
+        throw new Error(sendBody.error || "Email delivery failed")
+      }
+      setSentIds((s) => new Set(s).add(selected.id))
+    } catch (err) {
+      console.error("Failed to send rejection feedback:", err)
+      setSendError(err.message || "Failed to send. The candidate has not been notified.")
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const justSent = selected && sentIds.has(selected.id)
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
-
-      {/* Header */}
       <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🤖 AI Decision Transparency Engine</div>
+        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>📬 Rejection Feedback</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
-          Every rejection becomes a <strong style={{ color:T.indigo }}>growth roadmap</strong>, not a dead end. AI generates candidate-safe explanations — showing strengths, naming exact gap types, and linking directly to personalised improvement paths. No private data about other candidates is ever revealed.
+          Real applications marked <strong>rejected</strong> that haven't had feedback sent yet. AI drafts a respectful, specific message from the candidate's actual score and skill gaps — you review and edit before it goes out. Nothing is sent until you click Send.
         </div>
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"280px 1fr", gap:16, alignItems:"start" }}>
-
-        {/* Candidate picker */}
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, boxShadow:T.shadow }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Select Candidate</div>
-          {loading ? <div style={{ color:T.ink4, fontSize:13 }}>Loading...</div>
-            : candidates.slice(0,12).map((c) => {
-            const col = c.keyword?.toLowerCase().includes("medical") ? T.green : c.keyword?.toLowerCase().includes("software") ? T.indigo : T.indigo2
-            const initials = (c.displayName || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0,2)
-            const rej = buildRejection(c)
-            const isSelected = selected?.uid === c.uid
+          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Pending Communication</div>
+          {loading ? (
+            <div style={{ color:T.ink4, fontSize:13 }}>Loading...</div>
+          ) : loadError ? (
+            <div style={{ color:T.red, fontSize:12 }}>Couldn't load: {loadError}</div>
+          ) : applications.length === 0 ? (
+            <div style={{ color:T.ink4, fontSize:12, lineHeight:1.5 }}>No rejected applications are waiting on feedback right now.</div>
+          ) : applications.map((c) => {
+            const isSelected = selectedId === c.id
+            const initials = (c.name || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
             return (
-              <div key={c.uid} onClick={() => { setSelected(c); setSent(false) }}
-                style={{ display:"flex", alignItems:"center", gap:10, padding:"10px", borderRadius:10, cursor:"pointer", marginBottom:4, background: isSelected ? T.indigo3 : "transparent", border:`1px solid ${isSelected ? T.indigo + "30" : "transparent"}`, transition:"all 0.15s" }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:`${col}15`, color:col, border:`1px solid ${col}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
+              <div key={c.id} onClick={() => setSelectedId(c.id)}
+                style={{ display:"flex", alignItems:"center", gap:10, padding:"10px", borderRadius:10, cursor:"pointer", marginBottom:4, background: isSelected ? T.indigo3 : "transparent", border:`1px solid ${isSelected ? T.indigo + "30" : "transparent"}` }}>
+                <div style={{ width:32, height:32, borderRadius:9, background:`${T.indigo}15`, color:T.indigo, border:`1px solid ${T.indigo}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:12, fontWeight:600, color: isSelected ? T.indigo : T.ink, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.displayName || "—"}</div>
-                  <div style={{ fontSize:10, color:T.ink4 }}>{rej.stageReached}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color: isSelected ? T.indigo : T.ink, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name || "—"}</div>
+                  <div style={{ fontSize:10, color:T.ink4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.jobTitle}</div>
                 </div>
-                <div style={{ width:6, height:6, borderRadius:"50%", background: rej.gaps.length === 0 ? T.green : rej.gaps.some((g) => g.severity === "high") ? T.red : T.amber, flexShrink:0 }} />
+                {sentIds.has(c.id) && <span style={{ fontSize:10, color:T.green }}>✓</span>}
               </div>
             )
           })}
         </div>
 
-        {/* Rejection engine */}
-        {rejection && (
+        {selected && (
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-
-            {/* View toggle */}
             <div style={{ display:"flex", gap:8 }}>
-              {[["recruiter","🔎 Recruiter View"],["candidate","📬 Candidate-Safe View"]].map(([v,l]) => (
+              {[["recruiter","🔎 Score & Gaps"],["candidate","📬 Message to Candidate"]].map(([v, l]) => (
                 <button key={v} onClick={() => setPreview(v)}
-                  style={{ fontSize:12, padding:"7px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, transition:"all 0.15s", background: preview === v ? T.indigo3 : "transparent", borderColor: preview === v ? `${T.indigo}40` : T.border, color: preview === v ? T.indigo : T.ink4 }}>
+                  style={{ fontSize:12, padding:"7px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, background: preview === v ? T.indigo3 : "transparent", borderColor: preview === v ? `${T.indigo}40` : T.border, color: preview === v ? T.indigo : T.ink4 }}>
                   {l}
                 </button>
               ))}
             </div>
 
             {preview === "recruiter" ? (
-              <>
-                {/* Internal decision summary */}
-                <div style={{ background:T.cream, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, marginBottom:14 }}>🔎 Internal Decision Summary — {selected.displayName}</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
-                    <div style={{ padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
-                      <div style={{ fontSize:11, color:T.ink4, marginBottom:4 }}>Stage Reached</div>
-                      <div style={{ fontSize:14, fontWeight:700, color:T.ink }}>{rejection.stageReached}</div>
-                    </div>
-                    <div style={{ padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
-                      <div style={{ fontSize:11, color:T.ink4, marginBottom:4 }}>Primary Gap Type</div>
-                      <div style={{ fontSize:14, fontWeight:700, color:T.red }}>{rejection.gaps[0]?.type || "None — selected!"}</div>
-                    </div>
+              <div style={{ background:T.cream, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, marginBottom:14 }}>{selected.name} — {selected.jobTitle}</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+                  <div style={{ padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
+                    <div style={{ fontSize:11, color:T.ink4, marginBottom:4 }}>ATS Score</div>
+                    <ScorePill score={selected.score} />
                   </div>
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:12, fontWeight:600, color:T.ink4, marginBottom:8 }}>Gap Analysis</div>
-                    {rejection.gaps.length === 0 ? (
-                      <div style={{ fontSize:13, color:T.green }}>✅ No significant gaps — this candidate is a strong match.</div>
-                    ) : rejection.gaps.map((g, i) => (
-                      <div key={i} style={{ padding:"10px 12px", background:GAP_TINTS[g.type] || T.cream2, border:`1px solid ${GAP_COLORS[g.type]}25`, borderRadius:9, marginBottom:8 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                          <GapBadge type={g.type} severity={g.severity} />
-                          <span style={{ fontSize:10, color:T.ink4, textTransform:"uppercase" }}>{g.severity} priority</span>
-                        </div>
-                        <div style={{ fontSize:12, color:T.ink3 }}>{g.detail}</div>
-                      </div>
-                    ))}
+                  <div style={{ padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
+                    <div style={{ fontSize:11, color:T.ink4, marginBottom:4 }}>Rejected</div>
+                    <div style={{ fontSize:13, color:T.ink }}>{selected.rejectedAt ? new Date(selected.rejectedAt).toLocaleDateString() : "—"}</div>
                   </div>
                 </div>
-              </>
+                {selected.atsSummary && (
+                  <div style={{ marginBottom:14, fontSize:12, color:T.ink3, lineHeight:1.6 }}>{selected.atsSummary}</div>
+                )}
+                {selected.matchedSkills.length > 0 && (
+                  <div style={{ marginBottom:12 }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:T.green, marginBottom:6 }}>Matched skills</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {selected.matchedSkills.map((s) => <span key={s} style={{ fontSize:11, color:T.green, background:T.green2, border:`1px solid ${T.green}30`, borderRadius:6, padding:"2px 8px" }}>{s}</span>)}
+                    </div>
+                  </div>
+                )}
+                {selected.missingSkills.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:600, color:T.red, marginBottom:6 }}>Gap skills</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {selected.missingSkills.map((s) => <span key={s} style={{ fontSize:11, color:T.red, background:T.red2, border:`1px solid ${T.red}30`, borderRadius:6, padding:"2px 8px" }}>{s}</span>)}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
-              <>
-                {/* Candidate-safe rejection preview */}
-                <div style={{ background:T.cream, border:`1px solid ${T.green}20`, borderRadius:16, padding:24, boxShadow:T.shadow }}>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:16 }}>📬 Candidate-Safe Rejection Message Preview</div>
+              <div style={{ background:T.cream, border:`1px solid ${T.green}20`, borderRadius:16, padding:24, boxShadow:T.shadow }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:16 }}>📬 Message to {selected.name}</div>
 
-                  <div style={{ background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, padding:20, fontFamily:"'DM Sans',sans-serif", fontSize:13, color:T.ink3, lineHeight:1.8 }}>
-                    <p style={{ color:T.ink, fontWeight:600, marginTop:0 }}>Hi {selected.displayName?.split(" ")[0] || "there"},</p>
-                    <p>Thank you for applying and for the effort you put into every stage of the process. We genuinely appreciate the time you invested.</p>
-                    <p>After careful review, we have decided not to proceed with your application at this stage. We want to be transparent about what we observed:</p>
-
-                    <div style={{ background:T.green2, border:`1px solid ${T.green}20`, borderRadius:10, padding:"14px 16px", margin:"16px 0" }}>
-                      <div style={{ fontWeight:700, color:T.green, marginBottom:8 }}>✨ Your Strengths We Recognised</div>
-                      {rejection.strengths.map((s, i) => (
-                        <div key={i} style={{ display:"flex", gap:8, marginBottom:6 }}>
-                          <span style={{ color:T.green, flexShrink:0 }}>•</span>
-                          <span>{s}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {rejection.gaps.length > 0 && (
-                      <div style={{ background:T.red2, border:`1px solid ${T.red}20`, borderRadius:10, padding:"14px 16px", margin:"16px 0" }}>
-                        <div style={{ fontWeight:700, color:T.red, marginBottom:8 }}>📌 Areas That Affected the Decision</div>
-                        {rejection.gaps.map((g, i) => (
-                          <div key={i} style={{ marginBottom:8 }}>
-                            <span style={{ fontWeight:600, color:GAP_COLORS[g.type] }}>{g.type}</span>
-                            <span style={{ color:T.ink3 }}> — The role requires a stronger foundation here. This is not a reflection of your overall ability; it is a specific gap for this role's requirements.</span>
-                          </div>
-                        ))}
-                      </div>
+                {generating ? (
+                  <div style={{ textAlign:"center", padding:"30px 0", color:T.ink4, fontSize:13 }}>Drafting personalised feedback...</div>
+                ) : justSent ? (
+                  <div style={{ padding:"14px", background:T.green2, border:`1px solid ${T.green}25`, borderRadius:12, textAlign:"center" }}>
+                    <div style={{ fontSize:18 }}>✅</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.green, marginTop:6 }}>Sent — {selected.name} was emailed this feedback.</div>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      rows={14}
+                      style={{ width:"100%", padding:"14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, fontSize:13, color:T.ink2, lineHeight:1.7, fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box", resize:"vertical" }}
+                    />
+                    {sendError && (
+                      <div style={{ marginTop:10, fontSize:12, color:T.red, background:T.red2, border:`1px solid ${T.red}30`, borderRadius:8, padding:"8px 12px" }}>{sendError}</div>
                     )}
-
-                    <p>This is not the end of your journey with Capabilio. Based on your profile, we have created a personalised improvement roadmap to help you close these gaps and become stronger for future roles:</p>
-                  </div>
-
-                  {/* Growth roadmap */}
-                  <div style={{ marginTop:16 }}>
-                    <div style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>🗺️ Your Personalised Growth Roadmap</div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 }}>
-                      {rejection.nextSteps.map((step) => (
-                        <div key={step.type} style={{ padding:"14px 16px", background:step.tint, border:`1px solid ${step.color}25`, borderRadius:12 }}>
-                          <div style={{ fontSize:20 }}>{step.icon}</div>
-                          <div style={{ fontSize:12, fontWeight:700, color:step.color, marginTop:6 }}>{step.label}</div>
-                          <div style={{ fontSize:12, color:T.ink3, marginTop:4 }}>{step.action}</div>
-                          <button style={{ marginTop:10, fontSize:11, padding:"5px 10px", background:T.cream, border:`1px solid ${step.color}30`, borderRadius:7, color:step.color, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
-                            Start Now →
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {!sent ? (
-                    <button onClick={() => setSent(true)}
-                      style={{ marginTop:20, width:"100%", padding:"12px", background:T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
-                      📬 Send Rejection + Roadmap to {selected.displayName}
+                    <button onClick={handleSend} disabled={sending || !feedbackText.trim()}
+                      style={{ marginTop:16, width:"100%", padding:"12px", background: sending ? T.ink3 : T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor: sending ? "default" : "pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                      {sending ? "Sending..." : `📬 Send Feedback to ${selected.name}`}
                     </button>
-                  ) : (
-                    <div style={{ marginTop:20, padding:"14px", background:T.green2, border:`1px solid ${T.green}25`, borderRadius:12, textAlign:"center" }}>
-                      <div style={{ fontSize:18 }}>✅</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:T.green, marginTop:6 }}>Sent! {selected.displayName} received their rejection email and personalised growth roadmap.</div>
-                    </div>
-                  )}
-                </div>
-              </>
+                  </>
+                )}
+              </div>
             )}
           </div>
         )}

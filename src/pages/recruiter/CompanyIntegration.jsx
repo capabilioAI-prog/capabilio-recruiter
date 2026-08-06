@@ -8,6 +8,8 @@ function useCopy() {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(key)
       setTimeout(() => setCopied(null), 2000)
+    }).catch((err) => {
+      console.error("Failed to copy to clipboard:", err)
     })
   }
   return { copy, copied }

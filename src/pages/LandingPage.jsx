@@ -25,20 +25,24 @@ const T = {
 function Counter({ target, suffix = "", prefix = "", duration = 1800 }) {
   const [val, setVal] = useState(0)
   const ref = useRef()
+  const timerRef = useRef(null)
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return
       let v = 0
       const step = target / (duration / 16)
-      const timer = setInterval(() => {
+      timerRef.current = setInterval(() => {
         v += step
-        if (v >= target) { setVal(target); clearInterval(timer) }
+        if (v >= target) { setVal(target); clearInterval(timerRef.current); timerRef.current = null }
         else setVal(Math.floor(v))
       }, 16)
       obs.disconnect()
     }, { threshold: 0.4 })
     if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
+    return () => {
+      obs.disconnect()
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
   }, [target, duration])
   return <span ref={ref}>{prefix}{val.toLocaleString()}{suffix}</span>
 }
@@ -49,6 +53,62 @@ function Label({ children }) {
     <div style={{ display:"inline-block", fontSize:11, fontWeight:700, color:T.orange,
       letterSpacing:"0.1em", marginBottom:14, textTransform:"uppercase" }}>
       {children}
+    </div>
+  )
+}
+
+/* ─────────────────────────── SCROLL REVEAL ──────────────────────────── */
+// Fades + slides a section's content into place the first time it enters
+// the viewport, instead of everything being visible/static on load.
+function Reveal({ children, delay = 0, y = 36 }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          obs.disconnect()
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : `translateY(${y}px)`,
+        transition: `opacity 0.7s cubic-bezier(.2,.7,.2,1) ${delay}s, transform 0.7s cubic-bezier(.2,.7,.2,1) ${delay}s`,
+        willChange: "opacity, transform",
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ─────────────────────────── SCROLL PROGRESS BAR ────────────────────── */
+function ScrollProgress() {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement
+      const scrollable = h.scrollHeight - h.clientHeight
+      setPct(scrollable > 0 ? (h.scrollTop / scrollable) * 100 : 0)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+  return (
+    <div style={{ position:"fixed", top:0, left:0, right:0, height:3, zIndex:300, background:"transparent", pointerEvents:"none" }}>
+      <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${T.orange},#7C5FF5)`, transition:"width 0.1s linear" }} />
     </div>
   )
 }
@@ -133,6 +193,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ fontFamily:"'Inter',system-ui,sans-serif", background:T.bg, color:T.dark, overflowX:"hidden" }}>
+      <ScrollProgress />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
@@ -158,7 +219,6 @@ export default function LandingPage() {
           .features-cluster{grid-template-columns:1fr!important}
           .lifecycle-grid{grid-template-columns:1fr!important}
           .diff-grid{grid-template-columns:1fr 1fr!important}
-          .pricing-grid{grid-template-columns:1fr!important}
           .footer-inner{flex-direction:column!important;gap:24px!important;text-align:center!important}
         }
       `}</style>
@@ -174,14 +234,11 @@ export default function LandingPage() {
         transition:"all 0.3s",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:34, height:34, borderRadius:10, background:T.dark, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-            <span style={{ color:"white", fontSize:17, fontWeight:800, fontFamily:"'Playfair Display',serif" }}>C</span>
-          </div>
-          <span style={{ fontSize:16, fontWeight:700, color:T.dark, letterSpacing:"-0.01em" }}>Capabilio AI</span>
+          <img src="/logo-light.jpeg" alt="Capabilio AI" style={{ height:44, width:"auto", display:"block" }} />
           <span style={{ fontSize:10, fontWeight:700, color:T.dark4, background:T.bg3, border:`1px solid ${T.border}`, padding:"2px 8px", borderRadius:5, letterSpacing:"0.06em" }}>RECRUITER</span>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:28 }}>
-          {["How It Works","Features","Pricing"].map(l=>(
+          {["How It Works","Features"].map(l=>(
             <a key={l} className="nav-link" href={`#${l.toLowerCase().replace(/ /g,"-")}`}
               style={{ fontSize:13, fontWeight:500, color:T.dark3, textDecoration:"none", transition:"color 0.2s" }}>{l}</a>
           ))}
@@ -229,7 +286,7 @@ export default function LandingPage() {
             <div style={{ display:"flex", gap:14, marginBottom:40, flexWrap:"wrap", animation:"fadeUp 0.6s ease both 0.3s both" }}>
               <button className="btn-primary" onClick={()=>navigate("/recruiter")}
                 style={{ fontSize:15, fontWeight:700, padding:"15px 32px", background:T.orange, color:"white", border:"none", borderRadius:10, cursor:"pointer", boxShadow:`0 4px 24px ${T.orange}45`, letterSpacing:"0.02em" }}>
-                START 2-MONTH PILOT →
+                START 3-MONTH PILOT →
               </button>
               <button className="btn-outline" onClick={()=>navigate("/recruiter")}
                 style={{ fontSize:14, fontWeight:600, padding:"15px 26px", background:"transparent", color:T.dark2, border:`1.5px solid ${T.border}`, borderRadius:10, cursor:"pointer", transition:"all 0.2s" }}>
@@ -237,16 +294,11 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Social proof */}
-            <div style={{ display:"flex", alignItems:"center", gap:18, animation:"fadeUp 0.6s ease both 0.4s both" }}>
-              <div style={{ display:"flex" }}>
-                {["R","A","S","M","P"].map((l,i)=>(
-                  <div key={l} style={{ width:34, height:34, borderRadius:"50%", background:T.orange2, border:`2.5px solid ${T.bg}`, marginLeft:i?-10:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:T.orange }}>{l}</div>
-                ))}
-              </div>
-              <div>
-                <div style={{ fontSize:13, fontWeight:600, color:T.dark }}>200+ hiring teams trust Capabilio AI</div>
-                <div style={{ fontSize:12, color:T.dark4 }}>★★★★★ &nbsp;4.9 · 1,200+ candidates ELO-rated</div>
+            {/* Early access note (honest — no fabricated customer counts) */}
+            <div style={{ display:"flex", alignItems:"center", gap:10, animation:"fadeUp 0.6s ease both 0.4s both" }}>
+              <span style={{ width:7, height:7, borderRadius:"50%", background:T.orange, display:"inline-block", flexShrink:0 }} />
+              <div style={{ fontSize:13, fontWeight:600, color:T.dark3 }}>
+                Early access · Onboarding our first pilot teams now
               </div>
             </div>
           </div>
@@ -259,7 +311,7 @@ export default function LandingPage() {
             <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:20, padding:26, boxShadow:T.shadowL, position:"relative" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:T.dark4, letterSpacing:"0.08em", marginBottom:4 }}>LIVE CANDIDATE RANKING</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.dark4, letterSpacing:"0.08em", marginBottom:4 }}>SAMPLE VIEW — CANDIDATE RANKING</div>
                   <div style={{ fontSize:15, fontWeight:700, color:T.dark }}>Senior ML Engineer · 47 applicants</div>
                 </div>
                 <div style={{ fontSize:11, fontWeight:700, color:T.orange, background:T.orange2, padding:"4px 10px", borderRadius:6, border:`1px solid ${T.orange}22` }}>AI RANKED</div>
@@ -297,12 +349,12 @@ export default function LandingPage() {
 
             {/* Floating badges */}
             <div style={{ position:"absolute", bottom:-18, left:-20, background:T.white, border:`1px solid ${T.border}`, borderRadius:14, padding:"12px 18px", boxShadow:T.shadowM, animation:"float 3s ease-in-out infinite" }}>
-              <div style={{ fontSize:22, fontWeight:800, color:T.orange, fontFamily:"'Playfair Display',serif", lineHeight:1 }}>9 days</div>
-              <div style={{ fontSize:11, color:T.dark3, marginTop:2 }}>avg. time to shortlist</div>
+              <div style={{ fontSize:22, fontWeight:800, color:T.orange, fontFamily:"'Playfair Display',serif", lineHeight:1 }}>9-day</div>
+              <div style={{ fontSize:11, color:T.dark3, marginTop:2 }}>shortlist time — our target</div>
             </div>
             <div style={{ position:"absolute", top:-14, right:-20, background:T.white, border:`1px solid ${T.border}`, borderRadius:14, padding:"12px 18px", boxShadow:T.shadowM, animation:"float 3.5s ease-in-out infinite 0.6s" }}>
               <div style={{ fontSize:22, fontWeight:800, color:"#7C5FF5", fontFamily:"'Playfair Display',serif", lineHeight:1 }}>0 ghost</div>
-              <div style={{ fontSize:11, color:T.dark3, marginTop:2 }}>every candidate updated</div>
+              <div style={{ fontSize:11, color:T.dark3, marginTop:2 }}>design commitment</div>
             </div>
           </div>
         </div>
@@ -325,13 +377,13 @@ export default function LandingPage() {
 
       {/* ══════════════════════════ STATS ══════════════════════════ */}
       <section style={{ background:T.bg }}>
-        <div style={{ maxWidth:1360, margin:"0 auto", padding:"0 clamp(20px,6vw,100px)" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto", padding:"0 clamp(20px,6vw,100px)" }}>
           <div className="stats-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderTop:`1px solid ${T.border}`, borderBottom:`1px solid ${T.border}` }}>
             {[
-              { value:47, suffix:"→9d", label:"Shortlist time",       sub:"vs. 47d industry avg" },
-              { value:94, suffix:"%",   label:"Parse accuracy",        sub:"AI-powered screening" },
-              { value:73, suffix:"%",   label:"Less manual work",      sub:"vs. traditional ATS" },
-              { value:100, suffix:"%",  label:"Candidates updated",    sub:"zero ghosting guarantee" },
+              { value:9,   suffix:"d",  label:"Target shortlist time",  sub:"Designed to replace 4–6 week processes" },
+              { value:94,  suffix:"%",  label:"Target parse accuracy",  sub:"AI-powered resume screening" },
+              { value:73,  suffix:"%",  label:"Less manual work (goal)",sub:"vs. traditional ATS workflows" },
+              { value:100, suffix:"%",  label:"Candidate updates",      sub:"Zero-ghosting is a core design commitment" },
             ].map((m,i)=>(
               <div key={m.label} style={{ padding:"40px 32px", borderRight: i<3 ? `1px solid ${T.border}` : "none" }}>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize:52, fontWeight:900, color:T.orange, lineHeight:1 }}>
@@ -342,12 +394,17 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+          <div style={{ textAlign:"center", padding:"18px 0 32px" }}>
+            <p style={{ fontSize:12, color:T.dark4, fontStyle:"italic" }}>
+              Figures reflect what Capabilio AI Recruiter is engineered to deliver — we're in early pilot and will publish real results as we onboard our first teams.
+            </p>
+          </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ PROBLEM ══════════════════════════ */}
       <section style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg2 }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ maxWidth:600, marginBottom:60 }}>
             <Label>The Problem</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
@@ -367,12 +424,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ WHY CAPABILIO AI ══════════════════════════ */}
       <section style={{ padding:"100px clamp(20px,6vw,100px)", background:T.dark }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             <div>
               <Label>Why Capabilio AI</Label>
@@ -421,12 +478,12 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ HOW IT REDUCES TIME ══════════════════════════ */}
       <section style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:64 }}>
             <Label>Time Savings</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
@@ -452,12 +509,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ TRANSPARENCY ══════════════════════════ */}
       <section style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg2 }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
             {/* Timeline visual */}
             <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:20, padding:28, boxShadow:T.shadowM }}>
@@ -514,12 +571,12 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ FEATURE ARCHITECTURE ══════════════════════════ */}
       <section id="features" style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:64 }}>
             <Label>Feature Architecture</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
@@ -543,12 +600,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ DIFFERENTIATORS ══════════════════════════ */}
       <section style={{ padding:"100px clamp(20px,6vw,100px)", background:T.dark }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:64 }}>
             <Label>What No ATS Offers</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em", color:"white" }}>
@@ -565,12 +622,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ HOW IT WORKS ══════════════════════════ */}
       <section id="how-it-works" style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ marginBottom:60 }}>
             <Label>How It Works</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
@@ -588,95 +645,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════ PRICING ══════════════════════════ */}
-      <section id="pricing" style={{ padding:"100px clamp(20px,6vw,100px)", background:T.bg2 }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
-          <div style={{ textAlign:"center", marginBottom:64 }}>
-            <Label>Pricing</Label>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(30px,3.8vw,48px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
-              One plan.<br /><em style={{ color:T.orange, fontStyle:"italic" }}>Zero confusion.</em>
-            </h2>
-            <p style={{ fontSize:16, color:T.dark3, lineHeight:1.8, marginTop:18, maxWidth:480, margin:"18px auto 0" }}>
-              No confusing tiers. No hidden enterprise pricing. Built for companies that want speed and clarity.
-            </p>
-          </div>
-          <div className="pricing-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16 }}>
-            {/* Free Pilot */}
-            <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:20, padding:"36px 32px", boxShadow:T.shadow, display:"flex", flexDirection:"column" }}>
-              <div style={{ fontSize:11, fontWeight:700, color:T.dark4, letterSpacing:"0.08em", marginBottom:16 }}>START WITH</div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:900, color:T.dark, lineHeight:1 }}>Free</div>
-              <div style={{ fontSize:14, color:T.dark3, marginTop:8, marginBottom:24 }}>2-month pilot · No card required</div>
-              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, marginBottom:28 }}>
-                {["Full recruiter operating system","Smart AI ranking and clustering","Candidate transparency timeline","Verification layer included","Bulk hiring tools","Analytics & SLA tracking"].map(f=>(
-                  <div key={f} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
-                    <span style={{ color:T.orange, flexShrink:0, marginTop:2 }}>✓</span>
-                    <span style={{ fontSize:13, color:T.dark3 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="btn-outline" onClick={()=>navigate("/recruiter")}
-                style={{ width:"100%", padding:"13px 0", background:"transparent", color:T.dark, border:`1.5px solid ${T.border}`, borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", transition:"all 0.2s", letterSpacing:"0.03em" }}>
-                START FREE PILOT
-              </button>
-            </div>
-            {/* Monthly */}
-            <div style={{ background:T.dark, border:`1px solid ${T.orange}30`, borderRadius:20, padding:"36px 32px", boxShadow:T.shadowL, display:"flex", flexDirection:"column", position:"relative", overflow:"hidden" }}>
-              <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:T.orange }} />
-              <div style={{ fontSize:11, fontWeight:700, color:T.orange, letterSpacing:"0.08em", marginBottom:16 }}>SUBSCRIPTION</div>
-              <div style={{ display:"flex", alignItems:"baseline", gap:4 }}>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:900, color:"white", lineHeight:1 }}>₹14,999</div>
-                <div style={{ fontSize:14, color:"rgba(250,248,245,0.45)" }}>/month</div>
-              </div>
-              <div style={{ fontSize:14, color:"rgba(250,248,245,0.5)", marginTop:8, marginBottom:24 }}>After pilot · Cancel anytime</div>
-              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, marginBottom:28 }}>
-                {["Everything in the free pilot","Unlimited job postings","Unlimited candidate profiles","Priority support","Custom workflows","Advanced analytics"].map(f=>(
-                  <div key={f} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
-                    <span style={{ color:T.orange, flexShrink:0, marginTop:2 }}>✓</span>
-                    <span style={{ fontSize:13, color:"rgba(250,248,245,0.65)" }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="btn-primary" onClick={()=>navigate("/recruiter")}
-                style={{ width:"100%", padding:"13px 0", background:T.orange, color:"white", border:"none", borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", letterSpacing:"0.03em", boxShadow:`0 4px 20px ${T.orange}40` }}>
-                GET STARTED
-              </button>
-            </div>
-            {/* Per Hire */}
-            <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:20, padding:"36px 32px", boxShadow:T.shadow, display:"flex", flexDirection:"column" }}>
-              <div style={{ fontSize:11, fontWeight:700, color:T.dark4, letterSpacing:"0.08em", marginBottom:16 }}>PER HIRE</div>
-              <div style={{ display:"flex", alignItems:"baseline", gap:4 }}>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:44, fontWeight:900, color:T.dark, lineHeight:1 }}>₹4,999</div>
-              </div>
-              <div style={{ fontSize:14, color:T.dark3, marginTop:8, marginBottom:24 }}>Per successful hire · Outcome-aligned</div>
-              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, marginBottom:28 }}>
-                {["Pay only when you hire","No monthly commitment","All features included","Ideal for early hiring","Scales with your growth","Cancel between hires"].map(f=>(
-                  <div key={f} style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
-                    <span style={{ color:T.orange, flexShrink:0, marginTop:2 }}>✓</span>
-                    <span style={{ fontSize:13, color:T.dark3 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="btn-outline" onClick={()=>navigate("/recruiter")}
-                style={{ width:"100%", padding:"13px 0", background:"transparent", color:T.dark, border:`1.5px solid ${T.border}`, borderRadius:10, fontSize:14, fontWeight:700, cursor:"pointer", transition:"all 0.2s", letterSpacing:"0.03em" }}>
-                TALK TO US
-              </button>
-            </div>
-          </div>
-
-          <div style={{ textAlign:"center", marginTop:32 }}>
-            <p style={{ fontSize:14, color:T.dark4 }}>
-              All plans include: AI ranking · Verified skill profiles · Candidate transparency · Bulk tools · Fairness Ledger · Analytics
-            </p>
-          </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ TRUST / PROOF ══════════════════════════ */}
       <section style={{ padding:"80px clamp(20px,6vw,100px)", background:T.bg }}>
-        <div style={{ maxWidth:1360, margin:"0 auto" }}>
+        <Reveal><div style={{ maxWidth:1360, margin:"0 auto" }}>
           <div style={{ textAlign:"center", marginBottom:52 }}>
             <Label>Why Trust Capabilio AI</Label>
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(26px,3vw,40px)", fontWeight:900, lineHeight:1.1, letterSpacing:"-0.02em" }}>
@@ -697,23 +671,23 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ FINAL CTA ══════════════════════════ */}
       <section style={{ padding:"110px clamp(20px,6vw,100px)", background:T.dark }}>
-        <div style={{ maxWidth:760, margin:"0 auto", textAlign:"center" }}>
+        <Reveal><div style={{ maxWidth:760, margin:"0 auto", textAlign:"center" }}>
           <Label>Get Started</Label>
           <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:"clamp(34px,4.5vw,58px)", fontWeight:900, color:"white", lineHeight:1.08, letterSpacing:"-0.025em", marginBottom:22 }}>
             Bring clarity<br /><em style={{ color:T.orange, fontStyle:"italic" }}>to hiring.</em>
           </h2>
           <p style={{ fontSize:17, color:"rgba(250,248,245,0.5)", lineHeight:1.85, marginBottom:40, maxWidth:520, margin:"0 auto 40px" }}>
-            Start your 2-month free pilot today. No card required. See Capabilio AI Recruiter in action — or book a live demo with our team.
+            Start your 3-month free pilot today. No card required. See Capabilio AI Recruiter in action — or book a live demo with our team.
           </p>
           <div style={{ display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap" }}>
             <button className="btn-primary" onClick={()=>navigate("/recruiter")}
               style={{ fontSize:16, fontWeight:700, padding:"17px 38px", background:T.orange, color:"white", border:"none", borderRadius:12, cursor:"pointer", letterSpacing:"0.02em", boxShadow:`0 4px 28px ${T.orange}50` }}>
-              START 2-MONTH PILOT →
+              START 3-MONTH PILOT →
             </button>
             <button className="btn-ghost" onClick={()=>navigate("/recruiter")}
               style={{ fontSize:15, fontWeight:600, padding:"17px 30px", background:"transparent", color:"rgba(250,248,245,0.7)", border:"1.5px solid rgba(250,248,245,0.15)", borderRadius:12, cursor:"pointer", transition:"all 0.2s" }}>
@@ -723,17 +697,15 @@ export default function LandingPage() {
           <p style={{ fontSize:13, color:"rgba(250,248,245,0.25)", marginTop:24 }}>
             Free pilot · No card required · Cancel anytime · Full system access
           </p>
-        </div>
+        </div></Reveal>
       </section>
 
       {/* ══════════════════════════ FOOTER ══════════════════════════ */}
       <footer style={{ background:T.dark, borderTop:"1px solid rgba(250,248,245,0.07)", padding:"28px clamp(20px,6vw,100px)" }}>
         <div className="footer-inner" style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:28, height:28, borderRadius:8, background:"rgba(250,248,245,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ color:"white", fontSize:13, fontWeight:800, fontFamily:"'Playfair Display',serif" }}>C</span>
-            </div>
-            <span style={{ fontSize:13, fontWeight:500, color:"rgba(250,248,245,0.35)" }}>Capabilio AI Recruiter · {new Date().getFullYear()}</span>
+            <img src="/logo-dark.jpeg" alt="Capabilio AI" style={{ height:34, width:"auto", display:"block" }} />
+            <span style={{ fontSize:13, fontWeight:500, color:"rgba(250,248,245,0.35)" }}>Recruiter · {new Date().getFullYear()}</span>
           </div>
           <div style={{ display:"flex", gap:24, flexWrap:"wrap", justifyContent:"center" }}>
             {["Privacy","Terms","Support"].map(l=>(
@@ -746,6 +718,9 @@ export default function LandingPage() {
               capabilio.online ↗
             </a>
           </div>
+        </div>
+        <div style={{ textAlign:"center", marginTop:18, fontSize:12, color:"rgba(250,248,245,0.25)" }}>
+          Amaravati, Andhra Pradesh ❤️ from India
         </div>
       </footer>
     </div>
