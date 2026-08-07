@@ -129,8 +129,14 @@ export default function CandidateSearch() {
   const [q, setQ] = useState("")
   const [pathFilter, setPathFilter] = useState("all")
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
+  // 2026-08-07: this page previously fetched once on mount and never again
+  // -- a student updating their skills/ELO, or completing a challenge,
+  // wouldn't show up here until the recruiter did a hard reload. `silent`
+  // distinguishes the initial load (shows the loading state) from
+  // background refreshes (updates data without flashing a spinner over
+  // results the recruiter might currently be reading).
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     setBridgeError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -142,14 +148,30 @@ export default function CandidateSearch() {
       setCandidates(body.candidates || [])
     } catch (err) {
       console.error("Failed to load candidates from partner bridge:", err)
-      setBridgeError(err.message)
-      setCandidates([])
+      if (!silent) setBridgeError(err.message) // a failed background poll shouldn't blank out results already on screen
+      if (!silent) setCandidates([])
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  // Live refresh: poll every 20s, and immediately on tab focus / return to
+  // this browser tab -- covers both "left it open while a candidate
+  // updated their profile" and "was on another tab, came back."
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(true), 20000)
+    const onFocus = () => fetchData(true)
+    const onVisible = () => { if (document.visibilityState === "visible") fetchData(true) }
+    window.addEventListener("focus", onFocus)
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", onFocus)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [fetchData])
 
   const filtered = useMemo(() => {
     return candidates.filter((c) => {

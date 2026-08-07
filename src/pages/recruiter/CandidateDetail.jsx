@@ -22,8 +22,11 @@ export default function CandidateDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null)
+  // `silent` (2026-08-07): background polling refreshes ELO/skills/career
+  // timeline without re-showing the full-page loading state -- see the
+  // polling effect below.
+  const load = useCallback(async (silent = false) => {
+    if (!silent) { setLoading(true); setError(null) }
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch(`${BACKEND}/partner/candidates/${id}`, {
@@ -34,13 +37,27 @@ export default function CandidateDetail() {
       setData(body)
     } catch (err) {
       console.error("Failed to load candidate profile:", err)
-      setError(err.message)
+      if (!silent) setError(err.message)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [id])
 
   useEffect(() => { load() }, [load])
+
+  // Live refresh: poll every 20s and on tab focus, same pattern as
+  // CandidateSearch.jsx and CollegeConnections.jsx.
+  useEffect(() => {
+    const interval = setInterval(() => load(true), 20000)
+    const onVisible = () => { if (document.visibilityState === "visible") load(true) }
+    window.addEventListener("focus", onVisible)
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", onVisible)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [load])
 
   if (loading) {
     return <div style={{ color: T.ink3, fontSize: 13, textAlign: "center", padding: "60px 0" }}>Loading candidate profile...</div>

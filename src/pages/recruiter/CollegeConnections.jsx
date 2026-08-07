@@ -106,9 +106,12 @@ export default function CollegeConnections() {
     }
   }, [])
 
-  const fetchRosterAndRequests = useCallback(async (linkId) => {
-    setRosterLoading(true)
-    setRosterError(null)
+  // 2026-08-07: `silent` lets a background poll refresh ELO/skills/career/
+  // challenges-completed without flashing the loading state over a roster
+  // the recruiter might currently be reading -- see the polling effect
+  // below selectLink().
+  const fetchRosterAndRequests = useCallback(async (linkId, silent = false) => {
+    if (!silent) { setRosterLoading(true); setRosterError(null) }
     try {
       const [rosterRes, reqRes] = await Promise.all([
         fetch(`${BACKEND}/partner/company-links/${linkId}/students`).then(async (r) => {
@@ -122,9 +125,9 @@ export default function CollegeConnections() {
       setAccessByStudent(Object.fromEntries((reqRes.requests || []).map((r) => [r.student_id, r.status])))
     } catch (err) {
       console.error("Failed to load college roster:", err)
-      setRosterError(err.message)
+      if (!silent) setRosterError(err.message)
     } finally {
-      setRosterLoading(false)
+      if (!silent) setRosterLoading(false)
     }
   }, [])
 
@@ -133,6 +136,23 @@ export default function CollegeConnections() {
     setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinEloFilter(""); setAiInterviewFilter(false)
     fetchRosterAndRequests(linkId)
   }
+
+  // Live refresh (2026-08-07): a student's ELO, skills, career track, or
+  // challenge count can change at any moment while a recruiter has this
+  // roster open -- poll every 20s, plus refresh immediately when the
+  // browser tab regains focus, so this never shows stale performance data.
+  useEffect(() => {
+    if (!selectedLinkId) return
+    const interval = setInterval(() => fetchRosterAndRequests(selectedLinkId, true), 20000)
+    const onVisible = () => { if (document.visibilityState === "visible") fetchRosterAndRequests(selectedLinkId, true) }
+    window.addEventListener("focus", onVisible)
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", onVisible)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [selectedLinkId, fetchRosterAndRequests])
 
   const deptOptions = [...new Set(roster.map((s) => s.department).filter(Boolean))].sort()
   const batchOptions = [...new Set(roster.map((s) => s.batch).filter(Boolean))].sort()
