@@ -430,7 +430,7 @@ export default function CandidateProfile() {
             {/* Stat chips */}
             <div style={PP.chipsRow}>
               {[
-                { label: "ELO Rating",   value: `⚡ ${candidate.eloRating || 800}`, color: lvl.color  },
+                { label: "Performance", value: lvl.label, color: lvl.color },
                 { label: "Job Ready",    value: `${candidate.jobReadiness || 0}%`,  color: T.green    },
                 { label: "Arena Done",   value: candidate.arenaCompleted || 0,       color: T.indigo   },
                 ...(candidate.arenaStreak > 0
@@ -563,7 +563,7 @@ export default function CandidateProfile() {
               {[
                 { label: "Total Completed", value: candidate.arenaCompleted || 0,       color: T.indigo },
                 { label: "Best Streak",     value: `${candidate.arenaBestStreak || 0}d`, color: T.amber  },
-                { label: "ELO from Arena",  value: `+${Math.max(0, (candidate.eloRating || 800) - 800)}`, color: T.green },
+                { label: "Arena Performance", value: lvl.label,                          color: lvl.color },
               ].map((s) => (
                 <div key={s.label} style={PP.infoCard}>
                   <div style={PP.infoLabel}>{s.label}</div>
@@ -600,7 +600,7 @@ export default function CandidateProfile() {
                       <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>
                         {sub.score || 0}%
                       </div>
-                      <div style={{ fontSize: 12, color: T.indigo }}>+{sub.eloGained || 0} ELO</div>
+                      {sub.eloGained > 0 && <div style={{ fontSize: 12, color: T.indigo }}>↑ Improved</div>}
                     </div>
                   </div>
                 ))
@@ -623,13 +623,18 @@ export default function CandidateProfile() {
         {/* RESUME */}
         {tab === "resume" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* ELO upgrade banner */}
+            {/* Portfolio banner — 2026-08-07: recruiters see the candidate's
+                verified portfolio (skills, tasks, Arena challenges, AI
+                interviews), never a raw ELO number. Product decision:
+                "recruiters can see user portfolio and user skills and user
+                performance not ELO because recruiters don't understand
+                about ELO thing." */}
             <div style={{ background: T.indigo3, border: `1px solid ${T.indigo}25`, borderRadius: 14, padding: "16px 20px", display: "flex", gap: 14, alignItems: "flex-start" }}>
               <span style={{ fontSize: 28 }}>⚡</span>
               <div>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: T.ink, marginBottom: 4 }}>Capabilio ELO Profile is Active</div>
+                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: T.ink, marginBottom: 4 }}>Capabilio Verified Portfolio</div>
                 <div style={{ fontSize: 12, color: T.ink3, lineHeight: 1.6 }}>
-                  This candidate has a verified ELO score of <strong style={{ color: T.indigo }}>⚡{candidate.eloRating || 800}</strong> from skill assessments and Arena challenges — a far stronger hiring signal than a resume. The resume below is supplementary context.
+                  This candidate has a <strong style={{ color: T.indigo }}>{lvl.label}</strong>-level verified portfolio built from skill assessments, Arena challenges, and AI interviews — a far stronger hiring signal than a resume. The resume below is supplementary context.
                 </div>
               </div>
             </div>

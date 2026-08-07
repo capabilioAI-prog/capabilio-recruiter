@@ -20,16 +20,27 @@ function StatusPill({ status }) {
 
 const COLUMN_LABELS = {
   name: "Name", role: "Role/Branch", department: "Department", batch: "Batch",
-  status: "Status", elo_rating: "ELO",
-  // 2026-08-07: the actual differentiator (skill-graph evidence + challenge
-  // completions, not resume keywords) — only present when the college's
-  // visibility tier for this link is "elo"/"placements"/"full" (see
-  // orgStudentVisibility.js's fetchLinkStudents; the base "roster" tier
-  // withholds this same as it withholds elo_rating).
+  status: "Status",
+  // 2026-08-07 (product decision): recruiters never see a raw ELO number —
+  // "ELO should be only visible to users not recruiters ... recruiters can
+  // see user portfolio and user skills and user performance not ELO because
+  // recruiters don't understand about ELO thing." The backend
+  // (orgStudentVisibility.js's fetchLinkStudents) now returns
+  // performance_tier (a qualitative label) and ai_interview_completed
+  // instead of elo_rating — this is the candidate's portfolio, built from
+  // tasks/skills/AI interviews, not a score.
+  performance_tier: "Performance", ai_interview_completed: "AI Interview",
+  // The actual differentiator (skill-graph evidence + challenge completions,
+  // not resume keywords) — only present when the college's visibility tier
+  // for this link is "elo"/"placements"/"full" (see orgStudentVisibility.js's
+  // fetchLinkStudents; the base "roster" tier withholds this the same way it
+  // withholds performance_tier).
   top_skills: "Top Skills", challenges_completed: "Challenges",
   placement_company: "Placement", placement_ctc: "CTC", joined_at: "Joined",
 }
-const ROSTER_ROW_ORDER = ["name", "department", "batch", "status", "elo_rating", "top_skills", "challenges_completed", "placement_company", "placement_ctc", "joined_at"]
+const ROSTER_ROW_ORDER = ["name", "department", "batch", "status", "performance_tier", "top_skills", "challenges_completed", "ai_interview_completed", "placement_company", "placement_ctc", "joined_at"]
+const TIER_OPTIONS = ["Beginner", "Intermediate", "Advanced", "Expert"]
+const TIER_RANK = { Beginner: 0, Intermediate: 1, Advanced: 2, Expert: 3 }
 
 export default function CollegeConnections() {
   const navigate = useNavigate()
@@ -69,17 +80,16 @@ export default function CollegeConnections() {
   // ── Roster filters (2026-08-07) — a college has multiple departments and
   // recruiters don't hire every department, so let them narrow the roster
   // before deciding who to request access to. Filters run client-side over
-  // data already fetched (department/batch/status/elo_rating all come back
-  // from fetchLinkStudents already — see VISIBILITY_COLUMNS in
-  // orgStudentVisibility.js on capabilio-web). "Tasks completed" and "AI
-  // interview" filters are NOT included here — that data doesn't exist on
-  // this roster query yet (would need a join to arena/task-submission
-  // tables on capabilio-web's side); adding fake/placeholder filters for
-  // data we don't have would be worse than omitting them.
+  // data already fetched (department/batch/status/performance_tier/
+  // ai_interview_completed all come back from fetchLinkStudents already —
+  // see VISIBILITY_COLUMNS in orgStudentVisibility.js on capabilio-web).
+  // "Min ELO" was replaced with a performance-tier filter the same day —
+  // recruiters filter by tier and portfolio signal, never a raw ELO number.
   const [deptFilter, setDeptFilter] = useState("")
   const [batchFilter, setBatchFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
-  const [minEloFilter, setMinEloFilter] = useState("")
+  const [minTierFilter, setMinTierFilter] = useState("")
+  const [aiInterviewFilter, setAiInterviewFilter] = useState(false)
 
   const fetchActiveLinks = useCallback(async (email) => {
     if (!email) { setActiveLinksLoading(false); return }
@@ -120,23 +130,23 @@ export default function CollegeConnections() {
 
   const selectLink = (linkId) => {
     setSelectedLinkId(linkId)
-    setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinEloFilter("")
+    setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinTierFilter(""); setAiInterviewFilter(false)
     fetchRosterAndRequests(linkId)
   }
 
   const deptOptions = [...new Set(roster.map((s) => s.department).filter(Boolean))].sort()
   const batchOptions = [...new Set(roster.map((s) => s.batch).filter(Boolean))].sort()
   const statusOptions = [...new Set(roster.map((s) => s.status).filter(Boolean))].sort()
-  const minEloNum = Number.parseInt(minEloFilter, 10)
   const filteredRoster = roster.filter((s) => {
     if (deptFilter && s.department !== deptFilter) return false
     if (batchFilter && s.batch !== batchFilter) return false
     if (statusFilter && s.status !== statusFilter) return false
-    if (Number.isFinite(minEloNum) && !(Number(s.elo_rating) >= minEloNum)) return false
+    if (minTierFilter && (TIER_RANK[s.performance_tier] ?? 0) < TIER_RANK[minTierFilter]) return false
+    if (aiInterviewFilter && !s.ai_interview_completed) return false
     return true
   })
-  const filtersActive = !!(deptFilter || batchFilter || statusFilter || minEloFilter)
-  const clearFilters = () => { setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinEloFilter("") }
+  const filtersActive = !!(deptFilter || batchFilter || statusFilter || minTierFilter || aiInterviewFilter)
+  const clearFilters = () => { setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinTierFilter(""); setAiInterviewFilter(false) }
 
   const requestAccess = async (studentUserId) => {
     if (!identity?.companyId) return
@@ -405,9 +415,15 @@ export default function CollegeConnections() {
                       <option value="">All statuses</option>
                       {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <input value={minEloFilter} onChange={(e) => setMinEloFilter(e.target.value.replace(/[^0-9]/g, ""))}
-                      placeholder="Min ELO" inputMode="numeric"
-                      style={{ width:84, fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }} />
+                    <select value={minTierFilter} onChange={(e) => setMinTierFilter(e.target.value)}
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      <option value="">Any performance</option>
+                      {TIER_OPTIONS.map((t) => <option key={t} value={t}>{t}+</option>)}
+                    </select>
+                    <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:T.ink2, cursor:"pointer" }}>
+                      <input type="checkbox" checked={aiInterviewFilter} onChange={(e) => setAiInterviewFilter(e.target.checked)} />
+                      AI Interview done
+                    </label>
                     {filtersActive && (
                       <button onClick={clearFilters} style={{ fontSize:11, fontWeight:600, padding:"7px 10px", background:"transparent", color:T.ink4, border:`1px solid ${T.border}`, borderRadius:8, cursor:"pointer" }}>
                         Clear filters
@@ -440,12 +456,22 @@ export default function CollegeConnections() {
                                   student.top_skills?.length ? (
                                     <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
                                       {student.top_skills.map((s) => (
-                                        <span key={s.skill_name} title={`ELO ${s.elo_value}`} style={{ fontSize:10, fontWeight:600, padding:"2px 7px", background:T.indigo3, color:T.indigo, borderRadius:6, whiteSpace:"nowrap" }}>
+                                        <span key={s.skill_name} style={{ fontSize:10, fontWeight:600, padding:"2px 7px", background:T.indigo3, color:T.indigo, borderRadius:6, whiteSpace:"nowrap" }}>
                                           {s.skill_name}
                                         </span>
                                       ))}
                                     </div>
                                   ) : "—"
+                                ) : k === "performance_tier" ? (
+                                  student.performance_tier ? (
+                                    <span style={{ fontSize:11, fontWeight:700, padding:"3px 9px", borderRadius:7, background:T.green2, color:T.green, border:`1px solid ${T.green}30` }}>
+                                      {student.performance_tier}
+                                    </span>
+                                  ) : "—"
+                                ) : k === "ai_interview_completed" ? (
+                                  student.ai_interview_completed
+                                    ? <span style={{ fontSize:11, fontWeight:700, color:T.green }}>✓ Completed</span>
+                                    : <span style={{ fontSize:11, color:T.ink4 }}>Not yet</span>
                                 ) : (
                                   student[k] ?? "—"
                                 )}
