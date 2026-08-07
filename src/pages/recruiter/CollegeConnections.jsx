@@ -20,9 +20,16 @@ function StatusPill({ status }) {
 
 const COLUMN_LABELS = {
   name: "Name", role: "Role/Branch", department: "Department", batch: "Batch",
-  status: "Status", elo_rating: "ELO", placement_company: "Placement", placement_ctc: "CTC", joined_at: "Joined",
+  status: "Status", elo_rating: "ELO",
+  // 2026-08-07: the actual differentiator (skill-graph evidence + challenge
+  // completions, not resume keywords) — only present when the college's
+  // visibility tier for this link is "elo"/"placements"/"full" (see
+  // orgStudentVisibility.js's fetchLinkStudents; the base "roster" tier
+  // withholds this same as it withholds elo_rating).
+  top_skills: "Top Skills", challenges_completed: "Challenges",
+  placement_company: "Placement", placement_ctc: "CTC", joined_at: "Joined",
 }
-const ROSTER_ROW_ORDER = ["name", "department", "batch", "status", "elo_rating", "placement_company", "placement_ctc", "joined_at"]
+const ROSTER_ROW_ORDER = ["name", "department", "batch", "status", "elo_rating", "top_skills", "challenges_completed", "placement_company", "placement_ctc", "joined_at"]
 
 export default function CollegeConnections() {
   const navigate = useNavigate()
@@ -428,7 +435,21 @@ export default function CollegeConnections() {
                         return (
                           <tr key={student.id} style={{ borderTop:`1px solid ${T.border}` }}>
                             {ROSTER_ROW_ORDER.filter((k) => roster[0]?.[k] !== undefined).map((k) => (
-                              <td key={k} style={{ padding:"10px 14px", color:T.ink2 }}>{student[k] ?? "—"}</td>
+                              <td key={k} style={{ padding:"10px 14px", color:T.ink2 }}>
+                                {k === "top_skills" ? (
+                                  student.top_skills?.length ? (
+                                    <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+                                      {student.top_skills.map((s) => (
+                                        <span key={s.skill_name} title={`ELO ${s.elo_value}`} style={{ fontSize:10, fontWeight:600, padding:"2px 7px", background:T.indigo3, color:T.indigo, borderRadius:6, whiteSpace:"nowrap" }}>
+                                          {s.skill_name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : "—"
+                                ) : (
+                                  student[k] ?? "—"
+                                )}
+                              </td>
                             ))}
                             <td style={{ padding:"10px 14px", textAlign:"right", whiteSpace:"nowrap" }}>
                               {access === "approved" ? (
