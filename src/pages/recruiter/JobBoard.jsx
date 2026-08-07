@@ -40,7 +40,8 @@ function fromDbJob(row) {
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const domainColor = (d = "") => {
+const domainColor = (d) => {
+  d = d || "" // guard against explicit null, not just undefined
   if (d.toLowerCase().includes("medical"))   return T.green
   if (d.toLowerCase().includes("software"))  return T.indigo
   if (d.toLowerCase().includes("data"))      return T.blue

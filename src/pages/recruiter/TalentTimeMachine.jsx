@@ -5,7 +5,8 @@ import { db } from "./firebase"
 import { T, card, cardLg, tag, btn } from "./theme"
 
 
-const domainColor = (d = "") => {
+const domainColor = (d) => {
+  d = d || "" // guard against explicit null, not just undefined
   if (d.toLowerCase().includes("medical"))  return "#1A7A4A"
   if (d.toLowerCase().includes("software")) return "#3D4EAC"
   if (d.toLowerCase().includes("data"))     return "#1565C0"

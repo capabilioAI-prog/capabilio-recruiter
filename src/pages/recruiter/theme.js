@@ -40,8 +40,16 @@ export const T = {
 }
 
 // ── Shared helper: domain color ───────────────────────────────────────────────
-export function domainColor(d = "") {
-  const l = d.toLowerCase()
+export function domainColor(d) {
+  // 2026-08-07: `d = ""` as a default parameter only covers `undefined` —
+  // a candidate with a real but unset domain (profiles.domain IS NULL,
+  // which several real accounts have) passes `null` explicitly, and default
+  // parameters don't apply to explicit null. That crashed every page
+  // rendering such a candidate (Cannot read properties of null (reading
+  // 'toLowerCase')) — confirmed via CandidateSearch.jsx's `domainColor(c.domain)`
+  // once a previously-invisible candidate with domain=null started actually
+  // appearing in search results.
+  const l = (d || "").toLowerCase()
   if (l.includes("medical"))   return T.green
   if (l.includes("software"))  return T.indigo
   if (l.includes("data"))      return T.blue

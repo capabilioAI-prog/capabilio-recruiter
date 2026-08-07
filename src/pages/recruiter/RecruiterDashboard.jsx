@@ -16,8 +16,8 @@ function daysUntil(iso) {
   return Math.round((new Date(iso).getTime() - Date.now()) / DAY)
 }
 
-const domainColor = (d = "") => {
-  const s = d.toLowerCase()
+const domainColor = (d) => {
+  const s = (d || "").toLowerCase() // guard against explicit null, not just undefined
   if (s.includes("medical"))   return T.green
   if (s.includes("software") || s.includes("engineer")) return T.indigo
   if (s.includes("data"))      return T.blue
