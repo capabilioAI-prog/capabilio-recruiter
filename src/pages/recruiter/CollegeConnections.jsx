@@ -59,6 +59,21 @@ export default function CollegeConnections() {
   const [accessByStudent, setAccessByStudent] = useState({}) // studentId -> status
   const [requestingId, setRequestingId] = useState(null)
 
+  // ── Roster filters (2026-08-07) — a college has multiple departments and
+  // recruiters don't hire every department, so let them narrow the roster
+  // before deciding who to request access to. Filters run client-side over
+  // data already fetched (department/batch/status/elo_rating all come back
+  // from fetchLinkStudents already — see VISIBILITY_COLUMNS in
+  // orgStudentVisibility.js on capabilio-web). "Tasks completed" and "AI
+  // interview" filters are NOT included here — that data doesn't exist on
+  // this roster query yet (would need a join to arena/task-submission
+  // tables on capabilio-web's side); adding fake/placeholder filters for
+  // data we don't have would be worse than omitting them.
+  const [deptFilter, setDeptFilter] = useState("")
+  const [batchFilter, setBatchFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("")
+  const [minEloFilter, setMinEloFilter] = useState("")
+
   const fetchActiveLinks = useCallback(async (email) => {
     if (!email) { setActiveLinksLoading(false); return }
     setActiveLinksLoading(true)
@@ -98,8 +113,23 @@ export default function CollegeConnections() {
 
   const selectLink = (linkId) => {
     setSelectedLinkId(linkId)
+    setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinEloFilter("")
     fetchRosterAndRequests(linkId)
   }
+
+  const deptOptions = [...new Set(roster.map((s) => s.department).filter(Boolean))].sort()
+  const batchOptions = [...new Set(roster.map((s) => s.batch).filter(Boolean))].sort()
+  const statusOptions = [...new Set(roster.map((s) => s.status).filter(Boolean))].sort()
+  const minEloNum = Number.parseInt(minEloFilter, 10)
+  const filteredRoster = roster.filter((s) => {
+    if (deptFilter && s.department !== deptFilter) return false
+    if (batchFilter && s.batch !== batchFilter) return false
+    if (statusFilter && s.status !== statusFilter) return false
+    if (Number.isFinite(minEloNum) && !(Number(s.elo_rating) >= minEloNum)) return false
+    return true
+  })
+  const filtersActive = !!(deptFilter || batchFilter || statusFilter || minEloFilter)
+  const clearFilters = () => { setDeptFilter(""); setBatchFilter(""); setStatusFilter(""); setMinEloFilter("") }
 
   const requestAccess = async (studentUserId) => {
     if (!identity?.companyId) return
@@ -351,6 +381,37 @@ export default function CollegeConnections() {
               ) : roster.length === 0 ? (
                 <div style={{ color:T.ink4, fontSize:13, textAlign:"center", padding:"24px 0" }}>No students in this college's shared roster yet.</div>
               ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                    <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      <option value="">All departments</option>
+                      {deptOptions.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)}
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      <option value="">All batches</option>
+                      {batchOptions.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      <option value="">All statuses</option>
+                      {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <input value={minEloFilter} onChange={(e) => setMinEloFilter(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="Min ELO" inputMode="numeric"
+                      style={{ width:84, fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }} />
+                    {filtersActive && (
+                      <button onClick={clearFilters} style={{ fontSize:11, fontWeight:600, padding:"7px 10px", background:"transparent", color:T.ink4, border:`1px solid ${T.border}`, borderRadius:8, cursor:"pointer" }}>
+                        Clear filters
+                      </button>
+                    )}
+                    <span style={{ fontSize:11, color:T.ink4, marginLeft:"auto" }}>{filteredRoster.length} of {roster.length} students</span>
+                  </div>
+
+                  {filteredRoster.length === 0 ? (
+                    <div style={{ color:T.ink4, fontSize:13, textAlign:"center", padding:"24px 0", background:T.cream, border:`1px solid ${T.border}`, borderRadius:14 }}>No students match these filters.</div>
+                  ) : (
                 <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", boxShadow:T.shadow }}>
                   <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
                     <thead>
@@ -362,7 +423,7 @@ export default function CollegeConnections() {
                       </tr>
                     </thead>
                     <tbody>
-                      {roster.map((student) => {
+                      {filteredRoster.map((student) => {
                         const access = accessByStudent[student.user_id] || "none"
                         return (
                           <tr key={student.id} style={{ borderTop:`1px solid ${T.border}` }}>
@@ -392,6 +453,8 @@ export default function CollegeConnections() {
                       })}
                     </tbody>
                   </table>
+                </div>
+                  )}
                 </div>
               )
             )}
