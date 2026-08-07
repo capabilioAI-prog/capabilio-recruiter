@@ -42,7 +42,7 @@ function VisibilityBadge({ pathType, employmentStatus }) {
 }
 
 // ── Candidate card (real data from capabilio-web via the partner bridge) ─────
-function CandidateCard({ c, onTask, onMessage, onPipeline }) {
+function CandidateCard({ c, onTask, onMessage, onPipeline, onOpen }) {
   const col = domainColor(c.domain)
   const displayName = c.display_name || c.username || "Candidate"
   const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -50,9 +50,17 @@ function CandidateCard({ c, onTask, onMessage, onPipeline }) {
   return (
     <div style={CC.card}>
       <div style={CC.top}>
-        <div style={{ ...CC.avatar, background:`${col}18`, border:`1.5px solid ${col}44`, color:col }}>{initials}</div>
+        {c.avatar_url ? (
+          <img src={c.avatar_url} alt={displayName} style={{ ...CC.avatar, objectFit: "cover" }} />
+        ) : (
+          <div style={{ ...CC.avatar, background:`${col}18`, border:`1.5px solid ${col}44`, color:col }}>{initials}</div>
+        )}
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={CC.name}>{displayName}</div>
+          <div style={CC.name}>
+            <button onClick={() => onOpen(c)} style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "inherit", cursor: "pointer", textAlign: "left" }}>
+              {displayName}
+            </button>
+          </div>
           <div style={{ fontSize:11, color:T.ink4, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
             {c.headline || (c.current_role_title ? `${c.current_role_title}${c.current_company ? ` · ${c.current_company}` : ""}` : "—")}
           </div>
@@ -69,7 +77,9 @@ function CandidateCard({ c, onTask, onMessage, onPipeline }) {
       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:8 }}>
         {c.uan_verified && <VerifiedBadge label="Employment (EPFO)" />}
         {c.education_verified && <VerifiedBadge label="Education" />}
-        {typeof c.years_of_experience === "number" && (
+        {c.path_type === "student" ? (
+          <span style={{ fontSize:10, color:T.ink3, background:T.cream2, border:`1px solid ${T.border}`, borderRadius:5, padding:"2px 7px" }}>Student</span>
+        ) : typeof c.years_of_experience === "number" && (
           <span style={{ fontSize:10, color:T.ink3, background:T.cream2, border:`1px solid ${T.border}`, borderRadius:5, padding:"2px 7px" }}>{c.years_of_experience} yrs experience</span>
         )}
       </div>
@@ -90,6 +100,7 @@ function CandidateCard({ c, onTask, onMessage, onPipeline }) {
       )}
 
       <div style={CC.btnRow}>
+        <button onClick={() => onOpen(c)} style={CC.profileBtn}>View Profile</button>
         <button onClick={() => onMessage(c)} style={CC.msgBtn}>Message</button>
         <button onClick={() => onTask(c)} style={CC.taskBtn}>Send Task</button>
         <button onClick={() => onPipeline(c)} style={CC.addBtn}>+ Pipeline</button>
@@ -103,6 +114,7 @@ const CC = {
   avatar: { width:40, height:40, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:15 },
   name: { fontSize:14, fontWeight:600, color:T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
   btnRow: { display:"flex", gap:5, marginTop:12 },
+  profileBtn: { flex:1, padding:"7px 0", background:T.ink, border:"none", borderRadius:8, color:T.cream, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
   msgBtn:  { flex:1, padding:"7px 0", background:T.blue2, border:`1px solid ${T.blue}30`, borderRadius:8, color:T.blue, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
   taskBtn: { flex:1, padding:"7px 0", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
   addBtn:  { padding:"7px 10px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:8, color:T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
@@ -152,6 +164,7 @@ export default function CandidateSearch() {
 
   const handleTask = (c) => navigate("/recruiter/tasks", { state: { candidateId: c.id, candidateName: c.display_name || c.username } })
   const handleMessage = () => navigate("/recruiter/messages")
+  const handleOpen = (c) => navigate(`/recruiter/candidates/${c.id}`)
   const handlePipeline = async (c) => {
     try {
       const { error } = await supabase.from("pipeline_candidates").insert({
@@ -196,7 +209,7 @@ export default function CandidateSearch() {
       ) : (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
           {filtered.map((c) => (
-            <CandidateCard key={c.id} c={c} onTask={handleTask} onMessage={handleMessage} onPipeline={handlePipeline} />
+            <CandidateCard key={c.id} c={c} onTask={handleTask} onMessage={handleMessage} onPipeline={handlePipeline} onOpen={handleOpen} />
           ))}
         </div>
       )}
