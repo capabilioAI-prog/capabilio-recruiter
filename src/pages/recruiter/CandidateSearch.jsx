@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../../lib/supabaseClient"
-import { T, domainColor } from "./theme"
+import { T, domainColor, eloLevel } from "./theme"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
@@ -42,10 +42,18 @@ function VisibilityBadge({ pathType, employmentStatus }) {
 }
 
 // ── Candidate card (real data from capabilio-web via the partner bridge) ─────
+// 2026-08-08: folded in the card style from the removed Talent Time
+// Machine tab (tier badge, skill bars, activity stats row) -- but sourced
+// from real fields only. Time Machine's ELO "history" sparkline was
+// Math.random()-generated and is deliberately NOT carried over; no
+// history data actually exists to chart.
 function CandidateCard({ c, onTask, onMessage, onPipeline, onOpen }) {
   const col = domainColor(c.domain)
   const displayName = c.display_name || c.username || "Candidate"
   const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const lvl = eloLevel(c.elo || 0)
+  const skillsDetailed = c.topSkillsDetailed || []
+  const maxSkillVal = Math.max(1, ...skillsDetailed.map((s) => s.elo_value || 0))
 
   return (
     <div style={CC.card}>
@@ -56,15 +64,44 @@ function CandidateCard({ c, onTask, onMessage, onPipeline, onOpen }) {
           <div style={{ ...CC.avatar, background:`${col}18`, border:`1.5px solid ${col}44`, color:col }}>{initials}</div>
         )}
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={CC.name}>
-            <button onClick={() => onOpen(c)} style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "inherit", cursor: "pointer", textAlign: "left" }}>
-              {displayName}
-            </button>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={CC.name}>
+              <button onClick={() => onOpen(c)} style={{ background: "none", border: "none", padding: 0, font: "inherit", color: "inherit", cursor: "pointer", textAlign: "left" }}>
+                {displayName}
+              </button>
+            </div>
+            {c.performance_tier && (
+              <span style={{ fontSize:9.5, fontWeight:700, color:lvl.color, background:`${lvl.color}15`, border:`1px solid ${lvl.color}33`, borderRadius:20, padding:"2px 8px", flexShrink:0 }}>
+                {c.performance_tier}
+              </span>
+            )}
           </div>
           <div style={{ fontSize:11, color:T.ink4, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
             {c.headline || (c.current_role_title ? `${c.current_role_title}${c.current_company ? ` · ${c.current_company}` : ""}` : "—")}
           </div>
         </div>
+      </div>
+
+      {skillsDetailed.length > 0 && (
+        <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:10 }}>
+          {skillsDetailed.map((s) => (
+            <div key={s.skill_name}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:T.ink3, marginBottom:2 }}>
+                <span>{s.skill_name}</span>
+                <span style={{ fontWeight:700, color:T.indigo }}>{s.elo_value}</span>
+              </div>
+              <div style={{ height:4, background:T.cream3, borderRadius:2 }}>
+                <div style={{ height:"100%", width:`${Math.max(4, Math.round((s.elo_value / maxSkillVal) * 100))}%`, borderRadius:2, background:col }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginTop:10, fontSize:11, color:T.ink3 }}>
+        <span>⚔️ {c.taskCount || 0} tasks</span>
+        <span>🔥 {c.streak || 0}d streak</span>
+        {c.jobReadiness != null && <span>📊 {c.jobReadiness}% ready</span>}
       </div>
 
       <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>

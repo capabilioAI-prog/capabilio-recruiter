@@ -89,7 +89,6 @@ const NAV_ADVANCED = [
     heading: "AI TOOLS",
     items: [
       { icon: "🤖", label: "Shadow Interview",   path: "/recruiter/simulation" },
-      { icon: "⏳", label: "Time Machine",       path: "/recruiter/time-machine" },
       { icon: "🧬", label: "Team Chemistry",     path: "/recruiter/team-chemistry" },
       { icon: "📡", label: "Market Intel",       path: "/recruiter/intelligence" },
     ],

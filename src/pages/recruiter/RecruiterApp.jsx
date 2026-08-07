@@ -20,7 +20,6 @@ import RecruiterSettings      from "./RecruiterSettings";
 
 // ── Advanced / AI Pages ────────────────────────────────────────────────────────
 import ShadowInterview        from "./ShadowInterview";
-import TalentTimeMachine      from "./TalentTimeMachine";
 import TeamChemistry          from "./TeamChemistry";
 import TalentIncubator        from "./TalentIncubator";
 import CompetitiveIntelligence from "./CompetitiveIntelligence";
@@ -146,7 +145,6 @@ export default function RecruiterApp() {
         <Route path="settings"                element={<RecruiterSettings />} />
         {/* AI / Advanced */}
         <Route path="simulation/:uid?"        element={<ShadowInterview />} />
-        <Route path="time-machine/:uid?"      element={<TalentTimeMachine />} />
         <Route path="team-chemistry"          element={<TeamChemistry />} />
         <Route path="incubator"               element={<TalentIncubator />} />
         <Route path="intelligence"            element={<CompetitiveIntelligence />} />
