@@ -80,7 +80,14 @@ export default function CandidateDetail() {
   const col = domainColor(c.domain)
   const displayName = c.display_name || c.username || "Candidate"
   const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-  const tierScore = Math.max(c.role_elo || 0, c.professional_elo || 0, c.aura_score || 0)
+  // 2026-08-07: was recomputing this from role_elo/professional_elo/
+  // aura_score only, which excludes profiles.elo_rating -- the field the
+  // candidate's OWN Aura dashboard actually shows for the student path (see
+  // canonicalElo() in capabilio-web's orgStudentVisibility.js). That made a
+  // student's real, live ELO show as 0 or a stale lower number here. The
+  // backend now computes this correctly and sends it as `c.elo`; fall back
+  // to the old formula only if an older cached response lacks it.
+  const tierScore = c.elo ?? Math.max(c.role_elo || 0, c.professional_elo || 0, c.aura_score || 0)
   const lvl = eloLevel(tierScore)
 
   return (
@@ -104,6 +111,9 @@ export default function CandidateDetail() {
           <div style={{ fontSize: 13, color: T.ink3, marginTop: 3 }}>
             {c.headline || (c.current_role_title ? `${c.current_role_title}${c.current_company ? ` · ${c.current_company}` : ""}` : "—")}
           </div>
+          {c.career && (
+            <div style={{ fontSize: 12, color: T.indigo, marginTop: 2, fontWeight: 600 }}>🎯 {c.career}</div>
+          )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
             {c.domain && <span style={{ fontSize: 11, color: col, border: `1px solid ${col}33`, background: `${col}11`, borderRadius: 6, padding: "2px 7px" }}>{c.domain}</span>}
             {c.path_type === "student"

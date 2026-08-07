@@ -92,8 +92,24 @@ function CandidateCard({ c, onTask, onMessage, onPipeline, onOpen }) {
         </div>
       )}
 
+      {(c.career || typeof c.elo === "number") && (
+        <div style={{ display:"flex", gap:8, marginTop:10 }}>
+          {typeof c.elo === "number" && (
+            <div style={{ padding:"6px 10px", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8 }}>
+              <div style={{ fontSize:9, color:T.indigo, fontWeight:700 }}>ELO</div>
+              <div style={{ fontSize:13, color:T.indigo, fontWeight:800 }}>{c.elo}</div>
+            </div>
+          )}
+          {c.career && (
+            <div style={{ flex:1, padding:"6px 10px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:8, minWidth:0 }}>
+              <div style={{ fontSize:9, color:T.ink3, fontWeight:700 }}>CAREER</div>
+              <div style={{ fontSize:11.5, color:T.ink2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{c.career}</div>
+            </div>
+          )}
+        </div>
+      )}
       {c.target_role && (
-        <div style={{ marginTop:10, padding:"8px 10px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:8 }}>
+        <div style={{ marginTop:8, padding:"8px 10px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:8 }}>
           <div style={{ fontSize:10, color:T.ink3, fontWeight:600, marginBottom:2 }}>Looking for</div>
           <div style={{ fontSize:11, color:T.ink2, lineHeight:1.45 }}>{c.target_role}</div>
         </div>
