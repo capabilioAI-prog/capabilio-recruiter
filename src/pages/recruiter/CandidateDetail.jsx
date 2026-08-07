@@ -5,16 +5,96 @@ import { T, domainColor, eloLevel, card, tag, btn } from "./theme"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
-// Recruiter-facing candidate portfolio — 2026-08-07.
-// Reached from CandidateSearch.jsx's "View Profile" (card click or button).
-// This is the real, live-data equivalent of a student's own Aura dashboard
-// in capabilio-web: ELO, career timeline (Arena history), AI interviews
-// completed, verified certifications, and published portfolio artifacts —
-// all via the new GET /partner/candidates/:id (backend/server/routes/
+const GRADE_COLOR = (g) => (g === "A+" || g === "A") ? T.green : (g === "B+" || g === "B") ? T.indigo : (g === "C") ? T.amber : T.red
+
+// Recruiter-facing candidate portfolio — 2026-08-07, rebuilt 2026-08-08 for
+// evidence-based transparency (see ProofCard below). Reached from
+// CandidateSearch.jsx's "View Profile" (card click or button). This is the
+// real, live-data equivalent of a student's own Aura dashboard in
+// capabilio-web, via GET /partner/candidates/:id (backend/server/routes/
 // partnerBridge.js on capabilio-web). Distinct from the legacy
 // /recruiter/candidate/:uid route (CandidateProfile.jsx), which reads from
 // a separate, disconnected Firestore project and has no data for any
 // candidate sourced from this live search.
+//
+// 2026-08-08: explicit request for "complete transparency ... with
+// evidence and proof rather than claiming like resumes." Three changes:
+//   1. What was labeled "Career Timeline" (actually Arena challenge
+//      history) is now "Proof of Skills" — each card expands to show the
+//      full evidence trail the backend now sends: the task scenario/
+//      objective the candidate was given, what they actually submitted,
+//      and the AI feedback explaining the score. Not just a title + number.
+//   2. "Career Timeline" now means what the label says: real employment
+//      history (and internships) from the candidate's own profile.
+//   3. New "Code DNA" section — a candidate's GitHub-derived profile, shown
+//      only when they've run Code DNA AND opted it into recruiter
+//      visibility (backend-gated, never fabricated when absent).
+function ProofCard({ p }) {
+  const [open, setOpen] = useState(false)
+  const hasEvidence = !!(p.scenario || p.objective || p.user_answer || p.feedback)
+  return (
+    <div style={{ padding: "10px 12px", background: T.cream2, borderRadius: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>{p.title || p.skill_name || "Challenge"}</div>
+          <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>
+            {[p.domain, p.difficulty].filter(Boolean).join(" · ")}
+            {p.completed_at ? ` · ${new Date(p.completed_at).toLocaleDateString()}` : ""}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          {typeof p.score === "number" && (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: GRADE_COLOR(p.grade) }}>{p.grade || ""} {p.score}%</div>
+              {typeof p.elo_delta === "number" && p.elo_delta !== 0 && (
+                <div style={{ fontSize: 10, color: p.elo_delta > 0 ? T.green : T.red }}>{p.elo_delta > 0 ? "+" : ""}{p.elo_delta} ELO</div>
+              )}
+            </div>
+          )}
+          {hasEvidence && (
+            <button onClick={() => setOpen((o) => !o)} style={{ fontSize: 11, fontWeight: 600, padding: "4px 10px", background: "transparent", color: T.indigo, border: `1px solid ${T.indigo}30`, borderRadius: 7, cursor: "pointer" }}>
+              {open ? "Hide evidence" : "View evidence"}
+            </button>
+          )}
+        </div>
+      </div>
+      {open && hasEvidence && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+          {p.scenario && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.ink4, marginBottom: 3 }}>SCENARIO GIVEN</div>
+              <div style={{ fontSize: 12, color: T.ink2, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{p.scenario}</div>
+            </div>
+          )}
+          {p.objective && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.ink4, marginBottom: 3 }}>OBJECTIVE</div>
+              <div style={{ fontSize: 12, color: T.ink2, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{p.objective}</div>
+            </div>
+          )}
+          {p.expected_output && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.ink4, marginBottom: 3 }}>EXPECTED OUTPUT</div>
+              <div style={{ fontSize: 12, color: T.ink2, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{p.expected_output}</div>
+            </div>
+          )}
+          {p.user_answer && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.indigo, marginBottom: 3 }}>CANDIDATE'S SUBMITTED SOLUTION</div>
+              <div style={{ fontSize: 12, color: T.ink, lineHeight: 1.5, whiteSpace: "pre-wrap", background: T.cream, borderRadius: 8, padding: "8px 10px", border: `1px solid ${T.border}` }}>{p.user_answer}</div>
+            </div>
+          )}
+          {p.feedback && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.ink4, marginBottom: 3 }}>WHY THIS SCORE — AI EVALUATION</div>
+              <div style={{ fontSize: 12, color: T.ink2, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{p.feedback}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 export default function CandidateDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -76,7 +156,7 @@ export default function CandidateDetail() {
     )
   }
 
-  const { candidate: c, skills, careerTimeline, interviewsCompleted, certifications, portfolioArtifacts } = data
+  const { candidate: c, skills, proofOfSkills = [], careerTimeline = [], codeDna, interviewsCompleted, certifications, portfolioArtifacts } = data
   const col = domainColor(c.domain)
   const displayName = c.display_name || c.username || "Candidate"
   const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -130,7 +210,7 @@ export default function CandidateDetail() {
             <div style={{ fontSize: 10, color: T.ink4 }}>ELO</div>
           </div>
           <div style={{ textAlign: "center", padding: "8px 16px", background: T.cream2, borderRadius: 10 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>{careerTimeline.length}</div>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>{proofOfSkills.length}</div>
             <div style={{ fontSize: 10, color: T.ink4 }}>Tasks Done</div>
           </div>
         </div>
@@ -152,30 +232,99 @@ export default function CandidateDetail() {
         )}
       </div>
 
-      {/* Career timeline / Arena history */}
+      {/* Proof of Skills — full evidence trail per completed challenge */}
       <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>Career Timeline</div>
-        {careerTimeline.length === 0 ? (
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 2 }}>Proof of Skills</div>
+        <div style={{ fontSize: 11, color: T.ink4, marginBottom: 12 }}>What they were given, what they submitted, and why they scored what they did — not a claim, the actual work.</div>
+        {proofOfSkills.length === 0 ? (
           <div style={{ fontSize: 13, color: T.ink4 }}>No completed challenges shared to portfolio yet.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {careerTimeline.map((e) => (
-              <div key={e.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 12px", background: T.cream2, borderRadius: 10 }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>{e.title || e.skill_name || "Challenge"}</div>
-                  <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>
-                    {[e.domain, e.difficulty].filter(Boolean).join(" · ")}
-                    {e.completed_at ? ` · ${new Date(e.completed_at).toLocaleDateString()}` : ""}
+            {proofOfSkills.map((p) => <ProofCard key={p.id} p={p} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Career Timeline — real employment history + internships */}
+      <div style={card}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>Career Timeline</div>
+        {careerTimeline.length === 0 ? (
+          <div style={{ fontSize: 13, color: T.ink4 }}>No employment history added yet.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {careerTimeline.map((e, i) => (
+              <div key={i} style={{ padding: "10px 12px", background: T.cream2, borderRadius: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.ink }}>
+                      {e.role || "—"}{e.company ? ` · ${e.company}` : ""}
+                    </div>
+                    <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>
+                      {e.startDate || "?"} — {e.isCurrent ? "Present" : (e.endDate || "?")}
+                    </div>
+                    {e.description && <div style={{ fontSize: 12, color: T.ink2, marginTop: 6, lineHeight: 1.5 }}>{e.description}</div>}
+                    {Array.isArray(e.skills) && e.skills.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 8 }}>
+                        {e.skills.map((s, si) => (
+                          <span key={si} style={{ fontSize: 10, color: T.ink3, background: T.cream, border: `1px solid ${T.border}`, borderRadius: 5, padding: "2px 7px" }}>{s}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end", flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: e.employmentType === "internship" ? T.amber : T.blue, background: e.employmentType === "internship" ? T.amber2 : T.blue2, borderRadius: 6, padding: "2px 7px" }}>
+                      {e.employmentType === "internship" ? "Internship" : "Employment"}
+                    </span>
+                    {e.verificationStatus === "verified" && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.green }}>✓ Verified</span>
+                    )}
                   </div>
                 </div>
-                {typeof e.score === "number" && (
-                  <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.green, flexShrink: 0 }}>{e.score}%</div>
-                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Code DNA — GitHub-derived profile, only when the candidate ran it and opted it into recruiter visibility */}
+      {codeDna && (
+        <div style={card}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>Code DNA {codeDna.username && <span style={{ fontWeight: 400, color: T.ink4 }}>· <a href={`https://github.com/${codeDna.username}`} target="_blank" rel="noreferrer" style={{ color: T.indigo }}>github.com/{codeDna.username}</a></span>}</div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+            {codeDna.publicRepos != null && (
+              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.publicRepos}</div><div style={{ fontSize: 10, color: T.ink4 }}>Public repos</div></div>
+            )}
+            {codeDna.totalCommits != null && (
+              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.totalCommits}</div><div style={{ fontSize: 10, color: T.ink4 }}>Commits</div></div>
+            )}
+            {codeDna.followers != null && (
+              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.followers}</div><div style={{ fontSize: 10, color: T.ink4 }}>Followers</div></div>
+            )}
+            {codeDna.score != null && (
+              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.indigo }}>{codeDna.score}</div><div style={{ fontSize: 10, color: T.ink4 }}>Builder score</div></div>
+            )}
+          </div>
+          {codeDna.standoutFact && (
+            <div style={{ fontSize: 12, color: T.ink2, marginBottom: 8, fontStyle: "italic" }}>"{codeDna.standoutFact}"</div>
+          )}
+          {codeDna.languages.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+              {codeDna.languages.slice(0, 8).map((l, i) => (
+                <span key={i} style={{ fontSize: 11, color: T.ink3, background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 6, padding: "3px 9px" }}>
+                  {l.lang}{l.pct != null ? ` ${l.pct}%` : ""}
+                </span>
+              ))}
+            </div>
+          )}
+          {codeDna.topRepos.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {codeDna.topRepos.slice(0, 5).map((r, i) => (
+                <div key={i} style={{ fontSize: 12, color: T.ink2 }}>• {typeof r === "string" ? r : (r.name || r.repoName || "Repo")}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* AI Interviews + Certifications side by side */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
