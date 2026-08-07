@@ -50,7 +50,7 @@ function MiniRing({ value, color, size = 48 }) {
         strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
       <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
-        fontSize="10" fontWeight="800" fill={color} fontFamily="Syne">{value}</text>
+        fontSize="10" fontWeight="800" fill={color} fontFamily="Inter">{value}</text>
     </svg>
   )
 }
@@ -141,15 +141,15 @@ const WC = {
     transition: "all 0.2s",
   },
   head:      { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
-  avatar:    { width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 13 },
+  avatar:    { width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 13 },
   name:      { fontSize: 13, fontWeight: 600, color: "#1A1A18", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   removeBtn: { background: "rgba(255,255,255,0.04)", border: "none", color: "#E8E8E1", width: 24, height: 24, borderRadius: 6, cursor: "pointer", fontSize: 12, flexShrink: 0 },
   statsRow:  { display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" },
   stat:      { fontSize: 11, color: "#3A3A38" },
-  noteInput: { width: "100%", padding: "6px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(61,78,172,0.3)", borderRadius: 8, color: "#1A1A18", fontSize: 11, fontFamily: "'DM Sans',sans-serif", resize: "none" },
+  noteInput: { width: "100%", padding: "6px 8px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(61,78,172,0.3)", borderRadius: 8, color: "#1A1A18", fontSize: 11, fontFamily: "'Inter',sans-serif", resize: "none" },
   noteDisplay:{ fontSize: 11, color: "#6B6B68", padding: "6px 8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 8, cursor: "text", minHeight: 30 },
-  primaryBtn: { flex: 1, padding: "7px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 8, color: "#a5b4fc", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
-  secondaryBtn:{ padding: "7px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  primaryBtn: { flex: 1, padding: "7px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 8, color: "#a5b4fc", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
+  secondaryBtn:{ padding: "7px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }
 
 // ── Rising Stars row ──────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ function RisingStarRow({ candidate, onWatch, watched }) {
             border: `1px solid ${watched ? "rgba(34,197,94,0.2)" : "rgba(61,78,172,0.2)"}`,
             borderRadius: 8, color: watched ? "#1A7A4A" : "#a5b4fc",
             fontSize: 11, cursor: watched ? "default" : "pointer",
-            fontFamily: "'DM Sans',sans-serif",
+            fontFamily: "'Inter',sans-serif",
           }}
         >
           {watched ? "✓ Watching" : "+ Watch"}
@@ -274,12 +274,12 @@ function GrowthForecast({ candidates }) {
 }
 
 const GF = {
-  btn:     { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  btn:     { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
   box:     { background: "rgba(61,78,172,0.06)", border: "1px solid rgba(61,78,172,0.15)", borderRadius: 12, padding: 12 },
   section: { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 10 },
   sTitle:  { fontSize: 12, fontWeight: 700, color: "#1A1A18", marginBottom: 8 },
   tag:     { fontSize: 11, color: "#a5b4fc", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", padding: "3px 10px", borderRadius: 20 },
-  rerun:   { padding: "7px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", alignSelf: "flex-start" },
+  rerun:   { padding: "7px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", alignSelf: "flex-start" },
 }
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
@@ -328,9 +328,9 @@ export default function TalentIncubator() {
   const hotCandidates = risingStars.filter((c) => growthPotential(c) >= 70).length
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.5} }
         input::placeholder { color: #334155; }
@@ -342,7 +342,7 @@ export default function TalentIncubator() {
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
+        <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
           🌱 Talent Incubator
         </h1>
         <p style={{ fontSize: 13, color: "#3A3A38", marginTop: 4 }}>
@@ -360,7 +360,7 @@ export default function TalentIncubator() {
         ].map((s) => (
           <div key={s.label} style={P.statCard}>
             <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: "#E8E8E1" }}>{s.label}</div>
           </div>
         ))}
@@ -483,14 +483,14 @@ const P = {
   statsRow:   { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 },
   statCard:   { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px", textAlign: "center" },
   tabsRow:    { display: "flex", gap: 8, marginBottom: 16 },
-  tab:        { padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#3A3A38", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" },
+  tab:        { padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#3A3A38", fontSize: 13, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all 0.2s" },
   tabActive:  { background: "rgba(61,78,172,0.12)", border: "1px solid rgba(61,78,172,0.25)", color: "#a5b4fc" },
   empty:      { textAlign: "center", padding: "60px 20px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16 },
   watchGrid:  { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 },
   filtersRow: { display: "flex", gap: 10, marginBottom: 14 },
-  searchInput:{ flex: 1, padding: "9px 14px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'DM Sans',sans-serif" },
-  select:     { padding: "9px 12px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" },
+  searchInput:{ flex: 1, padding: "9px 14px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif" },
+  select:     { padding: "9px 12px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif", cursor: "pointer" },
   hotBanner:  { display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: 12, marginBottom: 12, fontSize: 13 },
   panel:      { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 16 },
-  ctaBtn:     { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  ctaBtn:     { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }

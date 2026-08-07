@@ -75,13 +75,13 @@ function KanbanCard({ row, stageColor, stageId, jobTitle, onMove, onRemove }) {
 const KC = {
   card: { background: T.cream, border: `1px solid ${T.border}`, borderRadius: 12, padding: 12, boxShadow: T.shadow },
   top: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
-  avatar: { width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 13 },
+  avatar: { width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 13 },
   name: { fontSize: 13, fontWeight: 600, color: T.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   daysRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 },
   actions: { display: "flex", gap: 5, marginTop: 8 },
-  viewBtn: { flex: 1, padding: "5px 0", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 7, color: T.indigo, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
-  moveBtn: { padding: "5px 8px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 7, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
-  removeBtn: { padding: "5px 8px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 7, color: T.red, fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
+  viewBtn: { flex: 1, padding: "5px 0", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 7, color: T.indigo, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter', sans-serif" },
+  moveBtn: { padding: "5px 8px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 7, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter', sans-serif" },
+  removeBtn: { padding: "5px 8px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 7, color: T.red, fontSize: 11, cursor: "pointer", fontFamily: "'Inter', sans-serif" },
 }
 
 export default function RecruiterPipeline() {
@@ -162,7 +162,7 @@ export default function RecruiterPipeline() {
   }, [rows, jobsById])
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: T.ink }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", color: T.ink }}>
       <div style={P.header}>
         <div>
           <h1 style={P.title}>Hiring Pipeline</h1>
@@ -184,7 +184,7 @@ export default function RecruiterPipeline() {
       ) : totalCards === 0 ? (
         <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: "60px 20px", textAlign: "center", boxShadow: T.shadow }}>
           <div style={{ fontSize: 40 }}>🗂️</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>No one in your pipeline yet</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>No one in your pipeline yet</div>
           <div style={{ fontSize: 13, color: T.ink4, marginTop: 6 }}>Add candidates from Candidate Discovery or shortlist an applicant to see them here.</div>
         </div>
       ) : (
@@ -237,13 +237,13 @@ export default function RecruiterPipeline() {
 
 const P = {
   header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap", gap: 12 },
-  title: { fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 },
+  title: { fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 },
   sub: { fontSize: 13, color: T.ink4, marginTop: 4 },
-  select: { padding: "9px 14px", background: T.cream, border: `1px solid ${T.border}`, borderRadius: 12, color: T.ink, fontSize: 13, fontFamily: "'DM Sans', sans-serif", cursor: "pointer" },
-  addCandBtn: { padding: "9px 16px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 12, color: T.green, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" },
+  select: { padding: "9px 14px", background: T.cream, border: `1px solid ${T.border}`, borderRadius: 12, color: T.ink, fontSize: 13, fontFamily: "'Inter', sans-serif", cursor: "pointer" },
+  addCandBtn: { padding: "9px 16px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 12, color: T.green, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter', sans-serif" },
   funnelRow: { display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 20 },
   funnelCard: { background: T.cream, border: `1px solid ${T.border}`, borderRadius: 14, padding: "14px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, boxShadow: T.shadow },
-  funnelCount: { fontFamily: "'Syne', sans-serif", fontSize: 26, fontWeight: 800, lineHeight: 1.1 },
+  funnelCount: { fontFamily: "'Inter', sans-serif", fontSize: 26, fontWeight: 800, lineHeight: 1.1 },
   funnelLabel: { fontSize: 11, color: T.ink4, textAlign: "center" },
   board: { display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, overflowX: "auto" },
   column: { background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 16, padding: 12, minHeight: 420 },

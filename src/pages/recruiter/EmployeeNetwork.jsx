@@ -37,7 +37,7 @@ function EmployeeRow({ emp, onAction }) {
   const growthColor = emp.growth >= 80 ? T.green : emp.growth >= 60 ? T.amber : T.red
   return (
     <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 0", borderBottom:`1px solid ${T.border}` }}>
-      <div style={{ width:40, height:40, borderRadius:12, background:`${emp.color}18`, border:`1.5px solid ${emp.color}44`, color:emp.color, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:14, flexShrink:0 }}>
+      <div style={{ width:40, height:40, borderRadius:12, background:`${emp.color}18`, border:`1.5px solid ${emp.color}44`, color:emp.color, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:14, flexShrink:0 }}>
         {emp.avatar}
       </div>
       <div style={{ flex:1, minWidth:0 }}>
@@ -58,8 +58,8 @@ function EmployeeRow({ emp, onAction }) {
         </div>
       )}
       <div style={{ display:"flex", gap:6 }}>
-        <button onClick={() => onAction("message", emp)} style={{ fontSize:11, padding:"6px 10px", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>Message</button>
-        <button onClick={() => onAction("upskill", emp)} style={{ fontSize:11, padding:"6px 10px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:8, color:T.green, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>Upskill</button>
+        <button onClick={() => onAction("message", emp)} style={{ fontSize:11, padding:"6px 10px", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>Message</button>
+        <button onClick={() => onAction("upskill", emp)} style={{ fontSize:11, padding:"6px 10px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:8, color:T.green, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>Upskill</button>
       </div>
     </div>
   )
@@ -72,19 +72,19 @@ function UpskillModal({ emp, onClose }) {
     <div style={{ position:"fixed", inset:0, zIndex:400, background:"rgba(26,26,24,0.5)", backdropFilter:"blur(6px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
       <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:20, padding:28, width:"100%", maxWidth:520, boxShadow:T.shadow2, animation:"fadeIn 0.2s ease" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:700, color:T.ink }}>📚 Send Skill Improvement Request</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, fontWeight:700, color:T.ink }}>📚 Send Skill Improvement Request</div>
           <button onClick={onClose} style={{ background:"none", border:"none", color:T.ink4, cursor:"pointer", fontSize:20 }}>✕</button>
         </div>
         {sent ? (
           <div style={{ textAlign:"center", padding:"30px 0" }}>
             <div style={{ fontSize:48 }}>✅</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:700, color:T.green, marginTop:12 }}>Request Sent!</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, fontWeight:700, color:T.green, marginTop:12 }}>Request Sent!</div>
             <div style={{ fontSize:13, color:T.ink3, marginTop:6 }}>{emp.name} will receive this improvement plan in their Capabilio portal with full context, deadline, and resources.</div>
           </div>
         ) : (
           <>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20, padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
-              <div style={{ width:36, height:36, borderRadius:10, background:`${emp.color}18`, color:emp.color, border:`1.5px solid ${emp.color}44`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800 }}>{emp.avatar}</div>
+              <div style={{ width:36, height:36, borderRadius:10, background:`${emp.color}18`, color:emp.color, border:`1.5px solid ${emp.color}44`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800 }}>{emp.avatar}</div>
               <div>
                 <div style={{ fontSize:13, fontWeight:600, color:T.ink }}>{emp.name}</div>
                 <div style={{ fontSize:11, color:T.ink4 }}>{emp.role}</div>
@@ -108,7 +108,7 @@ function UpskillModal({ emp, onClose }) {
                 ))}
               </div>
             </div>
-            <button onClick={() => setSent(true)} style={{ width:"100%", padding:"12px", background:T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+            <button onClick={() => setSent(true)} style={{ width:"100%", padding:"12px", background:T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
               Send Improvement Request →
             </button>
           </>
@@ -133,7 +133,7 @@ export default function EmployeeNetwork() {
 
       {/* Hero */}
       <div style={{ background:T.green2, border:`1px solid ${T.green}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🏢 Employee Network · Post-Hire Operating Layer</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🏢 Employee Network · Post-Hire Operating Layer</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
           Capabilio doesn't end at hiring. Once a candidate joins, their profile is linked to your company workspace. Manage onboarding, send circulars, assign skill upgrades, track internal mobility, and communicate performance plans — all in one place.
         </div>
@@ -151,7 +151,7 @@ export default function EmployeeNetwork() {
           <div key={s.label} style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 14px", display:"flex", alignItems:"center", gap:10, boxShadow:T.shadow }}>
             <div style={{ width:40, height:40, borderRadius:10, background:`${s.color}15`, color:s.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{s.icon}</div>
             <div>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink }}>{s.value}</div>
+              <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink }}>{s.value}</div>
               <div style={{ fontSize:11, color:T.ink4 }}>{s.label}</div>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function EmployeeNetwork() {
       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            style={{ fontSize:12, padding:"8px 16px", borderRadius:10, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, transition:"all 0.15s", background: tab === t.id ? T.indigo3 : "transparent", borderColor: tab === t.id ? `${T.indigo}40` : T.border, color: tab === t.id ? T.indigo : T.ink4 }}>
+            style={{ fontSize:12, padding:"8px 16px", borderRadius:10, border:"1px solid", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600, transition:"all 0.15s", background: tab === t.id ? T.indigo3 : "transparent", borderColor: tab === t.id ? `${T.indigo}40` : T.border, color: tab === t.id ? T.indigo : T.ink4 }}>
             {t.label}
           </button>
         ))}
@@ -178,7 +178,7 @@ export default function EmployeeNetwork() {
           ].map((emp) => (
             <div key={emp.name} style={{ background:T.cream, border:`1px solid ${T.green}20`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                <div style={{ width:38, height:38, borderRadius:10, background:T.green2, color:T.green, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800 }}>
+                <div style={{ width:38, height:38, borderRadius:10, background:T.green2, color:T.green, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800 }}>
                   {emp.name.split(" ").map((n) => n[0]).join("")}
                 </div>
                 <div>
@@ -203,8 +203,8 @@ export default function EmployeeNetwork() {
       {tab === "circulars" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:0 }}>📢 Company Circulars & Communications</h2>
-            <button style={{ fontSize:12, padding:"7px 14px", background:T.ink, border:"none", borderRadius:9, color:T.cream, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:0 }}>📢 Company Circulars & Communications</h2>
+            <button style={{ fontSize:12, padding:"7px 14px", background:T.ink, border:"none", borderRadius:9, color:T.cream, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
               + New Circular
             </button>
           </div>
@@ -224,7 +224,7 @@ export default function EmployeeNetwork() {
               <div style={{ width:80, height:5, background:T.cream3, borderRadius:3 }}>
                 <div style={{ height:"100%", width:`${(c.seen/c.total)*100}%`, background:T.green, borderRadius:3 }} />
               </div>
-              <button style={{ fontSize:11, padding:"5px 10px", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:7, color:T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Resend</button>
+              <button style={{ fontSize:11, padding:"5px 10px", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:7, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Resend</button>
             </div>
           ))}
         </div>
@@ -232,7 +232,7 @@ export default function EmployeeNetwork() {
 
       {tab === "mobility" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>🔀 Internal Mobility — Verified Skill-Based Opportunities</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>🔀 Internal Mobility — Verified Skill-Based Opportunities</h2>
           <div style={{ fontSize:12, color:T.ink4, marginBottom:16 }}>Powered by verified skill data — not manager bias. Employees with matching skill graphs are surfaced for promotions, lateral transfers, and team moves.</div>
           {MOBILITY_OPPS.map((op, i) => (
             <div key={i} style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px", background:T.cream2, border:`1px solid ${op.type === "Promotion" ? T.green + "30" : T.indigo + "30"}`, borderRadius:12, marginBottom:10 }}>
@@ -248,10 +248,10 @@ export default function EmployeeNetwork() {
                 </div>
               </div>
               <div style={{ textAlign:"center" }}>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.green }}>{op.match}%</div>
+                <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.green }}>{op.match}%</div>
                 <div style={{ fontSize:10, color:T.ink4 }}>skill match</div>
               </div>
-              <button style={{ fontSize:12, padding:"7px 14px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:9, color:T.green, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+              <button style={{ fontSize:12, padding:"7px 14px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:9, color:T.green, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
                 Initiate Move →
               </button>
             </div>
@@ -262,7 +262,7 @@ export default function EmployeeNetwork() {
       {tab === "upskilling" && (
         <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
           <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>📚 Employee Skill Upgrade Plans</h2>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>📚 Employee Skill Upgrade Plans</h2>
             {EMPLOYEES.map((emp) => (
               <EmployeeRow key={emp.id} emp={emp} onAction={handleAction} />
             ))}
@@ -272,12 +272,12 @@ export default function EmployeeNetwork() {
 
       {tab === "performance" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>📊 Employee Growth Graph</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:"0 0 16px" }}>📊 Employee Growth Graph</h2>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
             {EMPLOYEES.slice(0,3).map((emp) => (
               <div key={emp.id} style={{ padding:"18px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:14 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                  <div style={{ width:36, height:36, borderRadius:10, background:`${emp.color}18`, color:emp.color, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:13 }}>{emp.avatar}</div>
+                  <div style={{ width:36, height:36, borderRadius:10, background:`${emp.color}18`, color:emp.color, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:13 }}>{emp.avatar}</div>
                   <div>
                     <div style={{ fontSize:13, fontWeight:600, color:T.ink }}>{emp.name}</div>
                     <div style={{ fontSize:11, color:T.ink4 }}>{emp.role}</div>

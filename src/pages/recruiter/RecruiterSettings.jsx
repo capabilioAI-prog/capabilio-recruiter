@@ -42,7 +42,7 @@ function Section({ title, icon, children }) {
 const S = {
   section:     { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 20, marginBottom: 14 },
   sectionHead: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.06)" },
-  sectionTitle:{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "#1A1A18" },
+  sectionTitle:{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 700, color: "#1A1A18" },
 }
 
 // ── Row ───────────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ function Input({ value, onChange, placeholder, type = "text" }) {
         padding: "8px 12px", background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 8, color: "#1A1A18",
-        fontSize: 13, fontFamily: "'DM Sans',sans-serif",
+        fontSize: 13, fontFamily: "'Inter',sans-serif",
         width: 220,
       }}
     />
@@ -106,7 +106,7 @@ function TagInput({ tags, onChange, placeholder }) {
 const TI = {
   tag:       { display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px 3px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 20, fontSize: 12, color: "#a5b4fc" },
   removeBtn: { background: "none", border: "none", color: "#3D4EAC", cursor: "pointer", fontSize: 11, padding: 0, lineHeight: 1 },
-  input:     { padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, color: "#1A1A18", fontSize: 12, fontFamily: "'DM Sans',sans-serif", width: 140 },
+  input:     { padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, color: "#1A1A18", fontSize: 12, fontFamily: "'Inter',sans-serif", width: 140 },
 }
 
 // ── Plan badge ────────────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ function PlanCard({ name, price, features, current, color }) {
   return (
     <div style={{ ...PC.card, borderColor: current ? color : "rgba(26,26,24,0.06)", background: current ? `${color}08` : "#EFEFE9" }}>
       {current && <div style={{ ...PC.currentBadge, background: color }}>Current Plan</div>}
-      <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color, marginBottom: 4 }}>{name}</div>
+      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color, marginBottom: 4 }}>{name}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color: "#1A1A18", marginBottom: 12 }}>
         {price}<span style={{ fontSize: 13, color: "#E8E8E1" }}>/mo</span>
       </div>
@@ -133,7 +133,7 @@ function PlanCard({ name, price, features, current, color }) {
 const PC = {
   card:         { position: "relative", border: "2px solid", borderRadius: 14, padding: 16 },
   currentBadge: { position: "absolute", top: -10, left: 12, fontSize: 10, fontWeight: 700, color: "#1A1A18", padding: "2px 8px", borderRadius: 20 },
-  upgradeBtn:   { marginTop: 12, width: "100%", padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  upgradeBtn:   { marginTop: 12, width: "100%", padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
@@ -279,9 +279,9 @@ export default function RecruiterSettings() {
   ]
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18", maxWidth: 900 }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1A1A18", maxWidth: 900 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         input::placeholder { color: #334155; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #3D4EAC !important; }
         ::-webkit-scrollbar { width: 4px; }
@@ -291,7 +291,7 @@ export default function RecruiterSettings() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
+          <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
             ⚙️ Settings
           </h1>
           <p style={{ fontSize: 13, color: "#3A3A38", marginTop: 4, margin: "4px 0 0" }}>
@@ -308,7 +308,7 @@ export default function RecruiterSettings() {
             borderRadius: 10, color: saved ? "#1A7A4A" : "#1A1A18",
             fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer",
             opacity: saving ? 0.7 : 1,
-            fontFamily: "'DM Sans',sans-serif", transition: "all 0.3s",
+            fontFamily: "'Inter',sans-serif", transition: "all 0.3s",
           }}
         >
           {saving ? "Saving…" : saved ? "✓ Saved!" : "💾 Save Changes"}
@@ -319,7 +319,7 @@ export default function RecruiterSettings() {
       <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ padding: "8px 14px", background: tab === t.key ? "rgba(61,78,172,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${tab === t.key ? "rgba(61,78,172,0.25)" : "rgba(26,26,24,0.07)"}`, borderRadius: 10, color: tab === t.key ? "#a5b4fc" : "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" }}>
+            style={{ padding: "8px 14px", background: tab === t.key ? "rgba(61,78,172,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${tab === t.key ? "rgba(61,78,172,0.25)" : "rgba(26,26,24,0.07)"}`, borderRadius: 10, color: tab === t.key ? "#a5b4fc" : "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all 0.2s" }}>
             {t.label}
           </button>
         ))}
@@ -331,13 +331,13 @@ export default function RecruiterSettings() {
           <Section title="Personal Information" icon="👤">
             {/* Avatar */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, color: "#1A1A18" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 18, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 22, color: "#1A1A18" }}>
                 {(displayName || user?.email || "R").charAt(0).toUpperCase()}
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1A18" }}>{displayName || "Recruiter"}</div>
                 <div style={{ fontSize: 12, color: "#E8E8E1" }}>{user?.email}</div>
-                <button style={{ marginTop: 6, padding: "4px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 6, color: "#a5b4fc", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                <button style={{ marginTop: 6, padding: "4px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 6, color: "#a5b4fc", fontSize: 11, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                   Change Photo
                 </button>
               </div>
@@ -362,19 +362,19 @@ export default function RecruiterSettings() {
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Brief description shown to candidates..."
                 rows={3}
-                style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'DM Sans',sans-serif", resize: "vertical" }}
+                style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif", resize: "vertical" }}
               />
             </div>
           </Section>
 
           <Section title="Account" icon="🔐">
             <Row label="Email Address" sub={user?.email}>
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 Change Email
               </button>
             </Row>
             <Row label="Password" sub="Last changed 30 days ago">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 Change Password
               </button>
             </Row>
@@ -460,7 +460,7 @@ export default function RecruiterSettings() {
           <Section title="Team Members" icon="👥">
             {teamMembers.map((m, i) => (
               <div key={m.email ?? i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 14, color: "#1A1A18", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 14, color: "#1A1A18", flexShrink: 0 }}>
                   {m.avatar}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -486,12 +486,12 @@ export default function RecruiterSettings() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="colleague@company.com"
-                style={{ flex: 1, minWidth: 200, padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'DM Sans',sans-serif" }}
+                style={{ flex: 1, minWidth: 200, padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif" }}
               />
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value)}
-                style={{ padding: "9px 12px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}
+                style={{ padding: "9px 12px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif", cursor: "pointer" }}
               >
                 <option>Recruiter</option>
                 <option>Viewer</option>
@@ -499,7 +499,7 @@ export default function RecruiterSettings() {
               </select>
               <button
                 onClick={sendInvite}
-                style={{ padding: "9px 18px", background: inviteSent ? "rgba(34,197,94,0.1)" : "rgba(61,78,172,0.12)", border: `1px solid ${inviteSent ? "rgba(34,197,94,0.25)" : "rgba(61,78,172,0.25)"}`, borderRadius: 10, color: inviteSent ? "#1A7A4A" : "#a5b4fc", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+                style={{ padding: "9px 18px", background: inviteSent ? "rgba(34,197,94,0.1)" : "rgba(61,78,172,0.12)", border: `1px solid ${inviteSent ? "rgba(34,197,94,0.25)" : "rgba(61,78,172,0.25)"}`, borderRadius: 10, color: inviteSent ? "#1A7A4A" : "#a5b4fc", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
               >
                 {inviteSent ? "✓ Invited!" : "Send Invite →"}
               </button>
@@ -569,17 +569,17 @@ export default function RecruiterSettings() {
               <span style={{ fontSize: 13, fontWeight: 700, color: "#3D4EAC" }}>Pro — $149/mo</span>
             </Row>
             <Row label="Payment Method" sub="Visa ending in 4242">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 Update Card
               </button>
             </Row>
             <Row label="Invoices" sub="Download past invoices">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 View Invoices
               </button>
             </Row>
             <Row label="Cancel Subscription" sub="You'll lose access at end of billing period">
-              <button style={{ padding: "6px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, color: "#fca5a5", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button style={{ padding: "6px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, color: "#fca5a5", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 Cancel Plan
               </button>
             </Row>

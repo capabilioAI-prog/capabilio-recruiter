@@ -323,7 +323,7 @@ export default function CollegeConnections() {
       {/* ── Invitations received from colleges ────────────────────────── */}
       <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
         <div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>College Invitations</h1>
+          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>College Invitations</h1>
           <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
             Colleges that invited your company from their Talent Network. Accept or decline here — connecting only happens in the app, invites are never emailed.
           </p>
@@ -355,14 +355,14 @@ export default function CollegeConnections() {
                     <button
                       disabled={actioningId === invite.id}
                       onClick={() => respondToInvite(invite, "accept")}
-                      style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor: actioningId === invite.id ? "default" : "pointer", opacity: actioningId === invite.id ? 0.6 : 1, fontFamily:"'DM Sans',sans-serif" }}
+                      style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor: actioningId === invite.id ? "default" : "pointer", opacity: actioningId === invite.id ? 0.6 : 1, fontFamily:"'Inter',sans-serif" }}
                     >
                       {actioningId === invite.id ? "Accepting..." : "Accept"}
                     </button>
                     <button
                       disabled={actioningId === invite.id}
                       onClick={() => respondToInvite(invite, "decline")}
-                      style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.cream2, color:T.ink3, border:`1px solid ${T.border}`, borderRadius:8, cursor: actioningId === invite.id ? "default" : "pointer", opacity: actioningId === invite.id ? 0.6 : 1, fontFamily:"'DM Sans',sans-serif" }}
+                      style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.cream2, color:T.ink3, border:`1px solid ${T.border}`, borderRadius:8, cursor: actioningId === invite.id ? "default" : "pointer", opacity: actioningId === invite.id ? 0.6 : 1, fontFamily:"'Inter',sans-serif" }}
                     >
                       Decline
                     </button>
@@ -381,7 +381,7 @@ export default function CollegeConnections() {
           then send tasks/messages only once approved. ────────────────── */}
       <div style={{ display:"flex", flexDirection:"column", gap:18, borderTop:`1px solid ${T.border}`, paddingTop:24 }}>
         <div>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Connected Colleges — Performance</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Connected Colleges — Performance</h2>
           <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
             Aggregate, anonymized performance for colleges you're connected to. Contacting a specific student — messaging, sending a task, or viewing their full portfolio — requires that college's placement cell to approve your request first.
           </p>
@@ -399,7 +399,7 @@ export default function CollegeConnections() {
               {activeLinks.map((link) => (
                 <button key={link.id} onClick={() => selectLink(link.id)}
                   style={{
-                    fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:9, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+                    fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:9, cursor:"pointer", fontFamily:"'Inter',sans-serif",
                     background: selectedLinkId === link.id ? T.ink : T.cream2,
                     color: selectedLinkId === link.id ? T.cream : T.ink3,
                     border: `1px solid ${selectedLinkId === link.id ? T.ink : T.border}`,
@@ -422,23 +422,23 @@ export default function CollegeConnections() {
                 <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}
-                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'Inter',sans-serif" }}>
                       <option value="">All departments</option>
                       {deptOptions.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                     <select value={batchFilter} onChange={(e) => setBatchFilter(e.target.value)}
-                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'Inter',sans-serif" }}>
                       <option value="">All batches</option>
                       {batchOptions.map((b) => <option key={b} value={b}>{b}</option>)}
                     </select>
                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }}>
+                      style={{ fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'Inter',sans-serif" }}>
                       <option value="">All statuses</option>
                       {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <input value={minEloFilter} onChange={(e) => setMinEloFilter(e.target.value.replace(/[^0-9]/g, ""))}
                       placeholder="Min ELO" inputMode="numeric"
-                      style={{ width:84, fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'DM Sans',sans-serif" }} />
+                      style={{ width:84, fontSize:12, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, color:T.ink2, fontFamily:"'Inter',sans-serif" }} />
                     <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:T.ink2, cursor:"pointer" }}>
                       <input type="checkbox" checked={aiInterviewFilter} onChange={(e) => setAiInterviewFilter(e.target.checked)} />
                       AI Interview done
@@ -513,7 +513,7 @@ export default function CollegeConnections() {
                                 <button
                                   disabled={requestingId === student.user_id || !student.user_id}
                                   onClick={() => requestAccess(student.user_id)}
-                                  style={{ fontSize:11, fontWeight:600, padding:"6px 12px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:7, cursor: student.user_id ? "pointer" : "default", opacity: requestingId === student.user_id ? 0.6 : 1, fontFamily:"'DM Sans',sans-serif" }}>
+                                  style={{ fontSize:11, fontWeight:600, padding:"6px 12px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:7, cursor: student.user_id ? "pointer" : "default", opacity: requestingId === student.user_id ? 0.6 : 1, fontFamily:"'Inter',sans-serif" }}>
                                   {requestingId === student.user_id ? "Requesting..." : "Request Access"}
                                 </button>
                               )}
@@ -536,7 +536,7 @@ export default function CollegeConnections() {
           college-side follow-up per the note below) ─────────────────────── */}
       <div style={{ display:"flex", flexDirection:"column", gap:18, borderTop:`1px solid ${T.border}`, paddingTop:24 }}>
         <div>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Institution Directory</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Institution Directory</h2>
           <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
             Live institution directory from Capabilio. Requesting a connection here notifies you locally — the college-side accept flow is a follow-up (see the note on each pending request).
           </p>
@@ -562,7 +562,7 @@ export default function CollegeConnections() {
                     </div>
                     {conn ? <StatusPill status={conn.status} /> : <span style={{ fontSize:11, color:T.ink4 }}>Not connected</span>}
                     {!conn && (
-                      <button onClick={() => requestConnection(institution)} style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                      <button onClick={() => requestConnection(institution)} style={{ fontSize:12, fontWeight:600, padding:"7px 14px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
                         Request Connection
                       </button>
                     )}
@@ -578,9 +578,9 @@ export default function CollegeConnections() {
                         defaultValue={conn.notes || ""}
                         placeholder="Collaboration notes (visible to your team only)..."
                         onChange={(e) => setNoteDraft((d) => ({ ...d, [conn.id]: e.target.value }))}
-                        style={{ flex:1, padding:"8px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream2, fontSize:12, fontFamily:"'DM Sans',sans-serif" }}
+                        style={{ flex:1, padding:"8px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream2, fontSize:12, fontFamily:"'Inter',sans-serif" }}
                       />
-                      <button onClick={() => saveNote(conn)} style={{ fontSize:11, fontWeight:600, padding:"8px 14px", background:T.cream2, color:T.ink3, border:`1px solid ${T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Save</button>
+                      <button onClick={() => saveNote(conn)} style={{ fontSize:11, fontWeight:600, padding:"8px 14px", background:T.cream2, color:T.ink3, border:`1px solid ${T.border}`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Save</button>
                     </div>
                   )}
                 </div>

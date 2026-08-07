@@ -183,7 +183,7 @@ function OfferModal({ offer, onClose, onSaved }) {
     width:"100%", padding:"10px 12px",
     background:T.cream3, border:`1px solid ${T.border}`,
     borderRadius:10, color:T.ink, fontSize:13,
-    fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box",
+    fontFamily:"'Inter',sans-serif", boxSizing:"border-box",
   }
 
   const totalComp = [
@@ -194,7 +194,7 @@ function OfferModal({ offer, onClose, onSaved }) {
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(26,26,24,0.5)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:20, padding:28, width:"100%", maxWidth:680, maxHeight:"90vh", overflowY:"auto", fontFamily:"'DM Sans',sans-serif", boxShadow:T.shadow2 }}>
+      <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:20, padding:28, width:"100%", maxWidth:680, maxHeight:"90vh", overflowY:"auto", fontFamily:"'Inter',sans-serif", boxShadow:T.shadow2 }}>
 
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
@@ -202,7 +202,7 @@ function OfferModal({ offer, onClose, onSaved }) {
             <div style={{ fontSize:11, color:T.green, fontWeight:700, letterSpacing:"0.08em", marginBottom:4 }}>
               {step === 1 ? "OFFER DETAILS" : "OFFER LETTER"}
             </div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:T.ink, margin:0 }}>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:T.ink, margin:0 }}>
               {step === 1 ? (isEdit ? "Edit Offer" : "Create Offer") : "Review & Send"}
             </h2>
           </div>
@@ -281,7 +281,7 @@ function OfferModal({ offer, onClose, onSaved }) {
               {form.baseSalary && (
                 <div style={{ gridColumn:"1/-1", background:T.green2, border:`1px solid ${T.green}33`, borderRadius:12, padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                   <span style={{ fontSize:12, color:T.ink3 }}>Total Annual Compensation</span>
-                  <span style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:T.green }}>
+                  <span style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:T.green }}>
                     {form.currency} {totalComp.toLocaleString()}
                   </span>
                 </div>
@@ -374,16 +374,16 @@ function NegotiationModal({ offer, onClose, onSaved }) {
     width:"100%", padding:"10px 12px",
     background:T.cream3, border:`1px solid ${T.border}`,
     borderRadius:10, color:T.ink, fontSize:13,
-    fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box",
+    fontFamily:"'Inter',sans-serif", boxSizing:"border-box",
   }
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:700, background:"rgba(26,26,24,0.5)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:T.cream, border:`1px solid ${T.amber}44`, borderRadius:20, padding:28, width:"100%", maxWidth:480, fontFamily:"'DM Sans',sans-serif", boxShadow:T.shadow2 }}>
+      <div style={{ background:T.cream, border:`1px solid ${T.amber}44`, borderRadius:20, padding:28, width:"100%", maxWidth:480, fontFamily:"'Inter',sans-serif", boxShadow:T.shadow2 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <div>
             <div style={{ fontSize:11, color:T.amber, fontWeight:700, letterSpacing:"0.08em", marginBottom:4 }}>COUNTER OFFER</div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Log Negotiation</h2>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>Log Negotiation</h2>
           </div>
           <button onClick={onClose} style={{ background:T.cream3, border:`1px solid ${T.border}`, color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer" }}>✕</button>
         </div>
@@ -451,14 +451,14 @@ function OfferCard({ offer, onEdit, onDelete, onStatusChange, onNegotiate, onSub
       <div style={{ display:"flex", gap:16, marginBottom:12, flexWrap:"wrap" }}>
         <div style={{ background:T.green2, border:`1px solid ${T.green}33`, borderRadius:10, padding:"8px 14px" }}>
           <div style={{ fontSize:10, color:T.ink3, marginBottom:2 }}>BASE</div>
-          <div style={{ fontSize:14, fontWeight:700, color:T.green, fontFamily:"'Syne',sans-serif" }}>
+          <div style={{ fontSize:14, fontWeight:700, color:T.green, fontFamily:"'Inter',sans-serif" }}>
             {offer.currency} {Number(offer.baseSalary||0).toLocaleString()}
           </div>
         </div>
         {offer.bonus && Number(offer.bonus) > 0 && (
           <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}33`, borderRadius:10, padding:"8px 14px" }}>
             <div style={{ fontSize:10, color:T.ink3, marginBottom:2 }}>BONUS</div>
-            <div style={{ fontSize:14, fontWeight:700, color:T.indigo, fontFamily:"'Syne',sans-serif" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:T.indigo, fontFamily:"'Inter',sans-serif" }}>
               {offer.currency} {Number(offer.bonus).toLocaleString()}
             </div>
           </div>
@@ -602,9 +602,9 @@ export default function OfferManagement() {
   const acceptanceRate = totalOffered > 0 ? Math.round(offers.filter(o => o.status === "accepted").length / totalOffered * 100) : 0
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", color:T.ink }}>
+    <div style={{ fontFamily:"'Inter',sans-serif", color:T.ink }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin { to { transform:rotate(360deg) } }
         input:focus,select:focus,textarea:focus { outline:none; border-color:${T.indigo} !important }
         input[type="date"]::-webkit-calendar-picker-indicator { filter:none; opacity:0.5 }
@@ -613,7 +613,7 @@ export default function OfferManagement() {
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
         <div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Offer Management</h1>
+          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Offer Management</h1>
           <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>Track offers, manage negotiations, and close candidates</p>
         </div>
         <button onClick={() => { setEditTarget(null); setShowModal(true) }} style={{ padding:"10px 20px", background:T.green, border:"none", borderRadius:12, color:"#1A1A18", fontSize:13, fontWeight:700, cursor:"pointer", boxShadow:T.shadow }}>
@@ -626,7 +626,7 @@ export default function OfferManagement() {
         {stats.map(s => (
           <div key={s.id} onClick={() => setFilterStage(filterStage === s.id ? "all" : s.id)} style={{ background: filterStage === s.id ? `${s.color}12` : T.cream2, border:`1px solid ${filterStage === s.id ? s.color+"44" : T.border}`, borderTop:`3px solid ${s.color}`, borderRadius:12, padding:"12px 14px", cursor:"pointer", transition:"all 0.2s", boxShadow: filterStage === s.id ? T.shadow : "none" }}>
             <div style={{ fontSize:18, marginBottom:4 }}>{s.icon}</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:s.color }}>{s.count}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:s.color }}>{s.count}</div>
             <div style={{ fontSize:11, color:T.ink4, marginTop:2 }}>{s.label}</div>
           </div>
         ))}
@@ -637,7 +637,7 @@ export default function OfferManagement() {
         <div style={{ background:T.green2, border:`1px solid ${T.green}33`, borderRadius:14, padding:"14px 20px", marginBottom:20, display:"flex", alignItems:"center", gap:20 }}>
           <div>
             <div style={{ fontSize:11, color:T.ink3, marginBottom:2 }}>OFFER ACCEPTANCE RATE</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:28, fontWeight:800, color:T.green }}>{acceptanceRate}%</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:T.green }}>{acceptanceRate}%</div>
           </div>
           <div style={{ flex:1, height:6, background:T.border, borderRadius:3, overflow:"hidden" }}>
             <div style={{ height:"100%", width:`${acceptanceRate}%`, background:T.green, borderRadius:3, transition:"width 0.6s ease" }} />

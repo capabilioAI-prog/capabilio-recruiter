@@ -57,8 +57,8 @@ function DonutChart({ segments, size = 140 }) {
   return (
     <svg width={size} height={size}>
       {arcs.map((arc, i) => <path key={i} d={arc.path} fill={arc.color} opacity="0.85" />)}
-      <text x={cx} y={cy - 6} textAnchor="middle" fontSize="18" fontWeight="800" fill={T.ink} fontFamily="Syne">{total}</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9" fill={T.ink4} fontFamily="DM Sans">total</text>
+      <text x={cx} y={cy - 6} textAnchor="middle" fontSize="18" fontWeight="800" fill={T.ink} fontFamily="Inter">{total}</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9" fill={T.ink4} fontFamily="Inter">total</text>
     </svg>
   )
 }
@@ -74,7 +74,7 @@ function StatCard({ icon, label, value, sub, color, trend }) {
           </div>
         )}
       </div>
-      <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 800, color, margin: "8px 0 4px" }}>{value}</div>
+      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 26, fontWeight: 800, color, margin: "8px 0 4px" }}>{value}</div>
       <div style={{ fontSize: 12, fontWeight: 600, color: T.ink }}>{label}</div>
       {sub && <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>{sub}</div>}
     </div>
@@ -219,16 +219,16 @@ export default function RecruiterAnalytics() {
   )
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: T.ink }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: T.ink }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 }}>📊 Recruiter Analytics</h1>
+          <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 }}>📊 Recruiter Analytics</h1>
           <p style={{ fontSize: 13, color: T.ink3, margin: "4px 0 0" }}>Real counts from your jobs, applications, interviews, and offers.</p>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {Object.keys(PERIODS).map((p) => (
             <button key={p} onClick={() => setPeriod(p)}
-              style={{ padding: "6px 12px", background: period === p ? T.indigo3 : T.cream2, border: `1px solid ${period === p ? T.indigo : T.border}`, borderRadius: 8, color: period === p ? T.indigo : T.ink3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              style={{ padding: "6px 12px", background: period === p ? T.indigo3 : T.cream2, border: `1px solid ${period === p ? T.indigo : T.border}`, borderRadius: 8, color: period === p ? T.indigo : T.ink3, fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
               {p}
             </button>
           ))}
@@ -255,7 +255,7 @@ export default function RecruiterAnalytics() {
       ) : applications.length === 0 && interviews.length === 0 && offers.length === 0 ? (
         <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: "60px 20px", textAlign: "center", boxShadow: T.shadow }}>
           <div style={{ fontSize: 40 }}>📊</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>No activity yet</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>No activity yet</div>
           <div style={{ fontSize: 13, color: T.ink4, marginTop: 6 }}>Once candidates start applying to your jobs, analytics will show up here.</div>
         </div>
       ) : (
@@ -350,7 +350,7 @@ export default function RecruiterAnalytics() {
                   <div key={d.label} style={{ ...P.panel, borderLeft: `3px solid ${d.color}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: T.ink }}>◆ {d.label}</div>
-                      <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: d.color }}>{d.value}</div>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: d.color }}>{d.value}</div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 11, color: T.ink4 }}>Avg AI match</span>
@@ -412,7 +412,7 @@ export default function RecruiterAnalytics() {
 
 const P = {
   tabsRow:    { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" },
-  tab:        { padding: "8px 14px", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" },
+  tab:        { padding: "8px 14px", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all 0.2s" },
   tabActive:  { background: T.indigo3, border: `1px solid ${T.indigo}`, color: T.indigo },
   panel:      { background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, boxShadow: T.shadow },
   panelTitle: { fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12, display: "block" },

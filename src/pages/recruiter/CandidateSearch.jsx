@@ -127,13 +127,13 @@ function CandidateCard({ c, onTask, onMessage, onPipeline, onOpen }) {
 const CC = {
   card: { background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, position:"relative", boxShadow:T.shadow, display:"flex", flexDirection:"column" },
   top: { display:"flex", alignItems:"center", gap:10 },
-  avatar: { width:40, height:40, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:15 },
+  avatar: { width:40, height:40, borderRadius:12, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:15 },
   name: { fontSize:14, fontWeight:600, color:T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
   btnRow: { display:"flex", gap:5, marginTop:12 },
-  profileBtn: { flex:1, padding:"7px 0", background:T.ink, border:"none", borderRadius:8, color:T.cream, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
-  msgBtn:  { flex:1, padding:"7px 0", background:T.blue2, border:`1px solid ${T.blue}30`, borderRadius:8, color:T.blue, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
-  taskBtn: { flex:1, padding:"7px 0", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
-  addBtn:  { padding:"7px 10px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:8, color:T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
+  profileBtn: { flex:1, padding:"7px 0", background:T.ink, border:"none", borderRadius:8, color:T.cream, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" },
+  msgBtn:  { flex:1, padding:"7px 0", background:T.blue2, border:`1px solid ${T.blue}30`, borderRadius:8, color:T.blue, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" },
+  taskBtn: { flex:1, padding:"7px 0", background:T.indigo3, border:`1px solid ${T.indigo}30`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" },
+  addBtn:  { padding:"7px 10px", background:T.green2, border:`1px solid ${T.green}30`, borderRadius:8, color:T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" },
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ export default function CandidateSearch() {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
       <div>
-        <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Candidate Discovery</h1>
+        <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Candidate Discovery</h1>
         <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
           Live data from Capabilio's student/professional network. Only candidates who have explicitly opted into recruiter visibility appear here — that filter is enforced server-side, not by this screen.
         </p>
@@ -226,7 +226,7 @@ export default function CandidateSearch() {
 
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, domain, or skill..."
-          style={{ flex:1, minWidth:220, padding:"10px 14px", borderRadius:10, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif" }} />
+          style={{ flex:1, minWidth:220, padding:"10px 14px", borderRadius:10, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif" }} />
         <select value={pathFilter} onChange={(e) => setPathFilter(e.target.value)} style={FS.select}>
           <option value="all">All Paths</option>
           <option value="student">College Path</option>
@@ -256,5 +256,5 @@ export default function CandidateSearch() {
 }
 
 const FS = {
-  select: { padding:"10px 14px", borderRadius:10, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif", color:T.ink2, cursor:"pointer" },
+  select: { padding:"10px 14px", borderRadius:10, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif", color:T.ink2, cursor:"pointer" },
 }

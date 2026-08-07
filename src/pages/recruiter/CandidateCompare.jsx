@@ -78,11 +78,11 @@ function CompareColumn({ a, rank, jobTitle }) {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
-        <div style={{ width: 56, height: 56, borderRadius: 16, background: `${col}18`, border: `2px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 20 }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: `${col}18`, border: `2px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 20 }}>
           {initials}
         </div>
         <div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: T.ink }}>{a.name || "—"}</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 700, color: T.ink }}>{a.name || "—"}</div>
           <div style={{ fontSize: 11, color: T.ink3, marginTop: 2 }}>{jobTitle || "—"}</div>
           <div style={{ marginTop: 6 }}><StatusPill status={a.status} /></div>
         </div>
@@ -111,14 +111,14 @@ function CompareColumn({ a, rank, jobTitle }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <div style={{ padding: "10px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, textAlign: "center" }}>
           <div style={{ fontSize: 16 }}>📅</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 700, color: T.ink, marginTop: 4 }}>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 700, color: T.ink, marginTop: 4 }}>
             {a.created_at ? new Date(a.created_at).toLocaleDateString() : "—"}
           </div>
           <div style={{ fontSize: 10, color: T.ink4 }}>Applied</div>
         </div>
         <div style={{ padding: "10px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, textAlign: "center" }}>
           <div style={{ fontSize: 16 }}>💬</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 13, fontWeight: 700, color: T.ink, marginTop: 4 }}>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 700, color: T.ink, marginTop: 4 }}>
             {a.feedback_sent ? "Sent" : "Not sent"}
           </div>
           <div style={{ fontSize: 10, color: T.ink4 }}>Feedback</div>
@@ -127,13 +127,13 @@ function CompareColumn({ a, rank, jobTitle }) {
 
       {a.resume_url && (
         <a href={a.resume_url} target="_blank" rel="noreferrer"
-          style={{ padding: "9px 0", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink2, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'DM Sans',sans-serif" }}>
+          style={{ padding: "9px 0", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink2, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Inter',sans-serif" }}>
           📄 View Resume
         </a>
       )}
 
       <button onClick={() => navigate(`/recruiter/applications`)}
-        style={{ padding: "9px 0", background: T.indigo3, border: `1px solid ${T.indigo}25`, borderRadius: 10, color: T.indigo, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+        style={{ padding: "9px 0", background: T.indigo3, border: `1px solid ${T.indigo}25`, borderRadius: 10, color: T.indigo, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
         Open in Applications →
       </button>
     </div>
@@ -178,7 +178,7 @@ export default function CandidateCompare() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       <div style={{ background: T.indigo3, border: `1px solid ${T.indigo}20`, borderRadius: 16, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, marginBottom: 6 }}>⚖️ Candidate Compare</div>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, marginBottom: 6 }}>⚖️ Candidate Compare</div>
         <div style={{ fontSize: 13, color: T.ink3, lineHeight: 1.6 }}>
           Compare up to <strong style={{ color: T.indigo }}>4 applicants</strong> side-by-side on the real AI resume-match score, matched/missing skills, and ATS summary generated when each application was scored. Fields we don't actually measure (salary, notice period, "team fit") are intentionally left out rather than guessed.
         </div>
@@ -186,11 +186,11 @@ export default function CandidateCompare() {
 
       <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 20, boxShadow: T.shadow }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: 0 }}>
+          <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: 0 }}>
             Select applicants to compare <span style={{ color: T.ink4, fontWeight: 400 }}>({comparing.length}/4)</span>
           </h2>
           {comparing.length > 0 && (
-            <button onClick={() => setComparing([])} style={{ fontSize: 12, color: T.red, background: T.red2, border: `1px solid ${T.red}25`, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Clear All</button>
+            <button onClick={() => setComparing([])} style={{ fontSize: 12, color: T.red, background: T.red2, border: `1px solid ${T.red}25`, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>Clear All</button>
           )}
         </div>
         {loading ? (
@@ -205,7 +205,7 @@ export default function CandidateCompare() {
               const initials = (a.name || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
               return (
                 <button key={a.id} onClick={() => toggleCandidate(a)}
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: inList ? T.indigo3 : T.cream2, border: `1px solid ${inList ? T.indigo : T.border}`, borderRadius: 10, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: inList ? T.indigo3 : T.cream2, border: `1px solid ${inList ? T.indigo : T.border}`, borderRadius: 10, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `${col}18`, color: col, border: `1px solid ${col}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>{initials}</div>
                   <div style={{ textAlign: "left" }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: inList ? T.indigo : T.ink }}>{a.name || "—"}</div>
@@ -222,7 +222,7 @@ export default function CandidateCompare() {
       {comparing.length === 0 ? (
         <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: "60px 20px", textAlign: "center", boxShadow: T.shadow }}>
           <div style={{ fontSize: 40 }}>⚖️</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>Select applicants above to start comparing</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 700, color: T.ink, marginTop: 12 }}>Select applicants above to start comparing</div>
           <div style={{ fontSize: 13, color: T.ink4, marginTop: 6 }}>Pick 2–4 applicants to see a full side-by-side breakdown.</div>
         </div>
       ) : (
@@ -234,8 +234,8 @@ export default function CandidateCompare() {
           </div>
 
           <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 20, boxShadow: T.shadow }}>
-            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>📊 Side-by-Side Breakdown</h2>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'DM Sans',sans-serif" }}>
+            <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>📊 Side-by-Side Breakdown</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'Inter',sans-serif" }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", fontSize: 11, color: T.ink4, fontWeight: 600, textTransform: "uppercase", padding: "8px 12px", borderBottom: `1px solid ${T.border}`, width: 160 }}>Dimension</th>

@@ -151,7 +151,7 @@ export default function RejectionWorkflow() {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
       <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>📬 Rejection Feedback</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>📬 Rejection Feedback</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
           Real applications marked <strong>rejected</strong> that haven't had feedback sent yet. AI drafts a respectful, specific message from the candidate's actual score and skill gaps — you review and edit before it goes out. Nothing is sent until you click Send.
         </div>
@@ -159,7 +159,7 @@ export default function RejectionWorkflow() {
 
       <div style={{ display:"grid", gridTemplateColumns:"280px 1fr", gap:16, alignItems:"start" }}>
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, boxShadow:T.shadow }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Pending Communication</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Pending Communication</div>
           {loading ? (
             <div style={{ color:T.ink4, fontSize:13 }}>Loading...</div>
           ) : loadError ? (
@@ -172,7 +172,7 @@ export default function RejectionWorkflow() {
             return (
               <div key={c.id} onClick={() => setSelectedId(c.id)}
                 style={{ display:"flex", alignItems:"center", gap:10, padding:"10px", borderRadius:10, cursor:"pointer", marginBottom:4, background: isSelected ? T.indigo3 : "transparent", border:`1px solid ${isSelected ? T.indigo + "30" : "transparent"}` }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:`${T.indigo}15`, color:T.indigo, border:`1px solid ${T.indigo}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
+                <div style={{ width:32, height:32, borderRadius:9, background:`${T.indigo}15`, color:T.indigo, border:`1px solid ${T.indigo}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:12, fontWeight:600, color: isSelected ? T.indigo : T.ink, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.name || "—"}</div>
                   <div style={{ fontSize:10, color:T.ink4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.jobTitle}</div>
@@ -188,7 +188,7 @@ export default function RejectionWorkflow() {
             <div style={{ display:"flex", gap:8 }}>
               {[["recruiter","🔎 Score & Gaps"],["candidate","📬 Message to Candidate"]].map(([v, l]) => (
                 <button key={v} onClick={() => setPreview(v)}
-                  style={{ fontSize:12, padding:"7px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, background: preview === v ? T.indigo3 : "transparent", borderColor: preview === v ? `${T.indigo}40` : T.border, color: preview === v ? T.indigo : T.ink4 }}>
+                  style={{ fontSize:12, padding:"7px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600, background: preview === v ? T.indigo3 : "transparent", borderColor: preview === v ? `${T.indigo}40` : T.border, color: preview === v ? T.indigo : T.ink4 }}>
                   {l}
                 </button>
               ))}
@@ -196,7 +196,7 @@ export default function RejectionWorkflow() {
 
             {preview === "recruiter" ? (
               <div style={{ background:T.cream, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, marginBottom:14 }}>{selected.name} — {selected.jobTitle}</div>
+                <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, marginBottom:14 }}>{selected.name} — {selected.jobTitle}</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
                   <div style={{ padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
                     <div style={{ fontSize:11, color:T.ink4, marginBottom:4 }}>ATS Score</div>
@@ -229,7 +229,7 @@ export default function RejectionWorkflow() {
               </div>
             ) : (
               <div style={{ background:T.cream, border:`1px solid ${T.green}20`, borderRadius:16, padding:24, boxShadow:T.shadow }}>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:16 }}>📬 Message to {selected.name}</div>
+                <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:16 }}>📬 Message to {selected.name}</div>
 
                 {generating ? (
                   <div style={{ textAlign:"center", padding:"30px 0", color:T.ink4, fontSize:13 }}>Drafting personalised feedback...</div>
@@ -244,13 +244,13 @@ export default function RejectionWorkflow() {
                       value={feedbackText}
                       onChange={(e) => setFeedbackText(e.target.value)}
                       rows={14}
-                      style={{ width:"100%", padding:"14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, fontSize:13, color:T.ink2, lineHeight:1.7, fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box", resize:"vertical" }}
+                      style={{ width:"100%", padding:"14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, fontSize:13, color:T.ink2, lineHeight:1.7, fontFamily:"'Inter',sans-serif", boxSizing:"border-box", resize:"vertical" }}
                     />
                     {sendError && (
                       <div style={{ marginTop:10, fontSize:12, color:T.red, background:T.red2, border:`1px solid ${T.red}30`, borderRadius:8, padding:"8px 12px" }}>{sendError}</div>
                     )}
                     <button onClick={handleSend} disabled={sending || !feedbackText.trim()}
-                      style={{ marginTop:16, width:"100%", padding:"12px", background: sending ? T.ink3 : T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor: sending ? "default" : "pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                      style={{ marginTop:16, width:"100%", padding:"12px", background: sending ? T.ink3 : T.ink, border:"none", borderRadius:12, color:T.cream, fontSize:14, fontWeight:700, cursor: sending ? "default" : "pointer", fontFamily:"'Inter',sans-serif" }}>
                       {sending ? "Sending..." : `📬 Send Feedback to ${selected.name}`}
                     </button>
                   </>

@@ -53,7 +53,7 @@ function AttachmentPicker({ file, onChange, error }) {
       <input
         type="file"
         onChange={(e) => onChange(e.target.files?.[0] || null)}
-        style={{ fontSize:12, fontFamily:"'DM Sans',sans-serif", color:T.ink2 }}
+        style={{ fontSize:12, fontFamily:"'Inter',sans-serif", color:T.ink2 }}
       />
       {file && (
         <div style={{ fontSize:11, color:T.ink3, marginTop:4, display:"flex", alignItems:"center", gap:8 }}>
@@ -214,7 +214,7 @@ function AssignTaskForm({ defaultCandidateId, defaultCandidateName, companyLinkI
         <input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addRecipient() } }}
           placeholder="Candidate name — press Enter to add another"
-          style={{ flex:1, padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif" }} />
+          style={{ flex:1, padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif" }} />
         <button type="button" onClick={addRecipient} disabled={!nameDraft.trim()}
           style={{ fontSize:12, fontWeight:600, padding:"9px 14px", background:T.cream, color:T.ink3, border:`1px solid ${T.border}`, borderRadius:8, cursor: nameDraft.trim() ? "pointer" : "default", opacity: nameDraft.trim() ? 1 : 0.5 }}>
           + Add
@@ -225,9 +225,9 @@ function AssignTaskForm({ defaultCandidateId, defaultCandidateName, companyLinkI
       )}
 
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder='Task title (e.g. "Build a REST API endpoint")'
-        style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif" }} />
+        style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif" }} />
       <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description / instructions..."
-        style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'DM Sans',sans-serif", minHeight:60, resize:"vertical" }} />
+        style={{ padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif", minHeight:60, resize:"vertical" }} />
 
       <div>
         <div style={{ fontSize:11, fontWeight:700, color:T.ink4, marginBottom:4 }}>ATTACHMENT (OPTIONAL — PDF, DOC, ZIP, ETC., MAX {MAX_ATTACHMENT_MB}MB)</div>
@@ -243,7 +243,7 @@ function AssignTaskForm({ defaultCandidateId, defaultCandidateName, companyLinkI
       )}
 
       <button onClick={submit} disabled={saving || recipients.length === 0 || !title || !!fileError}
-        style={{ alignSelf:"flex-start", fontSize:12, fontWeight:700, padding:"8px 18px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", opacity: saving || recipients.length === 0 || !title || fileError ? 0.5 : 1 }}>
+        style={{ alignSelf:"flex-start", fontSize:12, fontWeight:700, padding:"8px 18px", background:T.indigo3, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif", opacity: saving || recipients.length === 0 || !title || fileError ? 0.5 : 1 }}>
         {saving ? `Assigning... (${progress?.done || 0}/${progress?.total || recipients.length})` : recipients.length > 1 ? `Assign to ${recipients.length} candidates` : "Assign Task"}
       </button>
     </div>
@@ -281,7 +281,7 @@ function TaskRow({ task, onAdvance, onSaveNotes }) {
         </div>
         <span style={{ fontSize:11, fontWeight:700, color:meta.color, background:meta.bg, border:`1px solid ${meta.color}30`, borderRadius:7, padding:"3px 9px", whiteSpace:"nowrap" }}>{meta.label}</span>
         {next && (
-          <button onClick={() => onAdvance(task, next)} style={{ fontSize:11, fontWeight:600, padding:"6px 12px", background:T.cream, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:7, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
+          <button onClick={() => onAdvance(task, next)} style={{ fontSize:11, fontWeight:600, padding:"6px 12px", background:T.cream, color:T.indigo, border:`1px solid ${T.indigo}30`, borderRadius:7, cursor:"pointer", fontFamily:"'Inter',sans-serif", whiteSpace:"nowrap" }}>
             Mark {STAGE_META[next].label} →
           </button>
         )}
@@ -300,7 +300,7 @@ function TaskRow({ task, onAdvance, onSaveNotes }) {
 
           <div style={{ fontSize:10, fontWeight:700, color:T.ink4, marginBottom:4 }}>EVALUATOR NOTES (visible to candidate)</div>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes on this submission..."
-            style={{ width:"100%", boxSizing:"border-box", padding:"8px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:12.5, minHeight:56, resize:"vertical", fontFamily:"'DM Sans',sans-serif" }} />
+            style={{ width:"100%", boxSizing:"border-box", padding:"8px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:12.5, minHeight:56, resize:"vertical", fontFamily:"'Inter',sans-serif" }} />
           <div style={{ display:"flex", gap:8, marginTop:8 }}>
             <button onClick={saveNotes} disabled={savingNotes} style={{ fontSize:11, fontWeight:700, padding:"6px 12px", background:T.ink, color:T.cream, border:"none", borderRadius:7, cursor:"pointer", opacity:savingNotes?0.6:1 }}>
               {savingNotes ? "Saving..." : "Save notes"}
@@ -446,10 +446,10 @@ export default function TasksChallenges() {
     <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
         <div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Tasks & Challenges</h1>
+          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Tasks & Challenges</h1>
           <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>Assign real work samples — to one candidate or many at once, with an optional reference file — and track them through review. No automated pass/fail without a human evaluation.</p>
         </div>
-        <button onClick={() => setShowForm((s) => !s)} style={{ fontSize:12, fontWeight:700, padding:"9px 18px", background:T.ink, color:T.cream, border:"none", borderRadius:10, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+        <button onClick={() => setShowForm((s) => !s)} style={{ fontSize:12, fontWeight:700, padding:"9px 18px", background:T.ink, color:T.cream, border:"none", borderRadius:10, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
           {showForm ? "Close" : "+ Assign Task"}
         </button>
       </div>

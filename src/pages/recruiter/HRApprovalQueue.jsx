@@ -25,11 +25,11 @@ function OfferReviewRow({ review, offer, onDecide }) {
         <span style={{ fontSize:11, fontWeight:700, color:T.amber, background:T.amber2, border:`1px solid ${T.amber}30`, borderRadius:7, padding:"3px 9px" }}>Pending HR Review</span>
       </div>
       <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Review notes (optional)..."
-        style={{ width:"100%", marginTop:10, padding:"8px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:12, fontFamily:"'DM Sans',sans-serif", resize:"vertical", minHeight:44 }} />
+        style={{ width:"100%", marginTop:10, padding:"8px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:12, fontFamily:"'Inter',sans-serif", resize:"vertical", minHeight:44 }} />
       <div style={{ display:"flex", gap:8, marginTop:10 }}>
-        <button onClick={() => onDecide(review, "approved", notes)} style={{ fontSize:12, fontWeight:700, padding:"7px 16px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Approve</button>
-        <button onClick={() => onDecide(review, "changes_requested", notes)} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.amber2, color:T.amber, border:`1px solid ${T.amber}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Request Changes</button>
-        <button onClick={() => onDecide(review, "rejected", notes)} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.red2, color:T.red, border:`1px solid ${T.red}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Reject</button>
+        <button onClick={() => onDecide(review, "approved", notes)} style={{ fontSize:12, fontWeight:700, padding:"7px 16px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Approve</button>
+        <button onClick={() => onDecide(review, "changes_requested", notes)} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.amber2, color:T.amber, border:`1px solid ${T.amber}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Request Changes</button>
+        <button onClick={() => onDecide(review, "rejected", notes)} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.red2, color:T.red, border:`1px solid ${T.red}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Reject</button>
       </div>
     </div>
   )
@@ -45,8 +45,8 @@ function EmploymentChangeRow({ req, onDecide }) {
       </div>
       <div style={{ fontSize:10, color:T.ink4, marginTop:4 }}>Requested {new Date(req.created_at).toLocaleDateString()}</div>
       <div style={{ display:"flex", gap:8, marginTop:10 }}>
-        <button onClick={() => onDecide(req, "approved")} style={{ fontSize:12, fontWeight:700, padding:"7px 16px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Approve</button>
-        <button onClick={() => onDecide(req, "rejected")} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.red2, color:T.red, border:`1px solid ${T.red}30`, borderRadius:8, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Reject</button>
+        <button onClick={() => onDecide(req, "approved")} style={{ fontSize:12, fontWeight:700, padding:"7px 16px", background:T.green2, color:T.green, border:`1px solid ${T.green}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Approve</button>
+        <button onClick={() => onDecide(req, "rejected")} style={{ fontSize:12, fontWeight:600, padding:"7px 16px", background:T.red2, color:T.red, border:`1px solid ${T.red}30`, borderRadius:8, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Reject</button>
       </div>
     </div>
   )
@@ -119,14 +119,14 @@ export default function HRApprovalQueue() {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
       <div>
-        <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>HR Approval Queue</h1>
+        <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>HR Approval Queue</h1>
         <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>No offer goes out, and no candidate employment change takes effect, without a human review here.</p>
       </div>
 
       <div style={{ display:"flex", gap:6 }}>
         {[["offers", `Offers (${offerReviews.length})`], ["changes", `Employment Changes (${changeRequests.length})`]].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
-            style={{ fontSize:12, fontWeight:600, padding:"8px 16px", borderRadius:8, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+            style={{ fontSize:12, fontWeight:600, padding:"8px 16px", borderRadius:8, border:"1px solid", cursor:"pointer", fontFamily:"'Inter',sans-serif",
               background: tab === key ? T.indigo3 : "transparent", borderColor: tab === key ? `${T.indigo}40` : T.border, color: tab === key ? T.indigo : T.ink3 }}>
             {label}
           </button>

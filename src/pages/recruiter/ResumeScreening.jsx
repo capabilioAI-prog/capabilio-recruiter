@@ -85,7 +85,7 @@ function ScoreBadge({ score }) {
   const color = score >= 85 ? "#22c55e" : score >= 70 ? "#3D4EAC" : score >= 55 ? "#f59e0b" : "#ef4444"
   return (
     <div style={{ width: 48, height: 48, borderRadius: "50%", border: `2px solid ${color}55`, background: `${color}12`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", flexShrink: 0 }}>
-      <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color }}>{score}</span>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 800, color }}>{score}</span>
       <span style={{ fontSize: 8, color: "#475569" }}>match</span>
     </div>
   )
@@ -114,7 +114,7 @@ function ResumeCard({ r, selected, onToggle, onView }) {
         {/* Main info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
-            <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>{r.name}</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>{r.name}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: verdictColor, background: `${verdictColor}15`, border: `1px solid ${verdictColor}30`, borderRadius: 6, padding: "2px 8px" }}>{r.aiVerdict}</span>
             <span style={{ fontSize: 11, color: domainCol, background: `${domainCol}10`, border: `1px solid ${domainCol}20`, borderRadius: 6, padding: "2px 8px" }}>{r.domain}</span>
           </div>
@@ -180,7 +180,7 @@ function DetailModal({ resume, onClose }) {
         onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: "#f1f5f9" }}>{resume.name}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: "#f1f5f9" }}>{resume.name}</div>
             <div style={{ fontSize: 13, color: "#64748b" }}>{resume.email} · {resume.phone}</div>
           </div>
           <button onClick={onClose} style={{ background: "rgba(26,26,24,0.08)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#6B6B68", padding: "6px 10px", cursor: "pointer", fontSize: 14 }}>✕</button>
@@ -290,14 +290,14 @@ export default function ResumeScreening() {
   const avgMatch = resumes.length ? Math.round(resumes.reduce((s, r) => s + r.matchScore, 0) / resumes.length) : 0
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: "'DM Sans',sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: "'Inter',sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');`}</style>
 
       {/* Bridge Mode Banner */}
       <div style={{ background: "linear-gradient(135deg,rgba(61,78,172,0.1),rgba(139,92,246,0.06))", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
         <div style={{ fontSize: 28 }}>🌉</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: "#f1f5f9", marginBottom: 3 }}>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 800, color: "#f1f5f9", marginBottom: 3 }}>
             Resume Screening Mode — Bridge to ELO-First Hiring
           </div>
           <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
@@ -306,11 +306,11 @@ export default function ResumeScreening() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ padding: "8px 14px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: "#22c55e" }}>0</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: "#22c55e" }}>0</div>
             <div style={{ fontSize: 10, color: "#475569" }}>ELO Profiles</div>
           </div>
           <div style={{ padding: "8px 14px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 10, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: "#3D4EAC" }}>{resumes.length}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: "#3D4EAC" }}>{resumes.length}</div>
             <div style={{ fontSize: 10, color: "#475569" }}>Resumes Parsed</div>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function ResumeScreening() {
 
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg,rgba(61,78,172,0.08),rgba(139,92,246,0.04))", border: "1px solid rgba(61,78,172,0.12)", borderRadius: 16, padding: "20px 24px" }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: "#f1f5f9", marginBottom: 6 }}>📄 Resume Screening</div>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: "#f1f5f9", marginBottom: 6 }}>📄 Resume Screening</div>
         <div style={{ fontSize: 13, color: "#6B6B68", lineHeight: 1.6 }}>
           Upload resumes in bulk (PDF/DOC). AI extracts skills, experience, education, CTC expectations — and scores each candidate against your role requirements. Use the bulk actions to shortlist or move candidates into the pipeline instantly.
         </div>
@@ -343,7 +343,7 @@ export default function ResumeScreening() {
         ) : (
           <>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "#f1f5f9", marginBottom: 6 }}>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 700, color: "#f1f5f9", marginBottom: 6 }}>
               Drag & drop resumes here, or click to upload
             </div>
             <div style={{ fontSize: 12, color: "#475569" }}>PDF, DOC, DOCX · Bulk upload supported · AI auto-parses each file</div>
@@ -371,7 +371,7 @@ export default function ResumeScreening() {
             { label: "Selected",        value: selected.size,                         color: "#a5b4fc" },
           ].map((s) => (
             <div key={s.label} style={{ background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px", textAlign: "center" }}>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
               <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -438,7 +438,7 @@ export default function ResumeScreening() {
       {resumes.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>
               {filtered.length} Candidates — Sorted by {sortBy}
             </div>
             <button onClick={selectAll}
@@ -456,7 +456,7 @@ export default function ResumeScreening() {
       {resumes.length === 0 && !parsing && (
         <div style={{ background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>No Resumes Uploaded Yet</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 700, color: "#f1f5f9", marginBottom: 8 }}>No Resumes Uploaded Yet</div>
           <div style={{ fontSize: 13, color: "#475569", maxWidth: 400, margin: "0 auto 20px", lineHeight: 1.6 }}>
             Upload candidate resumes in bulk. AI will parse each one and rank them against your open roles — exactly like Naukri's resume database, but with smarter matching.
           </div>
@@ -475,7 +475,7 @@ export default function ResumeScreening() {
 
       {/* How it works */}
       <div style={{ background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 20 }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>🔄 How Resume Screening Bridges to ELO Hiring</div>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 16 }}>🔄 How Resume Screening Bridges to ELO Hiring</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
           {[
             { step: "01", icon: "📂", title: "Upload Resumes", desc: "Bulk upload PDF/DOC resumes from any source — Naukri, LinkedIn, email, direct.", color: "#3D4EAC" },
@@ -486,7 +486,7 @@ export default function ResumeScreening() {
             <div key={s.step} style={{ padding: "16px", background: `${s.color}06`, border: `1px solid ${s.color}15`, borderRadius: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 20 }}>{s.icon}</span>
-                <span style={{ fontSize: 10, fontFamily: "'Syne',sans-serif", fontWeight: 800, color: s.color }}>STEP {s.step}</span>
+                <span style={{ fontSize: 10, fontFamily: "'Inter',sans-serif", fontWeight: 800, color: s.color }}>STEP {s.step}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9", marginBottom: 6 }}>{s.title}</div>
               <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>{s.desc}</div>

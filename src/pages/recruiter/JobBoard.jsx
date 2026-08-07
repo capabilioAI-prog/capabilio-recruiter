@@ -139,7 +139,7 @@ function ScoreRing({ score, size = 52 }) {
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
       <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
-        fontSize="12" fontWeight="800" fill={col} fontFamily="Syne">{score}</text>
+        fontSize="12" fontWeight="800" fill={col} fontFamily="Inter">{score}</text>
     </svg>
   )
 }
@@ -183,12 +183,12 @@ function FeedbackModal({ candidate, decision, job, onClose, onSent }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(26,26,24,0.45)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 20 }}>
       <style>{"@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}"}</style>
-      <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 640, maxHeight: "85vh", overflowY: "auto", animation: "slideUp 0.3s ease", fontFamily: "'DM Sans',sans-serif", boxShadow: T.shadow2 }}>
+      <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 640, maxHeight: "85vh", overflowY: "auto", animation: "slideUp 0.3s ease", fontFamily: "'Inter',sans-serif", boxShadow: T.shadow2 }}>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 11, color: T.ink4, marginBottom: 2 }}>{isShortlist ? "✅ SHORTLIST EMAIL" : "❌ REJECTION EMAIL"}</div>
-            <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, margin: 0 }}>
+            <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, margin: 0 }}>
               {isShortlist ? "🎉 Shortlist Candidate" : "Send Feedback"}
             </h2>
           </div>
@@ -225,7 +225,7 @@ function FeedbackModal({ candidate, decision, job, onClose, onSent }) {
           <>
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, color: T.ink4, marginBottom: 6 }}>Subject</div>
-              <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ width: "100%", padding: "10px 14px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'DM Sans',sans-serif" }} />
+              <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ width: "100%", padding: "10px 14px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'Inter',sans-serif" }} />
             </div>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 12, color: T.ink4, marginBottom: 6 }}>Email Body</div>
@@ -233,17 +233,17 @@ function FeedbackModal({ candidate, decision, job, onClose, onSent }) {
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={10}
-                style={{ width: "100%", padding: "10px 14px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'DM Sans',sans-serif", resize: "vertical", lineHeight: 1.7 }}
+                style={{ width: "100%", padding: "10px 14px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'Inter',sans-serif", resize: "vertical", lineHeight: 1.7 }}
               />
             </div>
             <div style={{ background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: T.ink3 }}>
               ⚡ Candidate receives personalised feedback in minutes, not weeks
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={onClose} style={{ flex: 1, padding: "11px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button onClick={onClose} style={{ flex: 1, padding: "11px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 Cancel
               </button>
-              <button onClick={handleSend} disabled={sending} style={{ flex: 2, padding: "11px", background: isShortlist ? T.green : T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button onClick={handleSend} disabled={sending} style={{ flex: 2, padding: "11px", background: isShortlist ? T.green : T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 {sending ? "⏳ Sending..." : `📧 Send ${isShortlist ? "Shortlist" : "Feedback"} Email Now`}
               </button>
             </div>
@@ -260,14 +260,14 @@ function CompareView({ candidates, job, onClose, onDecision }) {
   const topId  = sorted[0]?.id
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: T.cream2, overflow: "auto", fontFamily: "'DM Sans',sans-serif" }}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');"}</style>
+    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: T.cream2, overflow: "auto", fontFamily: "'Inter',sans-serif" }}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');"}</style>
       <div style={{ padding: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: 0 }}>
+          <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: 0 }}>
             📊 Comparing {candidates.length} Candidates
           </h2>
-          <button onClick={onClose} style={{ padding: "8px 16px", background: T.cream, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+          <button onClick={onClose} style={{ padding: "8px 16px", background: T.cream, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
             ✕ Close
           </button>
         </div>
@@ -309,8 +309,8 @@ function CompareView({ candidates, job, onClose, onDecision }) {
                 <div style={{ fontSize: 12, color: T.ink3, lineHeight: 1.5, marginBottom: 14 }}>{c.summary}</div>
                 {c.status === "pending" && (
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => onDecision(c, "shortlist")} style={{ flex: 1, padding: "7px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>✓ Shortlist</button>
-                    <button onClick={() => onDecision(c, "reject")}   style={{ flex: 1, padding: "7px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>✕ Reject</button>
+                    <button onClick={() => onDecision(c, "shortlist")} style={{ flex: 1, padding: "7px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>✓ Shortlist</button>
+                    <button onClick={() => onDecision(c, "reject")}   style={{ flex: 1, padding: "7px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>✕ Reject</button>
                   </div>
                 )}
                 {c.status !== "pending" && (
@@ -336,7 +336,7 @@ function CreateJobModal({ onClose, onCreated }) {
   const [generated, setGenerated] = useState(null)
 
   const DOMAINS = ["Software Engineering", "Data Science", "Medical & Health", "Finance", "Marketing", "Design", "Product Management", "Operations"]
-  const iStyle  = { width: "100%", padding: "10px 12px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'DM Sans',sans-serif" }
+  const iStyle  = { width: "100%", padding: "10px 12px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontFamily: "'Inter',sans-serif" }
 
   const generate = async () => {
     if (!form.title.trim()) return
@@ -375,11 +375,11 @@ function CreateJobModal({ onClose, onCreated }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(26,26,24,0.45)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 400, background: "rgba(26,26,24,0.45)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Inter',sans-serif" }}>
       <style>{`input:focus,select:focus,textarea:focus{outline:none;border-color:${T.indigo}!important}`}</style>
       <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 20, padding: 28, width: "100%", maxWidth: 580, maxHeight: "90vh", overflowY: "auto", boxShadow: T.shadow2 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, margin: 0 }}>
+          <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: T.ink, margin: 0 }}>
             {step === 1 ? "📋 Create Job Posting" : "✨ AI-Generated Description"}
           </h2>
           <button onClick={onClose} style={{ background: T.cream2, border: `1px solid ${T.border}`, color: T.ink3, width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14 }}>✕</button>
@@ -423,7 +423,7 @@ function CreateJobModal({ onClose, onCreated }) {
                 <input value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Python, SQL, Communication..." style={iStyle} />
               </div>
             </div>
-            <button onClick={generate} disabled={loading || !form.title.trim()} style={{ width: "100%", padding: "13px", background: loading ? T.indigo3 : T.indigo, border: "none", borderRadius: 12, color: loading ? T.indigo : "#1A1A18", fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+            <button onClick={generate} disabled={loading || !form.title.trim()} style={{ width: "100%", padding: "13px", background: loading ? T.indigo3 : T.indigo, border: "none", borderRadius: 12, color: loading ? T.indigo : "#1A1A18", fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'Inter',sans-serif" }}>
               {loading ? "✨ Generating with AI..." : "✨ Generate Description with AI →"}
             </button>
           </>
@@ -445,11 +445,11 @@ function CreateJobModal({ onClose, onCreated }) {
               {(generated.niceToHave || []).map((r, i) => <div key={i} style={{ fontSize: 13, color: T.ink3, padding: "3px 0" }}>⭐ {r}</div>)}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setStep(1)} style={{ padding: "11px 16px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>← Edit</button>
-              <button onClick={() => save("Draft")} disabled={saving} style={{ flex: 1, padding: "11px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button onClick={() => setStep(1)} style={{ padding: "11px 16px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink3, fontSize: 13, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>← Edit</button>
+              <button onClick={() => save("Draft")} disabled={saving} style={{ flex: 1, padding: "11px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 {saving ? "Saving..." : "💾 Save as Draft"}
               </button>
-              <button onClick={() => save("Open")} disabled={saving} style={{ flex: 1, padding: "11px", background: T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+              <button onClick={() => save("Open")} disabled={saving} style={{ flex: 1, padding: "11px", background: T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                 {saving ? "Publishing..." : "🚀 Post Job"}
               </button>
             </div>
@@ -643,18 +643,18 @@ export default function JobBoard() {
   const EmptyJobs = () => (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 400, gap: 16 }}>
       <div style={{ fontSize: 52 }}>📋</div>
-      <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: 0 }}>No Job Postings Yet</h2>
+      <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: 0 }}>No Job Postings Yet</h2>
       <p style={{ color: T.ink4, fontSize: 14, textAlign: "center" }}>Create your first job posting to start receiving applications</p>
-      <button onClick={() => setShowCreate(true)} style={{ padding: "12px 24px", background: T.indigo, border: "none", borderRadius: 12, color: "#1A1A18", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+      <button onClick={() => setShowCreate(true)} style={{ padding: "12px 24px", background: T.indigo, border: "none", borderRadius: 12, color: "#1A1A18", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
         + Create Job Posting
       </button>
     </div>
   )
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: T.ink }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: T.ink }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes fadeIn  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
         @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.6} }
@@ -667,10 +667,10 @@ export default function JobBoard() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 }}>Job Board</h1>
+          <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink, margin: 0 }}>Job Board</h1>
           <p style={{ fontSize: 13, color: T.ink4, marginTop: 4 }}>Post jobs, share apply links, and get 100 resumes auto-scored by AI</p>
         </div>
-        <button onClick={() => setShowCreate(true)} style={{ padding: "10px 20px", background: T.indigo, border: "none", borderRadius: 12, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", boxShadow: T.shadow }}>
+        <button onClick={() => setShowCreate(true)} style={{ padding: "10px 20px", background: T.indigo, border: "none", borderRadius: 12, color: "#1A1A18", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif", boxShadow: T.shadow }}>
           + Post New Job
         </button>
       </div>
@@ -680,7 +680,7 @@ export default function JobBoard() {
         {stats.map((s) => (
           <div key={s.label} style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 14, padding: "14px 16px", boxShadow: T.shadow }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
@@ -734,7 +734,7 @@ export default function JobBoard() {
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: "pointer",
-                      fontFamily: "'DM Sans',sans-serif",
+                      fontFamily: "'Inter',sans-serif",
                       transition: "all 0.2s",
                     }}
                   >
@@ -748,14 +748,14 @@ export default function JobBoard() {
                 <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 24, boxShadow: T.shadow }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
                     <div>
-                      <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: "0 0 4px" }}>{selectedJob.title}</h2>
+                      <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink, margin: "0 0 4px" }}>{selectedJob.title}</h2>
                       <div style={{ fontSize: 13, color: col }}>◆ {selectedJob.domain}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={copyApplyLink} style={{ padding: "8px 16px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 10, color: T.indigo, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                      <button onClick={copyApplyLink} style={{ padding: "8px 16px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 10, color: T.indigo, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                         🔗 Copy Apply Link
                       </button>
-                      <button onClick={() => setView("bulk-ats")} style={{ padding: "8px 16px", background: T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                      <button onClick={() => setView("bulk-ats")} style={{ padding: "8px 16px", background: T.indigo, border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                         📊 Bulk ATS →
                       </button>
                     </div>
@@ -769,7 +769,7 @@ export default function JobBoard() {
                       <span style={{ flex: 1, fontSize: 12, color: T.indigo, wordBreak: "break-all" }}>
                         {window.location.origin}/apply/{selectedJob.id}
                       </span>
-                      <button onClick={copyApplyLink} style={{ padding: "5px 12px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 6, color: T.indigo, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", flexShrink: 0 }}>
+                      <button onClick={copyApplyLink} style={{ padding: "5px 12px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 6, color: T.indigo, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif", flexShrink: 0 }}>
                         📋 Copy
                       </button>
                     </div>
@@ -799,12 +799,12 @@ export default function JobBoard() {
                 <div>
                   <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
                     {["All", "Strong", "Good", "Weak", "Shortlisted", "Rejected"].map((f) => (
-                      <button key={f} onClick={() => setFilter(f)} style={{ padding: "6px 14px", background: filter === f ? T.indigo3 : T.cream2, border: `1px solid ${filter === f ? T.border : T.border}`, borderRadius: 20, color: filter === f ? T.indigo : T.ink4, fontSize: 12, fontWeight: filter === f ? 700 : 400, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                      <button key={f} onClick={() => setFilter(f)} style={{ padding: "6px 14px", background: filter === f ? T.indigo3 : T.cream2, border: `1px solid ${filter === f ? T.border : T.border}`, borderRadius: 20, color: filter === f ? T.indigo : T.ink4, fontSize: 12, fontWeight: filter === f ? 700 : 400, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                         {f}
                       </button>
                     ))}
                     {selected.length >= 2 && (
-                      <button onClick={handleCompare} style={{ marginLeft: "auto", padding: "7px 16px", background: T.indigo, border: "none", borderRadius: 20, color: "#1A1A18", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                      <button onClick={handleCompare} style={{ marginLeft: "auto", padding: "7px 16px", background: T.indigo, border: "none", borderRadius: 20, color: "#1A1A18", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                         📊 Compare {selected.length} Selected
                       </button>
                     )}
@@ -824,7 +824,7 @@ export default function JobBoard() {
                       {applications.length === 0 && (
                         <>
                           <div style={{ fontSize: 13, color: T.ink4, marginBottom: 16 }}>Share the apply link to start receiving applications</div>
-                          <button onClick={copyApplyLink} style={{ padding: "10px 20px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 10, color: T.indigo, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                          <button onClick={copyApplyLink} style={{ padding: "10px 20px", background: T.indigo3, border: `1px solid ${T.border}`, borderRadius: 10, color: T.indigo, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
                             🔗 Copy Apply Link
                           </button>
                         </>
@@ -870,12 +870,12 @@ export default function JobBoard() {
                             <div style={{ display: "flex", gap: 5 }}>
                               {app.status === "pending" && (
                                 <>
-                                  <button onClick={() => handleDecision(app, "shortlist")} style={{ padding: "4px 10px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>✓</button>
-                                  <button onClick={() => handleDecision(app, "reject")}   style={{ padding: "4px 10px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>✕</button>
+                                  <button onClick={() => handleDecision(app, "shortlist")} style={{ padding: "4px 10px", background: T.green2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.green, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>✓</button>
+                                  <button onClick={() => handleDecision(app, "reject")}   style={{ padding: "4px 10px", background: T.red2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.red, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>✕</button>
                                 </>
                               )}
                               {app.status !== "pending" && (
-                                <button onClick={() => handleDecision(app, app.status === "shortlisted" ? "shortlist" : "reject")} style={{ padding: "4px 10px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.ink4, fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📧</button>
+                                <button onClick={() => handleDecision(app, app.status === "shortlisted" ? "shortlist" : "reject")} style={{ padding: "4px 10px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.ink4, fontSize: 11, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>📧</button>
                               )}
                             </div>
                           </div>

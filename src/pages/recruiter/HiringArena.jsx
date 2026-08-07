@@ -242,7 +242,7 @@ const CR = {
     borderRadius: 20, padding: 28,
   },
   heading: {
-    fontFamily: "'Syne', sans-serif", fontSize: 18,
+    fontFamily: "'Inter', sans-serif", fontSize: 18,
     fontWeight: 700, color: "#1A1A18",
     margin: "0 0 24px",
   },
@@ -260,19 +260,19 @@ const CR = {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
   },
   diffBtn: {
     flex: 1, padding: "7px 0",
     border: "1px solid", borderRadius: 8,
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s",
+    fontFamily: "'Inter', sans-serif", transition: "all 0.2s",
   },
   timeBtn: {
     padding: "6px 10px",
     border: "1px solid", borderRadius: 8,
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s",
+    fontFamily: "'Inter', sans-serif", transition: "all 0.2s",
   },
   aiBtn: {
     padding: "5px 12px",
@@ -280,14 +280,14 @@ const CR = {
     border: "1px solid rgba(139,92,246,0.3)",
     borderRadius: 8, color: "#c4b5fd",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   textarea: {
     padding: "10px 12px",
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
     resize: "vertical", width: "100%",
   },
   errorBox: {
@@ -301,7 +301,7 @@ const CR = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 12, color: "#1A1A18",
     fontSize: 15, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     boxShadow: "0 4px 20px rgba(61,78,172,0.4)",
   },
 }
@@ -380,7 +380,7 @@ function LiveRoom({ room, onClose }) {
               </div>
             </div>
             {p.score !== null ? (
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: p.score >= 80 ? "#1A7A4A" : p.score >= 60 ? "#f59e0b" : "#ef4444" }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: p.score >= 80 ? "#1A7A4A" : p.score >= 60 ? "#f59e0b" : "#ef4444" }}>
                 {p.score}%
               </div>
             ) : (
@@ -405,7 +405,7 @@ const LR = {
     borderRadius: 20, padding: 28,
     width: "min(680px, 94vw)",
     maxHeight: "90vh", overflowY: "auto",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   head: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
   liveChip: {
@@ -422,7 +422,7 @@ const LR = {
     animation: "pulse 2s ease-in-out infinite",
   },
   title: {
-    fontFamily: "'Syne', sans-serif", fontSize: 20,
+    fontFamily: "'Inter', sans-serif", fontSize: 20,
     fontWeight: 700, color: "#1A1A18", margin: "0 0 4px",
   },
   meta: { fontSize: 12, color: "#3A3A38" },
@@ -439,7 +439,7 @@ const LR = {
   taskLabel: { fontSize: 10, color: "#E8E8E1", letterSpacing: 1, marginBottom: 8, fontWeight: 600 },
   taskText:  { fontSize: 13, color: "#6B6B68", lineHeight: 1.6 },
   lbTitle: {
-    fontFamily: "'Syne', sans-serif", fontSize: 15,
+    fontFamily: "'Inter', sans-serif", fontSize: 15,
     fontWeight: 700, color: "#1A1A18", margin: 0,
   },
   gradeBtn: {
@@ -447,7 +447,7 @@ const LR = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 8, color: "#1A1A18",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   exportBtn: {
     padding: "7px 12px",
@@ -455,7 +455,7 @@ const LR = {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 8, color: "#6B6B68",
     fontSize: 12, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   lbRow: {
     display: "flex", alignItems: "center", gap: 14,
@@ -478,9 +478,9 @@ export default function HiringArena() {
   }
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         input::placeholder, textarea::placeholder { color: #334155; }
         input:focus, select:focus, textarea:focus  { outline: none; border-color: #3D4EAC !important; }
@@ -600,14 +600,14 @@ const PA = {
     alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap", gap: 12,
   },
   title: {
-    fontFamily: "'Syne', sans-serif", fontSize: 22,
+    fontFamily: "'Inter', sans-serif", fontSize: 22,
     fontWeight: 800, color: "#1A1A18", margin: 0,
   },
   sub: { fontSize: 13, color: "#3A3A38", marginTop: 4 },
   tabBtn: {
     padding: "9px 16px", border: "1px solid",
     borderRadius: 10, fontSize: 13, fontWeight: 600,
-    cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+    cursor: "pointer", fontFamily: "'Inter', sans-serif",
     transition: "all 0.2s",
   },
   emptyBox: {
@@ -616,7 +616,7 @@ const PA = {
     gap: 12, minHeight: 320,
   },
   emptyTitle: {
-    fontFamily: "'Syne', sans-serif", fontSize: 18,
+    fontFamily: "'Inter', sans-serif", fontSize: 18,
     fontWeight: 700, color: "#1A1A18",
   },
   emptySub: { fontSize: 13, color: "#E8E8E1" },
@@ -625,7 +625,7 @@ const PA = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 12, color: "#1A1A18",
     fontSize: 14, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   roomsGrid: {
     display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14,
@@ -656,7 +656,7 @@ const PA = {
     padding: "2px 8px", borderRadius: 20,
   },
   roomTitle: {
-    fontFamily: "'Syne', sans-serif", fontSize: 15,
+    fontFamily: "'Inter', sans-serif", fontSize: 15,
     fontWeight: 700, color: "#1A1A18", marginBottom: 4,
   },
   roomMeta: { fontSize: 12, color: "#3A3A38", marginBottom: 10 },
@@ -669,6 +669,6 @@ const PA = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 10, color: "#1A1A18",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
 }

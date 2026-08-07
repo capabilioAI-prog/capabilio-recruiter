@@ -320,17 +320,17 @@ function ScheduleModal({ interview, candidates, onClose, onSaved, gcalStatus, on
     setSaving(false)
   }
 
-  const iStyle = { width:"100%", padding:"10px 12px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, color:"#1A1A18", fontSize:13, fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" }
+  const iStyle = { width:"100%", padding:"10px 12px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, color:"#1A1A18", fontSize:13, fontFamily:"'Inter',sans-serif", boxSizing:"border-box" }
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(26,26,24,0.07)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:28, width:"100%", maxWidth:600, maxHeight:"90vh", overflowY:"auto", fontFamily:"'DM Sans',sans-serif" }}>
+      <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:28, width:"100%", maxWidth:600, maxHeight:"90vh", overflowY:"auto", fontFamily:"'Inter',sans-serif" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
           <div>
             <div style={{ fontSize:11, color:"#3D4EAC", fontWeight:700, letterSpacing:"0.08em", marginBottom:4 }}>
               {isEdit ? "EDIT INTERVIEW" : "SCHEDULE INTERVIEW"}
             </div>
-            <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18", margin:0 }}>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18", margin:0 }}>
               {isEdit ? "Update Interview" : "Book a Slot"}
             </h2>
           </div>
@@ -461,11 +461,11 @@ function InterviewCard({ iv, onEdit, onDelete, onStatusChange }) {
             {menuOpen && (
               <div style={{ position:"absolute", right:0, top:32, background:"#EFEFE9", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"6px 0", zIndex:10, minWidth:160 }} onMouseLeave={() => setMenuOpen(false)}>
                 {["pending","confirmed","completed","cancelled"].map(s => (
-                  <button key={s} onClick={() => { onStatusChange(iv.id,s); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color: iv.status===s?"#a5b4fc":"#6B6B68", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>Mark {s}</button>
+                  <button key={s} onClick={() => { onStatusChange(iv.id,s); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color: iv.status===s?"#a5b4fc":"#6B6B68", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>Mark {s}</button>
                 ))}
                 <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", margin:"4px 0" }} />
-                <button onClick={() => { onEdit(iv); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:"#6B6B68", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>✏️ Edit</button>
-                <button onClick={() => { onDelete(iv.id); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:"#ef4444", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>🗑 Delete</button>
+                <button onClick={() => { onEdit(iv); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:"#6B6B68", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>✏️ Edit</button>
+                <button onClick={() => { onDelete(iv.id); setMenuOpen(false) }} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:"#ef4444", fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>🗑 Delete</button>
               </div>
             )}
           </div>
@@ -512,7 +512,7 @@ function MiniCalendar({ interviews, selectedDate, onSelectDate }) {
     <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:20 }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
         <button onClick={prevMonth} style={{ background:"none", border:"none", color:"#3A3A38", cursor:"pointer", fontSize:16, padding:4 }}>‹</button>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:"#1A1A18" }}>{MONTHS[viewMonth]} {viewYear}</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:"#1A1A18" }}>{MONTHS[viewMonth]} {viewYear}</div>
         <button onClick={nextMonth} style={{ background:"none", border:"none", color:"#3A3A38", cursor:"pointer", fontSize:16, padding:4 }}>›</button>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:6 }}>
@@ -633,9 +633,9 @@ export default function InterviewScheduler() {
   }
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", color:"#1A1A18" }}>
+    <div style={{ fontFamily:"'Inter',sans-serif", color:"#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin { to { transform:rotate(360deg) } }
         input:focus,select:focus,textarea:focus { outline:none; border-color:#3D4EAC !important }
         input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(0.5) }
@@ -644,7 +644,7 @@ export default function InterviewScheduler() {
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
         <div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#1A1A18", margin:0 }}>Interview Scheduler</h1>
+          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:"#1A1A18", margin:0 }}>Interview Scheduler</h1>
           <p style={{ fontSize:13, color:"#3A3A38", marginTop:4 }}>Schedule, track, and sync interviews to Google Calendar</p>
         </div>
         <div style={{ display:"flex", gap:10 }}>
@@ -667,7 +667,7 @@ export default function InterviewScheduler() {
         {stats.map(s => (
           <div key={s.label} style={{ background:"#EFEFE9", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"14px 16px" }}>
             <div style={{ fontSize:20, marginBottom:6 }}>{s.icon}</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:26, fontWeight:800, color:s.color }}>{s.value}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:26, fontWeight:800, color:s.color }}>{s.value}</div>
             <div style={{ fontSize:11, color:"#E8E8E1", marginTop:2 }}>{s.label}</div>
           </div>
         ))}

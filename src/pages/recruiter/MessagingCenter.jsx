@@ -230,14 +230,14 @@ function ComposeArea({ threadId, recipientName, recipientBackground, jobTitle, o
           {showTpl && (
             <div style={{ position:"absolute", bottom:32, left:0, background:T.cream, border:`1px solid ${T.border}`, borderRadius:12, padding:"6px 0", zIndex:20, minWidth:200, boxShadow:T.shadow2 }}>
               {TEMPLATES.map(t => (
-                <button key={t.id} onClick={() => applyTemplate(t)} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:T.ink2, fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                <button key={t.id} onClick={() => applyTemplate(t)} style={{ display:"block", width:"100%", padding:"8px 14px", background:"none", border:"none", color:T.ink2, fontSize:12, textAlign:"left", cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
                   {t.label}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <select value={purpose} onChange={e => setPurpose(e.target.value)} style={{ padding:"5px 10px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:20, color:T.ink3, fontSize:11, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+        <select value={purpose} onChange={e => setPurpose(e.target.value)} style={{ padding:"5px 10px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:20, color:T.ink3, fontSize:11, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
           {["introduction","follow-up","shortlist","offer","rejection","general"].map(p => <option key={p}>{p}</option>)}
         </select>
       </div>
@@ -250,7 +250,7 @@ function ComposeArea({ threadId, recipientName, recipientBackground, jobTitle, o
           placeholder={`Message ${recipientName || "candidate"}…`}
           rows={3}
           onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend() }}
-          style={{ flex:1, padding:"10px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, color:T.ink, fontSize:13, lineHeight:1.6, resize:"none", fontFamily:"'DM Sans',sans-serif", outline:"none" }}
+          style={{ flex:1, padding:"10px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, color:T.ink, fontSize:13, lineHeight:1.6, resize:"none", fontFamily:"'Inter',sans-serif", outline:"none" }}
         />
         <button onClick={handleSend} disabled={sending || !body.trim()} style={{ padding:"10px 18px", background: sending || !body.trim() ? T.indigo3 : T.indigo, border:"none", borderRadius:12, color: sending || !body.trim() ? T.indigo : "#1A1A18", fontWeight:700, fontSize:13, cursor: body.trim() ? "pointer" : "not-allowed", height:44, whiteSpace:"nowrap" }}>
           {sending ? "…" : "Send ↑"}
@@ -290,7 +290,7 @@ function NewThreadModal({ onClose, onCreated }) {
     width:"100%", padding:"10px 12px",
     background:T.cream3, border:`1px solid ${T.border}`,
     borderRadius:10, color:T.ink, fontSize:13,
-    fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box",
+    fontFamily:"'Inter',sans-serif", boxSizing:"border-box",
   }
 
   async function handleCreate() {
@@ -309,9 +309,9 @@ function NewThreadModal({ onClose, onCreated }) {
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(26,26,24,0.5)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:20, padding:28, width:"100%", maxWidth:480, fontFamily:"'DM Sans',sans-serif", boxShadow:T.shadow2 }}>
+      <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:20, padding:28, width:"100%", maxWidth:480, fontFamily:"'Inter',sans-serif", boxShadow:T.shadow2 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>New Conversation</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, margin:0 }}>New Conversation</h2>
           <button onClick={onClose} style={{ background:T.cream3, border:`1px solid ${T.border}`, color:T.ink3, width:32, height:32, borderRadius:8, cursor:"pointer" }}>✕</button>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
@@ -428,9 +428,9 @@ export default function MessagingCenter() {
   const unreadCount = threads.filter(t => t.unread).length
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", color:T.ink, height:"calc(100vh - 120px)", display:"flex", flexDirection:"column" }}>
+    <div style={{ fontFamily:"'Inter',sans-serif", color:T.ink, height:"calc(100vh - 120px)", display:"flex", flexDirection:"column" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin { to { transform:rotate(360deg) } }
         input:focus,textarea:focus { outline:none; }
         ::-webkit-scrollbar { width:4px }
@@ -441,7 +441,7 @@ export default function MessagingCenter() {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div>
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Messages</h1>
+            <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, margin:0 }}>Messages</h1>
             <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
               {threads.length} conversations{unreadCount > 0 ? ` · ${unreadCount} unread` : ""}
             </p>
@@ -465,7 +465,7 @@ export default function MessagingCenter() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search conversations…"
-              style={{ width:"100%", padding:"8px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink, fontSize:12, fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" }}
+              style={{ width:"100%", padding:"8px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink, fontSize:12, fontFamily:"'Inter',sans-serif", boxSizing:"border-box" }}
             />
           </div>
 

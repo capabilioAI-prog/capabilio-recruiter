@@ -86,8 +86,8 @@ const AC = {
   desc:          { fontSize: 12, color: "#3A3A38", lineHeight: 1.5 },
   candidateChip: { display: "inline-flex", alignItems: "center", gap: 6, marginTop: 8, padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, fontSize: 12, color: "#1A1A18" },
   dot:           { width: 6, height: 6, borderRadius: "50%" },
-  actionBtn:     { padding: "6px 14px", background: "rgba(61,78,172,0.12)", border: "1px solid rgba(61,78,172,0.25)", borderRadius: 8, color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
-  secondaryBtn:  { padding: "6px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  actionBtn:     { padding: "6px 14px", background: "rgba(61,78,172,0.12)", border: "1px solid rgba(61,78,172,0.25)", borderRadius: 8, color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
+  secondaryBtn:  { padding: "6px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }
 
 // ── Poach Risk Row ────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ function PoachRiskRow({ candidate, risk }) {
 const PR = {
   row:     { display: "flex", alignItems: "center", gap: 10, padding: "9px 4px", borderRadius: 8, transition: "background 0.15s" },
   avatar:  { width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 },
-  viewBtn: { padding: "5px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#fca5a5", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", flexShrink: 0 },
+  viewBtn: { padding: "5px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#fca5a5", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif", flexShrink: 0 },
 }
 
 // ── Competitor Card ───────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ function CompetitorCard({ competitor }) {
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: "#ef4444" }}>{competitor.hiring}</div>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: "#ef4444" }}>{competitor.hiring}</div>
           <div style={{ fontSize: 10, color: "#E8E8E1" }}>open roles</div>
         </div>
       </div>
@@ -180,7 +180,7 @@ function CompetitorCard({ competitor }) {
 const CC = {
   card: { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 14, cursor: "pointer", transition: "all 0.2s" },
   head: { display: "flex", alignItems: "center", gap: 10 },
-  logo: { width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, fontFamily: "'Syne',sans-serif" },
+  logo: { width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, fontFamily: "'Inter',sans-serif" },
   name: { fontSize: 13, fontWeight: 700, color: "#1A1A18" },
 }
 
@@ -321,9 +321,9 @@ export default function CompetitiveIntelligence() {
   }
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
         ::-webkit-scrollbar { width: 4px; }
@@ -333,7 +333,7 @@ export default function CompetitiveIntelligence() {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-          <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
+          <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
             🕵️ Competitive Intelligence
           </h1>
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 20 }}>
@@ -356,7 +356,7 @@ export default function CompetitiveIntelligence() {
         ].map((s) => (
           <div key={s.label} style={P.statCard}>
             <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
             <div style={{ fontSize: 11, color: "#E8E8E1" }}>{s.label}</div>
           </div>
         ))}
@@ -511,7 +511,7 @@ export default function CompetitiveIntelligence() {
                   </div>
                 </div>
               )}
-              <button onClick={() => setAiReport(null)} style={{ padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", alignSelf: "flex-start" }}>
+              <button onClick={() => setAiReport(null)} style={{ padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", alignSelf: "flex-start" }}>
                 🔄 Regenerate
               </button>
             </div>
@@ -526,8 +526,8 @@ const P = {
   statsRow: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 },
   statCard: { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: 16, textAlign: "center" },
   tabsRow:  { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" },
-  tab:      { padding: "8px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s" },
+  tab:      { padding: "8px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all 0.2s" },
   tabActive:{ background: "rgba(61,78,172,0.12)", border: "1px solid rgba(61,78,172,0.25)", color: "#a5b4fc" },
   panel:    { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 16 },
-  aiBtn:    { padding: "11px 24px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  aiBtn:    { padding: "11px 24px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }

@@ -167,7 +167,7 @@ export default function InternalMobility() {
   const nominatedN  = nominated.size
 
   return (
-    <div style={{ padding: "24px", background: T.cream2, minHeight: "100%", fontFamily: "DM Sans, sans-serif" }}>
+    <div style={{ padding: "24px", background: T.cream2, minHeight: "100%", fontFamily: "Inter, sans-serif" }}>
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>

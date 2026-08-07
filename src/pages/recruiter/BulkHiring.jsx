@@ -63,11 +63,11 @@ function BucketCard({ bucket, candidates, onBulkAction }) {
           {bucket.icon}
         </div>
         <div style={{ flex:1 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink }}>{bucket.label}</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink }}>{bucket.label}</div>
           <div style={{ fontSize:11, color:T.ink3, marginTop:1 }}>{bucket.desc}</div>
         </div>
         <div style={{ textAlign:"right" }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:24, fontWeight:800, color:bucket.color }}>{count}</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:24, fontWeight:800, color:bucket.color }}>{count}</div>
           <div style={{ fontSize:10, color:T.ink4 }}>candidates</div>
         </div>
         <div style={{ textAlign:"right", marginLeft:4 }}>
@@ -75,7 +75,7 @@ function BucketCard({ bucket, candidates, onBulkAction }) {
           <div style={{ fontSize:10, color:T.ink4 }}>avg ELO</div>
         </div>
         <button onClick={(e) => { e.stopPropagation(); onBulkAction(bucket, candidates) }}
-          style={{ padding:"7px 14px", background:`${bucket.color}15`, border:`1px solid ${bucket.color}35`, borderRadius:9, color:bucket.color, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
+          style={{ padding:"7px 14px", background:`${bucket.color}15`, border:`1px solid ${bucket.color}35`, borderRadius:9, color:bucket.color, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Inter',sans-serif", whiteSpace:"nowrap" }}>
           {bucket.action} →
         </button>
         <span style={{ color:T.ink4, fontSize:16 }}>{expanded ? "▲" : "▼"}</span>
@@ -95,7 +95,7 @@ function BucketCard({ bucket, candidates, onBulkAction }) {
               <div style={{ display:"flex", gap:6, marginLeft:"auto" }}>
                 {["Shortlist","Reject","Move Stage","Message"].map((a) => (
                   <button key={a} onClick={() => setSelected([])}
-                    style={{ fontSize:11, padding:"4px 10px", background:T.indigo3, border:`1px solid ${T.indigo}25`, borderRadius:7, color:T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+                    style={{ fontSize:11, padding:"4px 10px", background:T.indigo3, border:`1px solid ${T.indigo}25`, borderRadius:7, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
                     {a}
                   </button>
                 ))}
@@ -113,7 +113,7 @@ function BucketCard({ bucket, candidates, onBulkAction }) {
                 <input type="checkbox" checked={selected.includes(c.uid)}
                   onChange={() => setSelected((s) => s.includes(c.uid) ? s.filter((x) => x !== c.uid) : [...s, c.uid])}
                   style={{ accentColor:T.indigo, cursor:"pointer", flexShrink:0 }} />
-                <div style={{ width:34, height:34, borderRadius:9, background:`${col}18`, color:col, border:`1px solid ${col}44`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
+                <div style={{ width:34, height:34, borderRadius:9, background:`${col}18`, color:col, border:`1px solid ${col}44`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:13, fontWeight:600, color:T.ink }}>{c.displayName || "—"}</div>
                   <div style={{ fontSize:11, color:T.ink4 }}>{c.keyword || "General"}</div>
@@ -173,7 +173,7 @@ export default function BulkHiring() {
 
       {/* Header */}
       <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🚀 Bulk Hiring Intelligence</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🚀 Bulk Hiring Intelligence</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
           Handles <strong style={{ color:T.indigo }}>1,000+ applications</strong> without chaos. AI auto-clusters every applicant into smart buckets, generates shortlist reasoning, enables bulk actions, and surfaces bottlenecks with SLA timers — so you move fast without losing transparency.
         </div>
@@ -184,7 +184,7 @@ export default function BulkHiring() {
         <span style={{ fontSize:12, color:T.ink3, fontWeight:600 }}>Active Job:</span>
         {JOBS.map((j) => (
           <button key={j} onClick={() => setActiveJob(j)}
-            style={{ fontSize:12, padding:"6px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, transition:"all 0.15s",
+            style={{ fontSize:12, padding:"6px 14px", borderRadius:9, border:"1px solid", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600, transition:"all 0.15s",
               background:  activeJob === j ? T.indigo3 : T.cream2,
               borderColor: activeJob === j ? T.indigo   : T.border,
               color:       activeJob === j ? T.indigo   : T.ink4,
@@ -199,7 +199,7 @@ export default function BulkHiring() {
         {BUCKETS.map((b) => (
           <div key={b.id} style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px", textAlign:"center", boxShadow:T.shadow }}>
             <div style={{ fontSize:22 }}>{b.icon}</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:b.color, marginTop:4 }}>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:b.color, marginTop:4 }}>
               {loading ? "—" : clustered[b.id]?.length || 0}
             </div>
             <div style={{ fontSize:11, color:T.ink3, marginTop:2, lineHeight:1.3 }}>{b.label}</div>
@@ -209,7 +209,7 @@ export default function BulkHiring() {
 
       {/* AI Shortlist Summary */}
       <div style={{ background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:16, padding:20 }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:14 }}>🤖 AI Shortlist Reasoning — {activeJob}</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:14 }}>🤖 AI Shortlist Reasoning — {activeJob}</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
           {[
             { title:"Why these candidates made Strong Fit",    text:`Top ${clustered.strong_fit?.length || 0} candidates scored ≥70% on hiring readiness, ELO ≥1100, and passed Arena challenges. All have verified identity and work history. Average notice period: 28 days.`, color:T.green  },
@@ -226,7 +226,7 @@ export default function BulkHiring() {
 
       {/* Stage drop-off analytics */}
       <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:14 }}>📉 Stage Drop-off Insights</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, marginBottom:14 }}>📉 Stage Drop-off Insights</div>
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           {[
             { from:"Applied",     to:"AI Screened",    in:candidates.length || 248, out:Math.round((candidates.length||248)*0.62), issue:"38% bounced — likely incomplete profiles or below ELO threshold" },
@@ -235,12 +235,12 @@ export default function BulkHiring() {
           ].map((row) => (
             <div key={row.from} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10 }}>
               <div style={{ textAlign:"center", minWidth:80 }}>
-                <div style={{ fontSize:18, fontWeight:800, color:T.ink, fontFamily:"'Syne',sans-serif" }}>{row.in}</div>
+                <div style={{ fontSize:18, fontWeight:800, color:T.ink, fontFamily:"'Inter',sans-serif" }}>{row.in}</div>
                 <div style={{ fontSize:10, color:T.ink4 }}>{row.from}</div>
               </div>
               <div style={{ fontSize:20, color:T.ink4 }}>→</div>
               <div style={{ textAlign:"center", minWidth:80 }}>
-                <div style={{ fontSize:18, fontWeight:800, color:T.green, fontFamily:"'Syne',sans-serif" }}>{row.out}</div>
+                <div style={{ fontSize:18, fontWeight:800, color:T.green, fontFamily:"'Inter',sans-serif" }}>{row.out}</div>
                 <div style={{ fontSize:10, color:T.ink4 }}>{row.to}</div>
               </div>
               <div style={{ flex:1, padding:"8px 12px", background:T.red2, border:`1px solid ${T.red}15`, borderRadius:8 }}>
@@ -248,7 +248,7 @@ export default function BulkHiring() {
                 <span style={{ fontSize:11, color:T.ink3 }}>{row.issue}</span>
               </div>
               <div style={{ textAlign:"right", minWidth:60 }}>
-                <div style={{ fontSize:16, fontWeight:800, color:T.red, fontFamily:"'Syne',sans-serif" }}>
+                <div style={{ fontSize:16, fontWeight:800, color:T.red, fontFamily:"'Inter',sans-serif" }}>
                   {Math.round((1 - row.out / row.in) * 100)}%
                 </div>
                 <div style={{ fontSize:10, color:T.ink4 }}>drop-off</div>

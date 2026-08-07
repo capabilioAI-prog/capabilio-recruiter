@@ -98,7 +98,7 @@ function CandidateRow({ app, jobTitle, onOpen }) {
         <div style={{ fontSize:11, color:T.ink4, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{jobTitle || "—"}</div>
       </div>
       <div style={{ textAlign:"center" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:800, color:scoreColor(app.score) }}>{app.score ?? "—"}</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, fontWeight:800, color:scoreColor(app.score) }}>{app.score ?? "—"}</div>
         <div style={{ fontSize:9, color:T.ink4 }}>match</div>
       </div>
     </div>
@@ -106,7 +106,7 @@ function CandidateRow({ app, jobTitle, onOpen }) {
 }
 const CR = {
   card: { display:"flex", alignItems:"center", gap:10, padding:"10px 12px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12, cursor:"pointer" },
-  avatar: { width:36, height:36, borderRadius:10, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:13 },
+  avatar: { width:36, height:36, borderRadius:10, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:13 },
   name: { fontSize:13, fontWeight:600, color:T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
 }
 
@@ -297,7 +297,7 @@ export default function RecruiterDashboard() {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10 }}>
         {QUICK.map((q) => (
           <button key={q.label} onClick={() => navigate(q.path)}
-            style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px", background:T.cream, border:`1px solid ${T.border}`, borderRadius:12, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", transition:"all 0.2s", boxShadow:T.shadow }}
+            style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px", background:T.cream, border:`1px solid ${T.border}`, borderRadius:12, cursor:"pointer", fontFamily:"'Inter',sans-serif", transition:"all 0.2s", boxShadow:T.shadow }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.borderColor = `${q.color}55` }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = T.border }}>
             <span style={{ fontSize:18, color:q.color }}>{q.icon}</span>
@@ -317,7 +317,7 @@ export default function RecruiterDashboard() {
           ) : (
             <>
               <div style={{ display:"flex", alignItems:"baseline", gap:4 }}>
-                <span style={{ fontFamily:"'Syne',sans-serif", fontSize:28, fontWeight:800, color:T.indigo }}>{avgTimeToShortlist.toFixed(1)}</span>
+                <span style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:T.indigo }}>{avgTimeToShortlist.toFixed(1)}</span>
                 <span style={{ fontSize:13, color:T.ink3 }}>days avg</span>
               </div>
               <div style={{ fontSize:11, color:T.ink4, marginTop:2 }}>from application to shortlist, across {shortlistTimes.length} candidate{shortlistTimes.length === 1 ? "" : "s"}</div>
@@ -333,7 +333,7 @@ export default function RecruiterDashboard() {
           ) : (
             <>
               <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
-                <span style={{ fontFamily:"'Syne',sans-serif", fontSize:28, fontWeight:800, color:T.red }}>{pendingFeedback.length}</span>
+                <span style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:T.red }}>{pendingFeedback.length}</span>
                 <span style={{ fontSize:13, color:T.ink3 }}>pending</span>
               </div>
               {pendingFeedback.slice(0, 3).map((a) => (
@@ -398,7 +398,7 @@ export default function RecruiterDashboard() {
                     <div style={{ fontSize:12, fontWeight:600, color:T.ink }}>{a.name || "—"}</div>
                     <div style={{ fontSize:11, color:T.ink3, marginTop:2 }}>{jobTitleById[a.job_id] || "—"} · waiting {daysAgo(a.created_at)} days</div>
                   </div>
-                  <button onClick={() => navigate("/recruiter/applications")} style={{ fontSize:11, color:T.amber, background:`${T.amber}15`, border:`1px solid ${T.amber}30`, borderRadius:7, padding:"5px 10px", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, whiteSpace:"nowrap" }}>
+                  <button onClick={() => navigate("/recruiter/applications")} style={{ fontSize:11, color:T.amber, background:`${T.amber}15`, border:`1px solid ${T.amber}30`, borderRadius:7, padding:"5px 10px", cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600, whiteSpace:"nowrap" }}>
                     Review
                   </button>
                 </div>
@@ -486,13 +486,13 @@ const P = {
   root: { display:"flex", flexDirection:"column", gap:18 },
   statCard: { background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:"16px 14px", display:"flex", alignItems:"center", gap:12, animation:"fadeUp 0.4s ease both", boxShadow:T.shadow },
   statIcon: { width:42, height:42, borderRadius:11, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 },
-  statVal:  { fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:T.ink, lineHeight:1.1 },
+  statVal:  { fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:T.ink, lineHeight:1.1 },
   statLabel:{ fontSize:11, color:T.ink3, marginTop:2 },
   statSub:  { fontSize:10, color:T.ink4, marginTop:1 },
   mainGrid: { display:"grid", gridTemplateColumns:"1fr 340px", gap:18, alignItems:"start" },
   card:     { background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow },
   cardHead: { display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 },
-  sectionTitle: { fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:0 },
-  linkBtn:  { background:"none", border:"none", color:T.indigo, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" },
+  sectionTitle: { fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink, margin:0 },
+  linkBtn:  { background:"none", border:"none", color:T.indigo, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" },
   spinner:  { width:28, height:28, border:`3px solid ${T.indigo3}`, borderTopColor:T.indigo, borderRadius:"50%", animation:"spin 0.8s linear infinite" },
 }

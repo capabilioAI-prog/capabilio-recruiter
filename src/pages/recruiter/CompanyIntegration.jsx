@@ -40,7 +40,7 @@ function StatTile({ icon, value, label, color = T.indigo, trend }) {
   return (
     <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px 20px" }}>
       <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color, fontFamily: "'Syne',sans-serif" }}>{value}</div>
+      <div style={{ fontSize: 26, fontWeight: 800, color, fontFamily: "'Inter',sans-serif" }}>{value}</div>
       <div style={{ fontSize: 12, color: T.ink3, marginTop: 2 }}>{label}</div>
       {trend && <div style={{ fontSize: 11, color: T.green, marginTop: 4 }}>↑ {trend}</div>}
     </div>
@@ -494,7 +494,7 @@ function CareerPageBuilder({ apiKey }) {
         </div>
 
         {/* Mock apply page */}
-        <div style={{ padding: 28, fontFamily: "DM Sans, sans-serif" }}>
+        <div style={{ padding: 28, fontFamily: "Inter, sans-serif" }}>
           <div style={{ maxWidth: 520, margin: "0 auto" }}>
             {/* Company header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
@@ -552,7 +552,7 @@ export default function CompanyIntegration() {
   const [tab, setTab] = useState("widget")
 
   return (
-    <div style={{ padding: "24px", background: T.cream2, minHeight: "100%", fontFamily: "DM Sans, sans-serif" }}>
+    <div style={{ padding: "24px", background: T.cream2, minHeight: "100%", fontFamily: "Inter, sans-serif" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>

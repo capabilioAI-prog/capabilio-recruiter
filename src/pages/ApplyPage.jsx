@@ -164,7 +164,7 @@ export default function ApplyPage() {
     background:"rgba(255,255,255,0.04)",
     border:"1px solid rgba(255,255,255,0.08)",
     borderRadius:10, color:"#f1f5f9", fontSize:14,
-    fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box",
+    fontFamily:"'Inter',sans-serif", boxSizing:"border-box",
     outline:"none",
   }
 
@@ -178,7 +178,7 @@ export default function ApplyPage() {
 
   // ── Not found / closed ─────────────────────────────────────────────────────
   if (notFound) return (
-    <div style={{ minHeight:"100vh", background:"#070d1a", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif" }}>
+    <div style={{ minHeight:"100vh", background:"#070d1a", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif" }}>
       <div style={{ textAlign:"center", color:"#475569" }}>
         <div style={{ fontSize:48, marginBottom:16 }}>🔒</div>
         <div style={{ fontSize:18, fontWeight:700, color:"#94a3b8", marginBottom:8 }}>Position Not Available</div>
@@ -188,9 +188,9 @@ export default function ApplyPage() {
   )
 
   return (
-    <div style={{ minHeight:"100vh", background:"#070d1a", fontFamily:"'DM Sans',sans-serif", color:"#f1f5f9" }}>
+    <div style={{ minHeight:"100vh", background:"#070d1a", fontFamily:"'Inter',sans-serif", color:"#f1f5f9" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin { to { transform:rotate(360deg) } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
         input:focus,textarea:focus { border-color:#6366f1 !important }
@@ -198,9 +198,9 @@ export default function ApplyPage() {
 
       {/* Header */}
       <div style={{ background:"rgba(13,20,36,0.9)", borderBottom:"1px solid rgba(255,255,255,0.05)", padding:"16px 24px", display:"flex", alignItems:"center", gap:12 }}>
-        <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, color:"#fff", fontSize:16 }}>C</div>
+        <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, color:"#fff", fontSize:16 }}>C</div>
         <div>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#f1f5f9" }}>capabilio</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontWeight:700, fontSize:14, color:"#f1f5f9" }}>capabilio</div>
           <div style={{ fontSize:10, color:"#475569", letterSpacing:"1px" }}>RECRUITER</div>
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function ApplyPage() {
           <div style={{ fontSize:11, color:"#6366f1", fontWeight:700, letterSpacing:"0.08em", marginBottom:8 }}>
             {job?.company_name || "Company"} · OPEN POSITION
           </div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:26, fontWeight:800, color:"#f1f5f9", margin:"0 0 12px" }}>
+          <h1 style={{ fontFamily:"'Inter',sans-serif", fontSize:26, fontWeight:800, color:"#f1f5f9", margin:"0 0 12px" }}>
             {job?.title}
           </h1>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:16 }}>
@@ -237,7 +237,7 @@ export default function ApplyPage() {
         {/* Form */}
         {stage === "form" && (
           <div style={{ animation:"fadeUp 0.5s ease" }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:"#f1f5f9", marginBottom:20 }}>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:"#f1f5f9", marginBottom:20 }}>
               Apply Now
             </div>
 
@@ -290,7 +290,7 @@ export default function ApplyPage() {
         {stage === "submitting" && (
           <div style={{ background:"#111827", border:"1px solid rgba(99,102,241,0.2)", borderRadius:18, padding:32, textAlign:"center", animation:"fadeUp 0.3s ease" }}>
             <div style={{ width:48, height:48, border:"3px solid rgba(99,102,241,0.2)", borderTopColor:"#6366f1", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 20px" }} />
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:700, color:"#f1f5f9", marginBottom:8 }}>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:700, color:"#f1f5f9", marginBottom:8 }}>
               Processing Your Application
             </div>
             <div style={{ fontSize:13, color:"#64748b", marginBottom:24 }}>
@@ -307,7 +307,7 @@ export default function ApplyPage() {
         {stage === "done" && (
           <div style={{ background:"#111827", border:"1px solid rgba(34,197,94,0.3)", borderRadius:18, padding:40, textAlign:"center", animation:"fadeUp 0.3s ease" }}>
             <div style={{ fontSize:52, marginBottom:16 }}>✅</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:"#22c55e", marginBottom:10 }}>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:"#22c55e", marginBottom:10 }}>
               Application Received!
             </div>
             <div style={{ fontSize:14, color:"#94a3b8", lineHeight:1.7, marginBottom:20 }}>
@@ -328,7 +328,7 @@ export default function ApplyPage() {
         {stage === "error" && (
           <div style={{ background:"#111827", border:"1px solid rgba(239,68,68,0.3)", borderRadius:18, padding:32, textAlign:"center", animation:"fadeUp 0.3s ease" }}>
             <div style={{ fontSize:40, marginBottom:12 }}>⚠️</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:700, color:"#f87171", marginBottom:8 }}>Submission Error</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:700, color:"#f87171", marginBottom:8 }}>Submission Error</div>
             <div style={{ fontSize:13, color:"#94a3b8", marginBottom:20 }}>{error}</div>
             <button onClick={() => setStage("form")} style={{ padding:"10px 24px", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", borderRadius:10, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>
               Try Again

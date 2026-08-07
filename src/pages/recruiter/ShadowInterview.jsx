@@ -226,7 +226,7 @@ const SS = {
     borderRadius: 20, padding: 28, maxWidth: 700,
   },
   heading: {
-    fontFamily: "'Syne', sans-serif", fontSize: 20,
+    fontFamily: "'Inter', sans-serif", fontSize: 20,
     fontWeight: 700, color: "#1A1A18", margin: "0 0 6px",
   },
   sub:   { fontSize: 14, color: "#3A3A38", marginBottom: 24 },
@@ -241,12 +241,12 @@ const SS = {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
   },
   diffBtn: {
     flex: 1, padding: "8px 0", border: "1px solid",
     borderRadius: 8, fontSize: 12, fontWeight: 600,
-    cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+    cursor: "pointer", fontFamily: "'Inter', sans-serif",
     transition: "all 0.2s",
   },
   aiBtn: {
@@ -255,14 +255,14 @@ const SS = {
     border: "1px solid rgba(139,92,246,0.3)",
     borderRadius: 8, color: "#c4b5fd",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   textarea: {
     width: "100%", padding: "10px 12px",
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
     resize: "vertical",
   },
   qCount:   { fontSize: 11, color: "#E8E8E1", marginTop: 6, textAlign: "right" },
@@ -277,7 +277,7 @@ const SS = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 12, color: "#1A1A18",
     fontSize: 15, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     boxShadow: "0 4px 20px rgba(61,78,172,0.4)",
   },
   linkBox: {
@@ -297,7 +297,7 @@ const SS = {
     border: "1px solid rgba(61,78,172,0.3)",
     borderRadius: 8, color: "#a5b4fc",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   shareRow: {
     display: "flex", gap: 8, justifyContent: "center",
@@ -309,7 +309,7 @@ const SS = {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#6B6B68",
     fontSize: 13, fontWeight: 500, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     textDecoration: "none", display: "inline-block",
   },
   sessionInfo: {
@@ -328,7 +328,7 @@ const SS = {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#6B6B68",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
 }
 
@@ -530,7 +530,7 @@ const IS = {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
     resize: "none",
   },
   submitBtn: {
@@ -538,7 +538,7 @@ const IS = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 10, color: "#1A1A18",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     transition: "opacity 0.2s",
   },
 }
@@ -616,7 +616,7 @@ const RS = {
     alignItems: "flex-start", flexWrap: "wrap", gap: 16,
   },
   title: {
-    fontFamily: "'Syne', sans-serif", fontSize: 22,
+    fontFamily: "'Inter', sans-serif", fontSize: 22,
     fontWeight: 800, color: "#1A1A18", margin: "0 0 4px",
   },
   overallBox: {
@@ -625,7 +625,7 @@ const RS = {
     borderRadius: 14, padding: "16px 24px", textAlign: "center",
   },
   overallLabel: { fontSize: 11, color: "#3A3A38", letterSpacing: 0.5, marginBottom: 4 },
-  overallScore: { fontFamily: "'Syne', sans-serif", fontSize: 36, fontWeight: 800, lineHeight: 1.1 },
+  overallScore: { fontFamily: "'Inter', sans-serif", fontSize: 36, fontWeight: 800, lineHeight: 1.1 },
   overallRec:   { fontSize: 13, fontWeight: 600, marginTop: 4 },
   statsRow:     { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
   statCard: {
@@ -633,7 +633,7 @@ const RS = {
     border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: 14, padding: 16, textAlign: "center",
   },
-  statVal:   { fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, marginBottom: 4 },
+  statVal:   { fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 800, marginBottom: 4 },
   statLabel: { fontSize: 11, color: "#3A3A38" },
   transcriptCard: {
     background: "#EFEFE9",
@@ -641,7 +641,7 @@ const RS = {
     borderRadius: 16, padding: 24,
   },
   sectionTitle: {
-    fontFamily: "'Syne', sans-serif", fontSize: 15,
+    fontFamily: "'Inter', sans-serif", fontSize: 15,
     fontWeight: 700, color: "#1A1A18", margin: "0 0 16px",
   },
   tRow: { borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 14, marginBottom: 14 },
@@ -662,7 +662,7 @@ const RS = {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#6B6B68",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   profileBtn: {
     padding: "10px 18px",
@@ -670,14 +670,14 @@ const RS = {
     border: "1px solid rgba(61,78,172,0.2)",
     borderRadius: 10, color: "#a5b4fc",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   pipelineBtn: {
     padding: "10px 18px",
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 10, color: "#1A1A18",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
 }
 
@@ -760,7 +760,7 @@ const CP = {
     borderRadius: 20, padding: 28, maxWidth: 640,
   },
   heading: {
-    fontFamily: "'Syne', sans-serif", fontSize: 20,
+    fontFamily: "'Inter', sans-serif", fontSize: 20,
     fontWeight: 700, color: "#1A1A18", margin: "0 0 6px",
   },
   sub: { fontSize: 14, color: "#3A3A38", marginBottom: 20 },
@@ -769,7 +769,7 @@ const CP = {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13, fontFamily: "'Inter', sans-serif",
     marginBottom: 12,
   },
   loading: { color: "#E8E8E1", fontSize: 13, textAlign: "center", padding: "20px 0" },
@@ -786,7 +786,7 @@ const CP = {
     background: "linear-gradient(135deg, #3D4EAC, #8b5cf6)",
     border: "none", borderRadius: 8, color: "#1A1A18",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif", flexShrink: 0,
+    fontFamily: "'Inter', sans-serif", flexShrink: 0,
   },
 }
 
@@ -823,9 +823,9 @@ export default function ShadowInterview() {
   )
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin  { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         input::placeholder, textarea::placeholder { color: #334155; }
@@ -833,7 +833,7 @@ export default function ShadowInterview() {
       `}</style>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
+        <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
           Shadow Interview AI
         </h1>
         <p style={{ fontSize: 13, color: "#3A3A38", marginTop: 4 }}>
@@ -851,7 +851,7 @@ export default function ShadowInterview() {
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <button
                 onClick={() => { setCandidate(null); setPhase("pick") }}
-                style={{ background: "none", border: "none", color: "#3D4EAC", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+                style={{ background: "none", border: "none", color: "#3D4EAC", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
               >
                 ← Change Candidate
               </button>

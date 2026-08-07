@@ -99,7 +99,7 @@ function TeamRadar({ team, size = 220 }) {
           <g key={s.label}>
             <circle cx={px} cy={py} r={3} fill="#3D4EAC" />
             <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
-              fontSize="9" fill="#3A3A38" fontFamily="DM Sans">{s.label}</text>
+              fontSize="9" fill="#3A3A38" fontFamily="Inter">{s.label}</text>
           </g>
         )
       })}
@@ -142,7 +142,7 @@ function ScoreRing({ value, color, label, size = 80 }) {
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           transform={`rotate(-90 ${size/2} ${size/2})`} />
         <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
-          fontSize="14" fontWeight="800" fill={color} fontFamily="Syne">{value}</text>
+          fontSize="14" fontWeight="800" fill={color} fontFamily="Inter">{value}</text>
       </svg>
       <span style={{ fontSize: 10, color: "#E8E8E1", textAlign: "center", maxWidth: size }}>{label}</span>
     </div>
@@ -234,13 +234,13 @@ function AIPanel({ team, chemistry }) {
 
 const AP = {
   empty:      { display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 0" },
-  btn:        { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  btn:        { padding: "10px 20px", background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", border: "none", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
   verdictBox: { background: "rgba(61,78,172,0.06)", border: "1px solid rgba(61,78,172,0.15)", borderRadius: 12, padding: 14 },
   section:    { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 12 },
   sTitle:     { fontSize: 12, fontWeight: 700, color: "#1A1A18", marginBottom: 8 },
   bullet:     { fontSize: 12, color: "#6B6B68", padding: "2px 0" },
   roleTag:    { fontSize: 11, color: "#a5b4fc", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", padding: "3px 10px", borderRadius: 20 },
-  rerunBtn:   { padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", alignSelf: "flex-start" },
+  rerunBtn:   { padding: "8px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif", alignSelf: "flex-start" },
 }
 
 export default function TeamChemistry() {
@@ -277,16 +277,16 @@ export default function TeamChemistry() {
   })
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         input::placeholder { color: #334155; }
         input:focus { outline: none; border-color: #3D4EAC !important; }
       `}</style>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
+        <h1 style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: "#1A1A18", margin: 0 }}>
           🧪 Team Chemistry
         </h1>
         <p style={{ fontSize: 13, color: "#3A3A38", marginTop: 4 }}>
@@ -369,7 +369,7 @@ export default function TeamChemistry() {
             <div style={{ ...M.panel, animation: "fadeUp 0.3s ease" }}>
               <div style={M.panelHead}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A18" }}>⚗️ Chemistry Score</span>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 800, color: chemColor }}>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 28, fontWeight: 800, color: chemColor }}>
                   {chemistry.overall}<span style={{ fontSize: 14, color: "#E8E8E1" }}>/100</span>
                 </div>
               </div>
@@ -451,14 +451,14 @@ const M = {
   right:        { display: "flex", flexDirection: "column", gap: 14 },
   panel:        { background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 16 },
   panelHead:    { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  search:       { width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#1A1A18", fontSize: 12, fontFamily: "'DM Sans',sans-serif", marginBottom: 10 },
+  search:       { width: "100%", padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#1A1A18", fontSize: 12, fontFamily: "'Inter',sans-serif", marginBottom: 10 },
   candidateList:{ maxHeight: 480, overflowY: "auto" },
   candidateRow: { display: "flex", alignItems: "center", gap: 8, padding: "7px 4px", borderRadius: 8, cursor: "default", transition: "background 0.15s" },
   miniAvatar:   { width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 },
   addBtn:       { width: 24, height: 24, flexShrink: 0, background: "rgba(61,78,172,0.15)", border: "1px solid rgba(61,78,172,0.25)", borderRadius: 6, color: "#a5b4fc", fontSize: 16, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
-  teamNameInput:{ flex: 1, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#1A1A18", fontSize: 14, fontWeight: 600, fontFamily: "'Syne',sans-serif", marginRight: 10 },
+  teamNameInput:{ flex: 1, padding: "7px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#1A1A18", fontSize: 14, fontWeight: 600, fontFamily: "'Inter',sans-serif", marginRight: 10 },
   emptyTeam:    { display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "24px 0", color: "#EFEFE9" },
   savedTeamRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" },
-  loadBtn:      { padding: "4px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 6, color: "#a5b4fc", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
-  saveBtn:      { marginTop: 10, width: "100%", padding: "8px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, color: "#1A7A4A", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
+  loadBtn:      { padding: "4px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 6, color: "#a5b4fc", fontSize: 11, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
+  saveBtn:      { marginTop: 10, width: "100%", padding: "8px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 8, color: "#1A7A4A", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
 }

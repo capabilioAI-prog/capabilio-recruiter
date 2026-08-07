@@ -144,7 +144,7 @@ export default function CandidateInterview() {
   if (phase === "welcome") return (
     <div style={S.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #F6F6F1; }
         @keyframes spin  { to { transform: rotate(360deg); } }
@@ -231,7 +231,7 @@ export default function CandidateInterview() {
   if (phase === "done") return (
     <div style={S.root}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #F6F6F1; }
         @keyframes fadeUp{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
@@ -271,7 +271,7 @@ export default function CandidateInterview() {
   return (
     <div style={S.interviewRoot}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #F6F6F1; }
         @keyframes spin  { to { transform: rotate(360deg); } }
@@ -398,7 +398,7 @@ const S = {
     minHeight: "100vh", background: "#F6F6F1",
     display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative", overflow: "hidden",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     padding: "20px 16px",
   },
   grid: {
@@ -420,7 +420,7 @@ const S = {
     minHeight: "100vh", background: "#F6F6F1",
     display: "flex", flexDirection: "column",
     alignItems: "center", justifyContent: "center",
-    gap: 16, fontFamily: "'DM Sans', sans-serif",
+    gap: 16, fontFamily: "'Inter', sans-serif",
   },
   spinner: {
     width: 40, height: 40,
@@ -428,7 +428,7 @@ const S = {
     borderTopColor: "#3D4EAC", borderRadius: "50%",
     animation: "spin 0.8s linear infinite",
   },
-  errorTitle: { fontFamily: "'Syne',sans-serif", fontSize: 20, color: "#fca5a5" },
+  errorTitle: { fontFamily: "'Inter',sans-serif", fontSize: 20, color: "#fca5a5" },
   errorSub:   { fontSize: 14, color: "#3A3A38", marginTop: 8 },
 
   // Welcome card
@@ -448,11 +448,11 @@ const S = {
     width: 34, height: 34, borderRadius: 10,
     background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#1A1A18", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 18,
+    color: "#1A1A18", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 18,
     boxShadow: "0 0 16px rgba(61,78,172,0.5)",
   },
   logoText: {
-    fontFamily: "'Syne',sans-serif", fontWeight: 700,
+    fontFamily: "'Inter',sans-serif", fontWeight: 700,
     fontSize: 18, color: "#1A1A18",
   },
   aiAvatar: {
@@ -460,7 +460,7 @@ const S = {
     filter: "drop-shadow(0 0 20px rgba(61,78,172,0.5))",
   },
   welcomeTitle: {
-    fontFamily: "'Syne',sans-serif", fontSize: 26, fontWeight: 800,
+    fontFamily: "'Inter',sans-serif", fontSize: 26, fontWeight: 800,
     color: "#1A1A18", marginBottom: 8,
   },
   welcomeSub: { fontSize: 14, color: "#3A3A38", marginBottom: 12 },
@@ -496,7 +496,7 @@ const S = {
     background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
     border: "none", borderRadius: 14, color: "#1A1A18",
     fontSize: 16, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
     boxShadow: "0 4px 24px rgba(61,78,172,0.45)",
     marginBottom: 12,
   },
@@ -514,7 +514,7 @@ const S = {
     borderRadius: 14, padding: "16px 24px",
   },
   doneStatNum: {
-    fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 800, color: "#1A1A18",
+    fontFamily: "'Inter',sans-serif", fontSize: 28, fontWeight: 800, color: "#1A1A18",
   },
   doneStatLabel: { fontSize: 11, color: "#E8E8E1" },
   doneMsg: {
@@ -528,7 +528,7 @@ const S = {
   interviewRoot: {
     minHeight: "100vh", background: "#F6F6F1",
     display: "flex", flexDirection: "column",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
   },
   interviewTopBar: {
     height: 60, background: "rgba(13,20,36,0.95)",
@@ -621,7 +621,7 @@ const S = {
     background: "rgba(239,239,233,0.8)",
     border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 14, color: "#1A1A18",
-    fontSize: 14, fontFamily: "'DM Sans',sans-serif",
+    fontSize: 14, fontFamily: "'Inter',sans-serif",
     resize: "none", lineHeight: 1.6,
   },
   answerFooter: {
@@ -633,7 +633,7 @@ const S = {
     background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
     border: "none", borderRadius: 10, color: "#1A1A18",
     fontSize: 14, fontWeight: 600,
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
     display: "flex", alignItems: "center", gap: 8,
     boxShadow: "0 4px 14px rgba(61,78,172,0.35)",
     transition: "opacity 0.2s",

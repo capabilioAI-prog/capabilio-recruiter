@@ -52,7 +52,7 @@ function PoolCard({ c, segment }) {
       </div>
 
       <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{ width:40, height:40, borderRadius:12, background:`${col}18`, border:`1.5px solid ${col}44`, color:col, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:15, flexShrink:0 }}>
+        <div style={{ width:40, height:40, borderRadius:12, background:`${col}18`, border:`1.5px solid ${col}44`, color:col, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:15, flexShrink:0 }}>
           {initials}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
@@ -85,11 +85,11 @@ function PoolCard({ c, segment }) {
 
       <div style={{ display:"flex", gap:6 }}>
         <button onClick={() => navigate(`/recruiter/candidate/${c.uid}`)}
-          style={{ flex:1, padding:"6px 0", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+          style={{ flex:1, padding:"6px 0", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
           View Profile
         </button>
         <button onClick={() => navigate("/recruiter/pipeline")}
-          style={{ padding:"6px 10px", background:`${seg?.color || T.green}10`, border:`1px solid ${seg?.color || T.green}25`, borderRadius:8, color:seg?.color || T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+          style={{ padding:"6px 10px", background:`${seg?.color || T.green}10`, border:`1px solid ${seg?.color || T.green}25`, borderRadius:8, color:seg?.color || T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
           Move to Role →
         </button>
       </div>
@@ -134,7 +134,7 @@ export default function TalentPool() {
 
       {/* Hero */}
       <div style={{ background:T.amber2, border:`1px solid ${T.amber}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🌱 Talent Pool · Never Lose a Good Candidate Again</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🌱 Talent Pool · Never Lose a Good Candidate Again</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
           <strong style={{ color:T.amber }}>"Strong but Not Selected"</strong> candidates stay warm with automated learning plans, get reactivated when a matching role opens, and are never ghosted. Reduces future sourcing time by up to 60%.
         </div>
@@ -152,7 +152,7 @@ export default function TalentPool() {
           <div key={s.id}
             onClick={() => setActiveTab(s.id)}
             style={{ background:T.cream, border:`1px solid ${activeTab === s.id ? s.color : T.border}`, borderRadius:16, padding:"18px 16px", cursor:"pointer", transition:"all 0.2s", boxShadow: activeTab === s.id ? T.shadow2 : T.shadow, outline: activeTab === s.id ? `2px solid ${s.color}40` : "none" }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:28, fontWeight:800, color:s.color }}>{loading ? "—" : segmented[s.id]?.length || 0}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:s.color }}>{loading ? "—" : segmented[s.id]?.length || 0}</div>
             <div style={{ fontSize:12, color:T.ink, fontWeight:600, marginTop:4 }}>{s.label}</div>
             <div style={{ fontSize:11, color:T.ink4, marginTop:4, lineHeight:1.4 }}>{s.desc}</div>
           </div>
@@ -162,7 +162,7 @@ export default function TalentPool() {
       {/* "Strong but Not Selected" — how it works */}
       {activeTab === "strong_not_selected" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.amber, margin:"0 0 16px" }}>💎 How Strong-but-Not-Selected Works</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.amber, margin:"0 0 16px" }}>💎 How Strong-but-Not-Selected Works</h2>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
             {[
               { step:"1", title:"Candidate Rejected",      desc:"AI generates personalised rejection with strengths and gap analysis. No ghosting.",              icon:"📬" },
@@ -183,7 +183,7 @@ export default function TalentPool() {
       {/* Reactivation matches */}
       {activeTab === "reactivated" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, margin:"0 0 14px" }}>♻️ Reactivation Queue — New Role Matches Found</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, margin:"0 0 14px" }}>♻️ Reactivation Queue — New Role Matches Found</h2>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {[
               { role:"Senior Data Analyst", matched:7, avgScore:88, opened:"2 days ago" },
@@ -195,14 +195,14 @@ export default function TalentPool() {
                   <div style={{ fontSize:11, color:T.ink4 }}>Opened {r.opened}</div>
                 </div>
                 <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:16, fontWeight:800, color:T.indigo, fontFamily:"'Syne',sans-serif" }}>{r.matched}</div>
+                  <div style={{ fontSize:16, fontWeight:800, color:T.indigo, fontFamily:"'Inter',sans-serif" }}>{r.matched}</div>
                   <div style={{ fontSize:10, color:T.ink4 }}>re-matched</div>
                 </div>
                 <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:16, fontWeight:800, color:T.green, fontFamily:"'Syne',sans-serif" }}>{r.avgScore}%</div>
+                  <div style={{ fontSize:16, fontWeight:800, color:T.green, fontFamily:"'Inter',sans-serif" }}>{r.avgScore}%</div>
                   <div style={{ fontSize:10, color:T.ink4 }}>avg match</div>
                 </div>
-                <button style={{ fontSize:12, padding:"6px 14px", background:T.cream, border:`1px solid ${T.indigo}25`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+                <button style={{ fontSize:12, padding:"6px 14px", background:T.cream, border:`1px solid ${T.indigo}25`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
                   Review →
                 </button>
               </div>
@@ -214,14 +214,14 @@ export default function TalentPool() {
       {/* Candidate cards grid */}
       <div>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:14, fontWeight:700, color:T.ink }}>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink }}>
             {SEGMENTS.find((s) => s.id === activeTab)?.label} — {loading ? "..." : segmented[activeTab]?.length || 0} candidates
           </div>
           <div style={{ display:"flex", gap:8 }}>
-            <button style={{ fontSize:12, padding:"6px 12px", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+            <button style={{ fontSize:12, padding:"6px 12px", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
               📬 Bulk Nurture
             </button>
-            <button style={{ fontSize:12, padding:"6px 12px", background:T.green2, border:`1px solid ${T.green}20`, borderRadius:8, color:T.green, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+            <button style={{ fontSize:12, padding:"6px 12px", background:T.green2, border:`1px solid ${T.green}20`, borderRadius:8, color:T.green, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
               ↓ Export Pool
             </button>
           </div>
@@ -232,7 +232,7 @@ export default function TalentPool() {
         ) : (segmented[activeTab] || []).length === 0 ? (
           <div style={{ textAlign:"center", padding:"50px 20px", background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, boxShadow:T.shadow }}>
             <div style={{ fontSize:36, marginBottom:12 }}>🌱</div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, color:T.ink }}>No candidates in this pool yet</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, color:T.ink }}>No candidates in this pool yet</div>
             <div style={{ fontSize:13, color:T.ink4, marginTop:6 }}>Candidates appear here as they move through your hiring pipeline.</div>
           </div>
         ) : (

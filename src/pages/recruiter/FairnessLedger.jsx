@@ -88,7 +88,7 @@ export default function FairnessLedger() {
 
       {/* Header */}
       <div style={{ background:T.green2, border:`1px solid ${T.green}20`, borderRadius:16, padding:"20px 24px" }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>⚖️ Fairness Ledger</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>⚖️ Fairness Ledger</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
           Every hiring event is timestamped and logged. Candidates see their <strong style={{ color:T.green }}>public timeline</strong>. Recruiters see internal notes and score changes. No black-box hiring — every decision is explainable and auditable.
         </div>
@@ -98,7 +98,7 @@ export default function FairnessLedger() {
 
         {/* Candidate list */}
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, boxShadow:T.shadow }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Applications</div>
+          <div style={{ fontFamily:"'Inter',sans-serif", fontSize:13, fontWeight:700, color:T.ink, marginBottom:12 }}>Applications</div>
           {loading ? <div style={{ color:T.ink4, fontSize:13 }}>Loading...</div>
             : candidates.slice(0, 12).map((c) => {
             const col = c.keyword?.toLowerCase().includes("medical") ? T.green
@@ -109,7 +109,7 @@ export default function FairnessLedger() {
             return (
               <div key={c.uid} onClick={() => setSelected(c)}
                 style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 10px", borderRadius:10, cursor:"pointer", marginBottom:4, background: isSelected ? T.indigo3 : "transparent", border: isSelected ? `1px solid ${T.indigo}30` : `1px solid transparent`, transition:"all 0.15s" }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:`${col}15`, color:col, border:`1px solid ${col}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
+                <div style={{ width:32, height:32, borderRadius:9, background:`${col}15`, color:col, border:`1px solid ${col}35`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:12, flexShrink:0 }}>{initials}</div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:12, fontWeight:600, color: isSelected ? T.indigo : T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{c.displayName || "—"}</div>
                   <div style={{ fontSize:10, color:T.ink4 }}>⚡{c.eloRating || 800}</div>
@@ -128,19 +128,19 @@ export default function FairnessLedger() {
             <>
               {/* Candidate header */}
               <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:20, padding:"14px 16px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:12 }}>
-                <div style={{ width:44, height:44, borderRadius:12, background:T.indigo3, color:T.indigo, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:16, flexShrink:0 }}>
+                <div style={{ width:44, height:44, borderRadius:12, background:T.indigo3, color:T.indigo, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:16, flexShrink:0 }}>
                   {(selected.displayName || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0,2)}
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:700, color:T.ink }}>{selected.displayName || "—"}</div>
+                  <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, fontWeight:700, color:T.ink }}>{selected.displayName || "—"}</div>
                   <div style={{ fontSize:12, color:T.ink4 }}>Applied to: Senior Role · ⚡{selected.eloRating || 800} · {selected.keyword || "General"}</div>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   <button onClick={() => setShowPublic(!showPublic)}
-                    style={{ fontSize:12, padding:"6px 12px", background: showPublic ? T.green2 : T.indigo3, border:`1px solid ${showPublic ? T.green + "30" : T.indigo + "30"}`, borderRadius:8, color: showPublic ? T.green : T.indigo, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+                    style={{ fontSize:12, padding:"6px 12px", background: showPublic ? T.green2 : T.indigo3, border:`1px solid ${showPublic ? T.green + "30" : T.indigo + "30"}`, borderRadius:8, color: showPublic ? T.green : T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
                     {showPublic ? "👁 Public View" : "🔒 Full View"}
                   </button>
-                  <button style={{ fontSize:12, padding:"6px 12px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                  <button style={{ fontSize:12, padding:"6px 12px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink3, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
                     ↓ Export PDF
                   </button>
                 </div>
@@ -161,7 +161,7 @@ export default function FairnessLedger() {
                   { label:"Interviews",     value:displayLedger.filter((e) => e.type === "interview_done").length, color:T.blue },
                 ].map((s) => (
                   <div key={s.label} style={{ padding:"12px", background:T.cream2, border:`1px solid ${T.border}`, borderRadius:10, textAlign:"center" }}>
-                    <div style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:s.color }}>{s.value}</div>
+                    <div style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:s.color }}>{s.value}</div>
                     <div style={{ fontSize:11, color:T.ink4, marginTop:2 }}>{s.label}</div>
                   </div>
                 ))}

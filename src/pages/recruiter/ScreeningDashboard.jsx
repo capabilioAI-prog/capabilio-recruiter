@@ -44,7 +44,7 @@ function ScreeningStatsCard({ jobId }) {
           { label:"Feedback Sent",     value:stats.feedbackSent,   color:"#3D4EAC" },
         ].map(s => (
           <div key={s.label} style={{ background:"rgba(255,255,255,0.03)", borderRadius:10, padding:"12px 14px" }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:22, fontWeight:800, color:s.color }}>{s.value}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:22, fontWeight:800, color:s.color }}>{s.value}</div>
             <div style={{ fontSize:11, color:"#E8E8E1", marginTop:2 }}>{s.label}</div>
           </div>
         ))}
@@ -123,7 +123,7 @@ function CandidateRow({ candidate, onOverride, onStageChange, onViewDetails }) {
     <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:"14px 16px", display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
       {/* Score badge */}
       <div style={{ minWidth:52, height:52, borderRadius:12, background:scoreBg(s), border:`1px solid ${scoreColor(s)}40`, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", flexShrink:0 }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:800, color:scoreColor(s) }}>{s}</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, fontWeight:800, color:scoreColor(s) }}>{s}</div>
         <div style={{ fontSize:8, color:"#E8E8E1", fontWeight:600 }}>SCORE</div>
       </div>
 
@@ -193,16 +193,16 @@ function CandidateDetailModal({ candidate, onClose }) {
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(26,26,24,0.07)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:28, width:"100%", maxWidth:680, maxHeight:"90vh", overflowY:"auto", fontFamily:"'DM Sans',sans-serif" }}>
+      <div style={{ background:"#F6F6F1", border:"1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:28, width:"100%", maxWidth:680, maxHeight:"90vh", overflowY:"auto", fontFamily:"'Inter',sans-serif" }}>
 
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
           <div>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18" }}>{candidate.name}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18" }}>{candidate.name}</div>
             <div style={{ fontSize:13, color:"#3A3A38" }}>{candidate.email} · {pd.current_role || "Candidate"}</div>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ textAlign:"center", background:scoreBg(candidate.matchScore||0), border:`1px solid ${scoreColor(candidate.matchScore||0)}40`, borderRadius:10, padding:"8px 14px" }}>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontSize:24, fontWeight:800, color:scoreColor(candidate.matchScore||0) }}>{candidate.matchScore}</div>
+              <div style={{ fontFamily:"'Inter',sans-serif", fontSize:24, fontWeight:800, color:scoreColor(candidate.matchScore||0) }}>{candidate.matchScore}</div>
               <div style={{ fontSize:10, color:"#E8E8E1" }}>Match Score</div>
             </div>
             <button onClick={onClose} style={{ background:"rgba(26,26,24,0.06)", border:"none", color:"#6B6B68", width:32, height:32, borderRadius:8, cursor:"pointer" }}>✕</button>
@@ -355,13 +355,13 @@ export default function ScreeningDashboard({ jobId, jobTitle }) {
   const displayed = activeTab==="screened" ? screened : activeTab==="rejected" ? rejected : manual
 
   return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", color:"#1A1A18" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+    <div style={{ fontFamily:"'Inter',sans-serif", color:"#1A1A18" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');`}</style>
 
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
         <div>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18", margin:0 }}>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:20, fontWeight:800, color:"#1A1A18", margin:0 }}>
             AI Screening — {jobTitle || "Job"}
           </h2>
           <p style={{ fontSize:13, color:"#3A3A38", margin:"4px 0 0" }}>

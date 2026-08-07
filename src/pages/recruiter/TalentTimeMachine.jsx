@@ -113,7 +113,7 @@ function TimelineCard({ candidate, onClick }) {
           <Sparkline points={eloHist} color={col} width={140} height={36} />
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: lvl.color }}>
+          <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: lvl.color }}>
             {candidate.eloRating || 800}
           </div>
           <div style={{ fontSize: 11, color: eloGain >= 0 ? "#1A7A4A" : "#ef4444" }}>
@@ -162,7 +162,7 @@ const TC = {
   avatar: {
     width: 38, height: 38, borderRadius: 10, flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 14,
+    fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 14,
   },
   name: {
     fontSize: 13, fontWeight: 600, color: "#1A1A18",
@@ -183,7 +183,7 @@ const TC = {
     border: "1px solid rgba(61,78,172,0.15)",
     borderRadius: 8, color: "#a5b4fc",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
   },
 }
 
@@ -302,7 +302,7 @@ function DetailDrawer({ candidate, onClose }) {
               { label: "Job Ready",   value: `${candidate.jobReadiness || 0}%`, color: "#1A7A4A" },
             ].map((s) => (
               <div key={s.label} style={DD.statCard}>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
                 <div style={{ fontSize: 10, color: "#E8E8E1" }}>{s.label}</div>
               </div>
             ))}
@@ -381,17 +381,17 @@ const DD = {
     background: "#F6F6F1",
     borderLeft: "1px solid rgba(255,255,255,0.08)",
     overflowY: "auto", padding: 24,
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
     animation: "slideIn 0.3s ease",
   },
   head: { display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 20 },
   bigAvatar: {
     width: 52, height: 52, borderRadius: 14, flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 20,
+    fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 20,
   },
   name: {
-    fontFamily: "'Syne',sans-serif", fontSize: 18,
+    fontFamily: "'Inter',sans-serif", fontSize: 18,
     fontWeight: 700, color: "#1A1A18", margin: "0 0 4px",
   },
   lvlBadge: {
@@ -422,7 +422,7 @@ const DD = {
     border: "1px solid rgba(139,92,246,0.25)",
     borderRadius: 10, color: "#c4b5fd",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
   },
   roleTag: {
     fontSize: 11, color: "#a5b4fc",
@@ -435,7 +435,7 @@ const DD = {
     background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
     border: "none", borderRadius: 10, color: "#1A1A18",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
   },
   secondaryBtn: {
     padding: "10px 14px",
@@ -443,7 +443,7 @@ const DD = {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#6B6B68",
     fontSize: 13, fontWeight: 500, cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "'Inter',sans-serif",
   },
 }
 
@@ -494,9 +494,9 @@ export default function TalentTimeMachine() {
     .slice(0, 3)
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", color: "#1A1A18" }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: "#1A1A18" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         input::placeholder { color: #334155; }
         input:focus, select:focus { outline: none; border-color: #3D4EAC !important; }
@@ -589,7 +589,7 @@ export default function TalentTimeMachine() {
 const P = {
   header: { marginBottom: 20 },
   title: {
-    fontFamily: "'Syne',sans-serif", fontSize: 22,
+    fontFamily: "'Inter',sans-serif", fontSize: 22,
     fontWeight: 800, color: "#1A1A18", margin: 0,
   },
   sub: { fontSize: 13, color: "#3A3A38", marginTop: 4 },
@@ -617,14 +617,14 @@ const P = {
     background: "#EFEFE9",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans',sans-serif",
+    fontSize: 13, fontFamily: "'Inter',sans-serif",
   },
   select: {
     padding: "9px 12px",
     background: "#EFEFE9",
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, color: "#1A1A18",
-    fontSize: 13, fontFamily: "'DM Sans',sans-serif",
+    fontSize: 13, fontFamily: "'Inter',sans-serif",
     cursor: "pointer",
   },
   countChip: {

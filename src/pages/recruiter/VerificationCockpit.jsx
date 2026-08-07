@@ -31,7 +31,7 @@ function TrustRing({ score, size = 56 }) {
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         transform={`rotate(-90 ${size / 2} ${size / 2})`} />
       <text x={size / 2} y={size / 2 + 1} textAnchor="middle" dominantBaseline="middle"
-        fontSize="13" fontWeight="800" fill={T.ink} fontFamily="Syne">{score}</text>
+        fontSize="13" fontWeight="800" fill={T.ink} fontFamily="Inter">{score}</text>
     </svg>
   )
 }
@@ -45,7 +45,7 @@ function CandidateVerifRow({ c }) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 0", borderBottom: `1px solid ${T.border}` }}>
-      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${col}18`, border: `1.5px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 10, background: `${col}18`, border: `1.5px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
         {initials}
       </div>
 
@@ -69,7 +69,7 @@ function CandidateVerifRow({ c }) {
       <TrustRing score={trustScore} />
 
       <button onClick={() => navigate(`/recruiter/search`)}
-        style={{ fontSize: 12, padding: "6px 12px", background: T.indigo3, border: `1px solid ${T.indigo}30`, borderRadius: 8, color: T.indigo, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
+        style={{ fontSize: 12, padding: "6px 12px", background: T.indigo3, border: `1px solid ${T.indigo}30`, borderRadius: 8, color: T.indigo, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
         View Profile →
       </button>
     </div>
@@ -139,7 +139,7 @@ export default function VerificationCockpit() {
           <div key={s.label} style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: "18px 16px", display: "flex", alignItems: "center", gap: 14, boxShadow: T.shadow }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: `${s.color}15`, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{s.icon}</div>
             <div>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink }}>{loading ? "—" : s.value}</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: T.ink }}>{loading ? "—" : s.value}</div>
               <div style={{ fontSize: 11, color: T.ink3, marginTop: 2 }}>{s.label}</div>
               <div style={{ fontSize: 10, color: T.ink4 }}>{s.sub}</div>
             </div>
@@ -148,7 +148,7 @@ export default function VerificationCockpit() {
       </div>
 
       <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 20, boxShadow: T.shadow }}>
-        <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>🛡️ What we actually check</h2>
+        <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>🛡️ What we actually check</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
           {REAL_CHECKS.map((l) => (
             <div key={l.key} style={{ padding: "14px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 12 }}>
@@ -165,12 +165,12 @@ export default function VerificationCockpit() {
       </div>
 
       <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 16, padding: 20, boxShadow: T.shadow }}>
-        <h2 style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>🔎 Candidate Verification Status</h2>
+        <h2 style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, margin: "0 0 16px" }}>🔎 Candidate Verification Status</h2>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
           {FILTERS.map((f) => (
             <button key={f.key} onClick={() => setFilter(f.key)}
-              style={{ fontSize: 12, padding: "6px 12px", borderRadius: 8, border: "1px solid", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontWeight: 600, transition: "all 0.15s",
+              style={{ fontSize: 12, padding: "6px 12px", borderRadius: 8, border: "1px solid", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontWeight: 600, transition: "all 0.15s",
                 background:  filter === f.key ? T.indigo3 : T.cream2,
                 borderColor: filter === f.key ? T.indigo   : T.border,
                 color:       filter === f.key ? T.indigo   : T.ink4,

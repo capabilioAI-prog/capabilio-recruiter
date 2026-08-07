@@ -81,7 +81,7 @@ function RadarChart({ skills = [], size = 280 }) {
             <circle cx={px} cy={py} r={4} fill={T.indigo} />
             <text x={lx} y={ly}
               textAnchor="middle" dominantBaseline="middle"
-              fontSize="10" fill={T.ink3} fontFamily="DM Sans">
+              fontSize="10" fill={T.ink3} fontFamily="Inter">
               {s.label}
             </text>
           </g>
@@ -187,7 +187,7 @@ function AITab({ candidate }) {
   if (!analysis) return (
     <div style={{ textAlign: "center", padding: "52px 24px" }}>
       <div style={{ fontSize: 52, marginBottom: 16 }}>🤖</div>
-      <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, color: T.ink, margin: "0 0 8px" }}>
+      <h3 style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, color: T.ink, margin: "0 0 8px" }}>
         AI-Powered Candidate Analysis
       </h3>
       <p style={{ color: T.ink3, fontSize: 14, maxWidth: 360, margin: "0 auto 28px", lineHeight: 1.6 }}>
@@ -292,7 +292,7 @@ const AI = {
     background: T.ink,
     border: "none", borderRadius: 14, color: "#fff",
     fontSize: 15, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     display: "inline-flex", alignItems: "center", gap: 8,
     boxShadow: `0 4px 20px rgba(26,26,24,0.18)`,
   },
@@ -313,7 +313,7 @@ const AI = {
     textTransform: "uppercase", marginBottom: 8,
   },
   bigVal: {
-    fontFamily: "'Syne', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     fontSize: 24, fontWeight: 800,
   },
   section: {
@@ -374,7 +374,7 @@ export default function CandidateProfile() {
   )
 
   if (!candidate) return (
-    <div style={{ textAlign: "center", padding: 60, color: T.ink3, fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ textAlign: "center", padding: 60, color: T.ink3, fontFamily: "'Inter',sans-serif" }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>👤</div>
       Candidate not found.
     </div>
@@ -387,9 +387,9 @@ export default function CandidateProfile() {
   const arenaEntries = Object.entries(candidate.arenaSubmissions || {})
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: T.ink }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", color: T.ink }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
         @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes fadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
       `}</style>
@@ -495,13 +495,13 @@ export default function CandidateProfile() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div style={PP.infoCard}>
               <div style={PP.infoLabel}>Assessment Score</div>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 32, fontWeight: 800, color: T.ink }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 32, fontWeight: 800, color: T.ink }}>
                 {candidate.score || "—"}
               </div>
             </div>
             <div style={PP.infoCard}>
               <div style={PP.infoLabel}>Cohort Percentile</div>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 22, fontWeight: 700, color: T.indigo }}>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 700, color: T.indigo }}>
                 Top {Math.max(1, Math.round(100 - ((candidate.eloRating || 800) - 800) / 4))}%
               </div>
               <div style={{ fontSize: 11, color: T.ink4, marginTop: 2 }}>in {candidate.keyword}</div>
@@ -568,7 +568,7 @@ export default function CandidateProfile() {
               ].map((s) => (
                 <div key={s.label} style={PP.infoCard}>
                   <div style={PP.infoLabel}>{s.label}</div>
-                  <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 24, fontWeight: 800, color: s.color }}>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 24, fontWeight: 800, color: s.color }}>
                     {s.value}
                   </div>
                 </div>
@@ -598,7 +598,7 @@ export default function CandidateProfile() {
                       )}
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>
+                      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>
                         {sub.score || 0}%
                       </div>
                       <div style={{ fontSize: 12, color: T.indigo }}>+{sub.eloGained || 0} ELO</div>
@@ -631,7 +631,7 @@ export default function CandidateProfile() {
             <div style={{ background: T.indigo3, border: `1px solid ${T.indigo}25`, borderRadius: 14, padding: "16px 20px", display: "flex", gap: 14, alignItems: "flex-start" }}>
               <span style={{ fontSize: 28 }}>⚡</span>
               <div>
-                <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 800, color: T.ink, marginBottom: 4 }}>Capabilio ELO Profile is Active</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 800, color: T.ink, marginBottom: 4 }}>Capabilio ELO Profile is Active</div>
                 <div style={{ fontSize: 12, color: T.ink3, lineHeight: 1.6 }}>
                   This candidate has a verified ELO score of <strong style={{ color: T.indigo }}>⚡{candidate.eloRating || 800}</strong> from skill assessments and Arena challenges — a far stronger hiring signal than a resume. The resume below is supplementary context.
                 </div>
@@ -640,7 +640,7 @@ export default function CandidateProfile() {
 
             {/* Parsed resume summary (AI-derived from profile data) */}
             <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, boxShadow: T.shadow }}>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, marginBottom: 16 }}>🤖 AI-Parsed Resume Summary</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, marginBottom: 16 }}>🤖 AI-Parsed Resume Summary</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {[
                   { label: "Full Name",        value: candidate.displayName || "—",      color: T.ink    },
@@ -687,7 +687,7 @@ export default function CandidateProfile() {
 
             {/* Original uploaded resume */}
             <div style={{ background: T.cream, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, boxShadow: T.shadow }}>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, marginBottom: 14 }}>📄 Uploaded Resume File</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 700, color: T.ink, marginBottom: 14 }}>📄 Uploaded Resume File</div>
               {candidate.resumeFileName ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                   <span style={{ fontSize: 32 }}>📄</span>
@@ -767,7 +767,7 @@ const PP = {
   backBtn: {
     background: "none", border: "none", color: T.indigo,
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     padding: "0 0 16px", display: "block",
   },
   headerCard: {
@@ -780,10 +780,10 @@ const PP = {
   bigAvatar: {
     width: 72, height: 72, borderRadius: 20, flexShrink: 0,
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 28,
+    fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 28,
   },
   name: {
-    fontFamily: "'Syne', sans-serif", fontSize: 26,
+    fontFamily: "'Inter', sans-serif", fontSize: 26,
     fontWeight: 800, color: T.ink, margin: 0,
   },
   levelBadge: {
@@ -801,14 +801,14 @@ const PP = {
     border: `1px solid ${T.border}`,
     borderRadius: 10, padding: "8px 14px",
   },
-  chipVal:   { fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800 },
+  chipVal:   { fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 800 },
   chipLabel: { fontSize: 10, color: T.ink4 },
   primaryBtn: {
     padding: "10px 20px",
     background: T.indigo,
     border: "none", borderRadius: 10, color: "#fff",
     fontSize: 13, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     boxShadow: `0 4px 14px ${T.indigo}30`,
   },
   outlineBtn: {
@@ -817,7 +817,7 @@ const PP = {
     border: `1px solid ${T.border}`,
     borderRadius: 10, color: T.ink3,
     fontSize: 13, fontWeight: 500, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
   },
   tabBar: {
     display: "flex", gap: 0,
@@ -828,7 +828,7 @@ const PP = {
     padding: "12px 18px", background: "none",
     border: "none", cursor: "pointer",
     fontSize: 13, fontWeight: 600,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Inter', sans-serif",
     transition: "all 0.2s", whiteSpace: "nowrap",
   },
   tabContent: {
@@ -866,6 +866,6 @@ const PP = {
     border: `1px solid ${T.indigo}25`,
     borderRadius: 8, color: T.indigo,
     fontSize: 12, fontWeight: 600, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif", textDecoration: "none",
+    fontFamily: "'Inter', sans-serif", textDecoration: "none",
   },
 }

@@ -45,9 +45,18 @@ function ProofCard({ p }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           {typeof p.score === "number" && (
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: GRADE_COLOR(p.grade) }}>{p.grade || ""} {p.score}%</div>
-              {typeof p.elo_delta === "number" && p.elo_delta !== 0 && (
-                <div style={{ fontSize: 10, color: p.elo_delta > 0 ? T.green : T.red }}>{p.elo_delta > 0 ? "+" : ""}{p.elo_delta} ELO</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color: GRADE_COLOR(p.grade) }}>{p.grade || ""} {p.score}%</div>
+              {/* 2026-08-08: always show ELO delta, even when it's 0 -- per
+                  explicit request, a score/grade alone can be copy-pasted or
+                  gamed, but the ELO change earned for that specific submission
+                  is a separate signal the AI grader doesn't control directly.
+                  A high score with 0 ELO gained (common: repeat/duplicate
+                  task, or a skill already at its ceiling) is worth a
+                  recruiter noticing, not hiding. */}
+              {typeof p.elo_delta === "number" && (
+                <div style={{ fontSize: 10, fontWeight: 700, color: p.elo_delta > 0 ? T.green : p.elo_delta < 0 ? T.red : T.ink4 }} title="ELO change earned from this specific submission">
+                  {p.elo_delta > 0 ? "+" : ""}{p.elo_delta} ELO
+                </div>
               )}
             </div>
           )}
@@ -179,13 +188,13 @@ export default function CandidateDetail() {
         {c.avatar_url ? (
           <img src={c.avatar_url} alt={displayName} style={{ width: 64, height: 64, borderRadius: 16, objectFit: "cover", flexShrink: 0 }} />
         ) : (
-          <div style={{ width: 64, height: 64, borderRadius: 16, background: `${col}18`, border: `1.5px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: `${col}18`, border: `1.5px solid ${col}44`, color: col, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>
             {initials}
           </div>
         )}
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink }}>{displayName}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.ink }}>{displayName}</div>
             <span style={tag(lvl.color, `${lvl.color}18`)}>{lvl.label}</span>
           </div>
           <div style={{ fontSize: 13, color: T.ink3, marginTop: 3 }}>
@@ -206,28 +215,57 @@ export default function CandidateDetail() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ textAlign: "center", padding: "8px 16px", background: T.cream2, borderRadius: 10 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.indigo }}>{tierScore || "—"}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.indigo }}>{tierScore || "—"}</div>
             <div style={{ fontSize: 10, color: T.ink4 }}>ELO</div>
           </div>
           <div style={{ textAlign: "center", padding: "8px 16px", background: T.cream2, borderRadius: 10 }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>{proofOfSkills.length}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: T.green }}>{proofOfSkills.length}</div>
             <div style={{ fontSize: 10, color: T.ink4 }}>Tasks Done</div>
           </div>
         </div>
       </div>
 
-      {/* Skills */}
+      {/* Professional Summary — same profiles.profile_summary field the
+          candidate's own public Portfolio page shows as its "Bio summary",
+          self-written or AI-generated via Aura's ProfileSummaryCard. */}
+      {c.professionalSummary && (
+        <div style={card}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 10 }}>Professional Summary</div>
+          <div style={{ fontSize: 13, color: T.ink2, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{c.professionalSummary}</div>
+        </div>
+      )}
+
+      {/* Skills — bar view mirroring the candidate's own Aura Skills tab
+          (percentage/proof-weighted bars, not plain chips). Bars are scaled
+          relative to this candidate's own highest skill, since `elo_value`
+          mixes two different source scales (resume-seeded profiles.skill_graph
+          vs the live, proof-backed skill_graph table -- see mergeSkillSources()
+          on the backend) and there's no single fixed ceiling both share. */}
       <div style={card}>
         <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>Skills</div>
         {skills.length === 0 ? (
           <div style={{ fontSize: 13, color: T.ink4 }}>No skill data yet.</div>
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {skills.map((s) => (
-              <span key={s.skill_name} title={`ELO ${s.elo_value}`} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", background: T.indigo3, color: T.indigo, borderRadius: 8 }}>
-                {s.skill_name} · {s.elo_value}
-              </span>
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {(() => {
+              const maxVal = Math.max(1, ...skills.map((s) => s.elo_value || 0))
+              return skills.map((s) => (
+                <div key={s.skill_name}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: T.ink2, display: "flex", alignItems: "center", gap: 6 }}>
+                      {s.skill_name}
+                      {s.source === "arena" && (
+                        <span style={{ fontSize: 9, fontWeight: 700, color: T.green, background: T.green2, border: `1px solid ${T.green}30`, borderRadius: 5, padding: "1px 5px" }}>✓ Proof-backed</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: T.indigo }}>{s.elo_value}</div>
+                  </div>
+                  <div style={{ height: 7, borderRadius: 4, background: T.cream3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${Math.max(4, Math.round((s.elo_value / maxVal) * 100))}%`, borderRadius: 4, background: s.source === "arena" ? T.indigo : T.ink4 }} />
+                  </div>
+                </div>
+              ))
+            })()}
           </div>
         )}
       </div>
@@ -292,16 +330,16 @@ export default function CandidateDetail() {
           <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>Code DNA {codeDna.username && <span style={{ fontWeight: 400, color: T.ink4 }}>· <a href={`https://github.com/${codeDna.username}`} target="_blank" rel="noreferrer" style={{ color: T.indigo }}>github.com/{codeDna.username}</a></span>}</div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
             {codeDna.publicRepos != null && (
-              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.publicRepos}</div><div style={{ fontSize: 10, color: T.ink4 }}>Public repos</div></div>
+              <div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.publicRepos}</div><div style={{ fontSize: 10, color: T.ink4 }}>Public repos</div></div>
             )}
             {codeDna.totalCommits != null && (
-              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.totalCommits}</div><div style={{ fontSize: 10, color: T.ink4 }}>Commits</div></div>
+              <div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.totalCommits}</div><div style={{ fontSize: 10, color: T.ink4 }}>Commits</div></div>
             )}
             {codeDna.followers != null && (
-              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.followers}</div><div style={{ fontSize: 10, color: T.ink4 }}>Followers</div></div>
+              <div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color: T.ink }}>{codeDna.followers}</div><div style={{ fontSize: 10, color: T.ink4 }}>Followers</div></div>
             )}
             {codeDna.score != null && (
-              <div><div style={{ fontFamily: "'Syne',sans-serif", fontSize: 16, fontWeight: 800, color: T.indigo }}>{codeDna.score}</div><div style={{ fontSize: 10, color: T.ink4 }}>Builder score</div></div>
+              <div><div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color: T.indigo }}>{codeDna.score}</div><div style={{ fontSize: 10, color: T.ink4 }}>Builder score</div></div>
             )}
           </div>
           {codeDna.standoutFact && (
