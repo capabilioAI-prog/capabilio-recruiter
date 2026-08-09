@@ -3,6 +3,16 @@ import { useNavigate } from "react-router-dom"
 import { supabase } from "../../lib/supabaseClient"
 import { T, domainColor } from "./theme"
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
+
+// 2026-08-09: workflow automation -- stages where an opt-in automatic
+// candidate notification email is supported. Must match
+// lib/stageEmailTemplates.js's ALLOWED_AUTO_STAGES on the backend exactly;
+// "rejected" is intentionally excluded everywhere (see that file's header
+// comment -- rejection already goes through the more careful, AI-drafted,
+// human-reviewed FeedbackModal flow in ApplicationsView.jsx).
+const AUTO_NOTIFY_STAGES = new Set(["contacted", "interview", "offered"])
+
 // Real data only: this board reads/writes the `pipeline_candidates` table
 // directly (populated by the "+ Pipeline" action in Candidate Discovery and
 // the "Shortlist" action in Applications). The previous version kept an
@@ -90,6 +100,13 @@ export default function RecruiterPipeline() {
   const [jobsById, setJobsById] = useState({})
   const [loading, setLoading] = useState(true)
   const [jobFilter, setJobFilter] = useState("all")
+  // Opt-in, defaults OFF -- moving a card is a low-friction click and this
+  // sends a real email to a real candidate with no per-send review step
+  // (unlike Reject, which still always goes through FeedbackModal). A
+  // recruiter should consciously turn this on, not discover it fired
+  // emails they didn't expect.
+  const [autoNotify, setAutoNotify] = useState(false)
+  const [notifyToast, setNotifyToast] = useState(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -119,12 +136,57 @@ export default function RecruiterPipeline() {
   }, [fetchData])
 
   const moveCard = async (id, toStage) => {
+    const row = rows.find((r) => r.id === id)
     try {
       const { error } = await supabase.from("pipeline_candidates").update({ stage: toStage }).eq("id", id)
       if (error) throw error
       setRows((prev) => prev.map((r) => (r.id === id ? { ...r, stage: toStage } : r)))
     } catch (err) {
       console.error("Failed to move candidate:", err)
+      return
+    }
+    // Stage move already succeeded above -- everything below is
+    // best-effort notification only. A failure here must never look like
+    // the move itself failed (the card has already updated on screen).
+    if (autoNotify && row && AUTO_NOTIFY_STAGES.has(toStage)) {
+      notifyCandidate(row, toStage)
+    }
+  }
+
+  const notifyCandidate = async (row, toStage) => {
+    try {
+      if (!row.candidate_id || !row.job_id) throw new Error("No linked candidate/job to look up an email for.")
+      const { data: app, error: appErr } = await supabase
+        .from("applications")
+        .select("email")
+        .eq("job_id", row.job_id)
+        .eq("candidate_id", row.candidate_id)
+        .maybeSingle()
+      if (appErr) throw appErr
+      if (!app?.email) throw new Error("No email on file for this candidate.")
+
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${BACKEND}/workflow/stage-notify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          candidateEmail: app.email,
+          candidateName: row.name,
+          jobTitle: jobsById[row.job_id] || row.job_title || "",
+          stage: toStage,
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok || !body.sent) throw new Error(body.error || "Send failed")
+      setNotifyToast({ msg: `${row.name} notified of move to ${toStage}`, type: "success" })
+    } catch (err) {
+      console.error("Stage-change notification failed:", err.message)
+      setNotifyToast({ msg: `Stage updated, but the notification email to ${row.name} didn't send`, type: "error" })
+    } finally {
+      setTimeout(() => setNotifyToast(null), 3500)
     }
   }
 
@@ -163,12 +225,21 @@ export default function RecruiterPipeline() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", color: T.ink }}>
+      {notifyToast && (
+        <div style={{ position: "fixed", top: 24, right: 24, zIndex: 2000, background: notifyToast.type === "success" ? T.green : T.red, color: "#fff", padding: "12px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, boxShadow: T.shadow }}>
+          {notifyToast.msg}
+        </div>
+      )}
       <div style={P.header}>
         <div>
           <h1 style={P.title}>Hiring Pipeline</h1>
           <p style={P.sub}>{totalCards} candidates · {conversionRate}% offer rate</p>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.ink3, cursor: "pointer" }} title="When on, moving a candidate to Contacted, Interview, or Offered automatically emails them a status update. Rejections are unaffected -- those still always go through the reviewable feedback flow.">
+            <input type="checkbox" checked={autoNotify} onChange={(e) => setAutoNotify(e.target.checked)} />
+            🔔 Auto-notify on stage move
+          </label>
           <select value={jobFilter} onChange={(e) => setJobFilter(e.target.value)} style={P.select}>
             <option value="all">All Jobs</option>
             {jobOptions.map((j) => (
