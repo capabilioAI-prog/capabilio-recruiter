@@ -337,9 +337,14 @@ function FeedbackModal({ candidate, jobTitle, onClose, onSent }) {
   async function generateFeedback() {
     setLoading(true);
     try {
+      // 2026-08-09: backend now requires auth (was open/unauthenticated).
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${BACKEND}/generate-feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           candidateName: candidate.name,
           jobTitle,
@@ -400,9 +405,13 @@ The Hiring Team`;
       if (updateErr) throw updateErr;
 
       // Trigger the actual email via backend
+      const { data: { session } } = await supabase.auth.getSession();
       await fetch(`${BACKEND}/send-feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           candidateEmail: candidate.email,
           candidateName: candidate.name,

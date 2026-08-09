@@ -5,6 +5,17 @@ import { T } from "./theme"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
+// 2026-08-09: every /partner/* route on the backend now requires this --
+// previously none of the calls below sent it at all, since the backend
+// didn't check. See capabilio-recruiter-backend's middleware/auth.js.
+async function authHeaders(extra = {}) {
+  const { data: { session } } = await supabase.auth.getSession()
+  return {
+    ...extra,
+    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+  }
+}
+
 const STATUS_META = {
   requested: { label: "Requested", color: T.amber, bg: T.amber2 },
   connected: { label: "Connected", color: T.green, bg: T.green2 },
@@ -95,7 +106,7 @@ export default function CollegeConnections() {
     if (!email) { setActiveLinksLoading(false); return }
     setActiveLinksLoading(true)
     try {
-      const res = await fetch(`${BACKEND}/partner/company-links?email=${encodeURIComponent(email)}`)
+      const res = await fetch(`${BACKEND}/partner/company-links?email=${encodeURIComponent(email)}`, { headers: await authHeaders() })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setActiveLinks(body.links || [])
@@ -113,11 +124,12 @@ export default function CollegeConnections() {
   const fetchRosterAndRequests = useCallback(async (linkId, silent = false) => {
     if (!silent) { setRosterLoading(true); setRosterError(null) }
     try {
+      const hdrs = await authHeaders()
       const [rosterRes, reqRes] = await Promise.all([
-        fetch(`${BACKEND}/partner/company-links/${linkId}/students`).then(async (r) => {
+        fetch(`${BACKEND}/partner/company-links/${linkId}/students`, { headers: hdrs }).then(async (r) => {
           const b = await r.json(); if (!r.ok) throw new Error(b.error || `Request failed (${r.status})`); return b
         }),
-        fetch(`${BACKEND}/partner/company-links/${linkId}/access-requests`).then(async (r) => {
+        fetch(`${BACKEND}/partner/company-links/${linkId}/access-requests`, { headers: hdrs }).then(async (r) => {
           const b = await r.json(); if (!r.ok) throw new Error(b.error || `Request failed (${r.status})`); return b
         }),
       ])
@@ -175,8 +187,8 @@ export default function CollegeConnections() {
     try {
       const res = await fetch(`${BACKEND}/partner/company-links/${selectedLinkId}/students/${studentUserId}/request-access`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ partnerCompanyId: identity.companyId, requestedByEmail: identity.email }),
+        headers: await authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ reason: null }),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
@@ -216,7 +228,7 @@ export default function CollegeConnections() {
     setInvitesLoading(true)
     setInvitesError(null)
     try {
-      const res = await fetch(`${BACKEND}/partner/company-invites?email=${encodeURIComponent(email)}`)
+      const res = await fetch(`${BACKEND}/partner/company-invites?email=${encodeURIComponent(email)}`, { headers: await authHeaders() })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setInvites(body.invites || [])
@@ -237,12 +249,8 @@ export default function CollegeConnections() {
     try {
       const res = await fetch(`${BACKEND}/partner/company-invites/${invite.id}/${action}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          action === "accept"
-            ? { partnerCompanyId: identity.companyId, acceptedByEmail: identity.email }
-            : {}
-        ),
+        headers: await authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({}),
       })
       const body = await res.json()
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
@@ -260,7 +268,7 @@ export default function CollegeConnections() {
     setBridgeError(null)
     try {
       const [instRes, connsRes] = await Promise.all([
-        fetch(`${BACKEND}/partner/institutions`).then(async (r) => {
+        fetch(`${BACKEND}/partner/institutions`, { headers: await authHeaders() }).then(async (r) => {
           const body = await r.json()
           if (!r.ok) throw new Error(body.error || `Request failed (${r.status})`)
           return body

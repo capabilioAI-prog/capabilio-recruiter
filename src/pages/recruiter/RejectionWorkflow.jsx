@@ -4,6 +4,17 @@ import { T } from "./theme"
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
+// 2026-08-09: /generate-feedback and /send-feedback now require auth on the
+// backend (were previously open, unauthenticated -- AI cost + email-relay
+// abuse risk).
+async function authHeaders(extra = {}) {
+  const { data: { session } } = await supabase.auth.getSession()
+  return {
+    ...extra,
+    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+  }
+}
+
 // 2026-08-06: REWRITTEN. This page used to read a Firebase `users`
 // collection (disconnected from both Supabase projects), fabricate a fake
 // "gap analysis" from a hardcoded ELO-threshold rule function, and its
@@ -90,7 +101,7 @@ export default function RejectionWorkflow() {
     try {
       const res = await fetch(`${BACKEND}/generate-feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           candidateName: candidate.name,
           jobTitle: candidate.jobTitle,
@@ -126,7 +137,7 @@ export default function RejectionWorkflow() {
 
       const sendRes = await fetch(`${BACKEND}/send-feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ candidateEmail: selected.email, candidateName: selected.name, feedback: feedbackText }),
       })
       const sendBody = await sendRes.json().catch(() => ({}))

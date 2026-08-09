@@ -167,12 +167,20 @@ function AssignTaskForm({ defaultCandidateId, defaultCandidateName, companyLinkI
     }
 
     const batchId = recipients.length > 1 ? crypto.randomUUID() : null
+    // 2026-08-09: POST /tasks now requires auth server-side (was previously
+    // wide open -- any caller could attribute a task to any companyId just
+    // by putting one in the request body). This was already silently
+    // sending no Authorization header at all; now required.
+    const { data: { session } } = await supabase.auth.getSession()
     const failures = []
     for (const r of recipients) {
       try {
         const res = await fetch(`${BACKEND}/tasks`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
           body: JSON.stringify({
             candidateId: r.candidateId || null,
             candidateName: r.candidateName,

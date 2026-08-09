@@ -91,9 +91,15 @@ function stageObj(id) { return STAGES.find(s => s.id === id) || STAGES[0] }
 // path is now real.
 async function generateOfferLetter(offer) {
   try {
+    // 2026-08-09: backend now requires auth (was previously an open,
+    // unauthenticated Anthropic-cost endpoint).
+    const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch(`${BACKEND}/generate-offer-letter`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify(offer),
     })
     const data = await res.json()
