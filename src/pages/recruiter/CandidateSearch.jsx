@@ -209,6 +209,68 @@ export default function CandidateSearch() {
     setUanVerified(false); setEducationVerified(false); setSortBy("recent")
   }
 
+  // 2026-08-09: AI-assisted natural-language search -- a thin translation
+  // layer in front of the SAME advanced filters above, via
+  // POST /search-assist (capabilio-recruiter-backend). It does not search
+  // candidates itself and cannot return a candidate the filters couldn't
+  // also return; it only fills in the filter panel state from free text,
+  // which the recruiter can see and edit before/after it runs (the panel
+  // auto-opens so the applied filters are never hidden). The backend
+  // whitelists/clamps every field before sending it back, but this is still
+  // AI output -- treated as a starting point, not a final decision.
+  const [aiQuery, setAiQuery] = useState("")
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiNote, setAiNote] = useState(null)
+  const [aiErr, setAiErr] = useState(null)
+
+  const applyPathType = (pt) => setPathFilter(pt === "student" || pt === "professional" ? pt : "all")
+
+  const handleAiSearch = async () => {
+    const query = aiQuery.trim()
+    if (!query || aiLoading) return
+    setAiLoading(true)
+    setAiErr(null)
+    setAiNote(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${BACKEND}/search-assist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ query }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      const f = body.filters || {}
+      // Apply only the whitelisted keys the backend can return -- anything
+      // else in the response object (there shouldn't be anything else) is
+      // ignored rather than blindly spread into state.
+      if ("pathType" in f) applyPathType(f.pathType)
+      setCareer(f.career ?? "")
+      setLocation(f.location ?? "")
+      setMinElo(f.minElo != null ? String(f.minElo) : "")
+      setMinExperience(f.minExperience != null ? String(f.minExperience) : "")
+      setMaxExperience(f.maxExperience != null ? String(f.maxExperience) : "")
+      setMinTasks(f.minTasks != null ? String(f.minTasks) : "")
+      setMinStreak(f.minStreak != null ? String(f.minStreak) : "")
+      setMinJobReadiness(f.minJobReadiness != null ? String(f.minJobReadiness) : "")
+      setEmploymentStatus(f.employmentStatus ?? "")
+      setUanVerified(f.uanVerified === true)
+      setEducationVerified(f.educationVerified === true)
+      setSortBy(f.sortBy || "recent")
+      if (f.skill) setQ(f.skill.split(",")[0].trim())
+      setAdvOpen(true)
+      setAiNote(body.interpretation || null)
+    } catch (err) {
+      console.error("AI search-assist failed:", err)
+      setAiErr(err.message)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   // 2026-08-07: this page previously fetched once on mount and never again
   // -- a student updating their skills/ELO, or completing a challenge,
   // wouldn't show up here until the recruiter did a hard reload. `silent`
@@ -301,6 +363,26 @@ export default function CandidateSearch() {
         <p style={{ fontSize:13, color:T.ink3, marginTop:4 }}>
           Live data from Capabilio's student/professional network. Only candidates who have explicitly opted into recruiter visibility appear here — that filter is enforced server-side, not by this screen.
         </p>
+      </div>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          <input
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAiSearch() }}
+            placeholder="Try: senior React devs in Bangalore, 3+ years, open to offers"
+            style={{ flex:1, minWidth:260, padding:"10px 14px", borderRadius:10, border:`1px solid ${T.indigo}44`, background:T.indigo3, fontSize:13, fontFamily:"'Inter',sans-serif" }}
+          />
+          <button onClick={handleAiSearch} disabled={aiLoading || !aiQuery.trim()} style={{ ...FS.select, cursor: aiLoading || !aiQuery.trim() ? "default" : "pointer", fontWeight:700, color:T.indigo, borderColor:T.indigo, opacity: aiLoading || !aiQuery.trim() ? 0.6 : 1 }}>
+            {aiLoading ? "Thinking..." : "✨ AI Search"}
+          </button>
+        </div>
+        {(aiNote || aiErr) && (
+          <div style={{ fontSize:11.5, color: aiErr ? T.red : T.ink3 }}>
+            {aiErr ? `Couldn't run AI search: ${aiErr}` : aiNote}
+          </div>
+        )}
       </div>
 
       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
