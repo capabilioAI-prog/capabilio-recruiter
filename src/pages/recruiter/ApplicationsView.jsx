@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { T, card, cardLg, tag, btn } from "./theme"
@@ -735,18 +735,44 @@ The Hiring Team`;
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
+// 2026-08-09: production-scale rewrite. Previously this component loaded
+// EVERY application for a job (or every application across every job on
+// the "All roles" view) in one unbounded query, then filtered/rendered all
+// of them client-side -- fine at a handful of applicants, but at real
+// scale (a popular posting can get hundreds to 1000+ applications) this
+// meant one huge query and a 1000-row client render on every load. Filter
+// tabs, pagination, and the applicant counts are now all computed
+// server-side (see SCORE_RANGES/scopedQuery below) so the browser only
+// ever holds one page's worth of rows.
+const PAGE_SIZE = 100;
+// Must match routes/bulkReject.js's own MAX_BATCH exactly -- that's the
+// hard per-request cap the backend enforces; this is how many candidates
+// this frontend chunks each bulk-reject call into.
+const BULK_REJECT_BATCH = 25;
+
+const SCORE_RANGES = {
+  all: null,
+  strong: { gte: 75 },
+  good: { gte: 50, lt: 75 },
+  weak: { lt: 50 },
+};
+
 export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState([]); // current page only
   const [jobsById, setJobsById] = useState({});
   const [jobDescById, setJobDescById] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // all | strong | good | weak
+  const [page, setPage] = useState(0); // 0-based
+  const [counts, setCounts] = useState({ all: 0, strong: 0, good: 0, weak: 0 });
   const [selected, setSelected] = useState(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
   const [feedbackTarget, setFeedbackTarget] = useState(null);
   const [toast, setToast] = useState(null);
   const [bulkActionInFlight, setBulkActionInFlight] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(null); // { done, total } while a bulk reject is running
+  const bulkInFlightRef = useRef(false); // read inside the realtime handler without a stale closure
 
   // titleFor(app) resolves the right job title whether this view is scoped
   // to one job (jobId/jobTitle props, drilled into from JobBoard) or showing
@@ -755,36 +781,96 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   // to a different job, so the single jobTitle prop can't be trusted.
   const titleFor = (app) => (jobId ? jobTitle : jobsById[app?.jobId] || app?.jobDescription?.slice(0, 40) || "—");
 
-  // Load applications + subscribe to realtime changes. Scoring is now done
-  // automatically server-side at apply time (POST /apply/:jobId), so every
-  // row loaded here already has a score -- there is no manual "Score All"
-  // step anymore. When jobId is omitted this loads every application across
-  // every job for the recruiter's own company (RLS-scoped server-side).
+  // Builds the shared "active applicants for this scope" query -- always
+  // excludes rejected/shortlisted (matches the old client-side filter
+  // exactly), always job-scoped when jobId is set, RLS still enforces the
+  // company boundary server-side either way.
+  function scopedQuery(table = "applications", select = "*") {
+    let q = supabase.from(table).select(select);
+    if (jobId) q = q.eq("job_id", jobId);
+    q = q.not("status", "in", "(rejected,shortlisted)");
+    const range = SCORE_RANGES[filter];
+    if (range?.gte != null) q = q.gte("score", range.gte);
+    if (range?.lt != null) q = q.lt("score", range.lt);
+    return q;
+  }
+
+  const fetchCounts = useCallback(async () => {
+    const withRange = (q, range) => {
+      if (range?.gte != null) q = q.gte("score", range.gte);
+      if (range?.lt != null) q = q.lt("score", range.lt);
+      return q;
+    };
+    const base = () => {
+      let q = supabase.from("applications").select("id", { count: "exact", head: true }).not("status", "in", "(rejected,shortlisted)");
+      if (jobId) q = q.eq("job_id", jobId);
+      return q;
+    };
+    const [all, strong, good, weak] = await Promise.all([
+      base(),
+      withRange(base(), SCORE_RANGES.strong),
+      withRange(base(), SCORE_RANGES.good),
+      withRange(base(), SCORE_RANGES.weak),
+    ]);
+    setCounts({
+      all: all.count || 0,
+      strong: strong.count || 0,
+      good: good.count || 0,
+      weak: weak.count || 0,
+    });
+    // filter is deliberately NOT a dependency -- this always computes all
+    // four tab counts together regardless of which tab is active.
+  }, [jobId]);
+
+  const fetchPage = useCallback(async (pageIndex, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    const from = pageIndex * PAGE_SIZE;
+    const { data, error } = await scopedQuery()
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error("Failed to load applications:", error.message);
+    } else {
+      setApplications((data || []).map(fromDbApplication));
+    }
+    if (!silent) setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId, filter]);
+
+  // Job title/description lookup -- small, loaded once regardless of scope
+  // (used for both the "All roles" column and the Hiring Assistant panel).
   useEffect(() => {
     let cancelled = false;
+    supabase.from("jobs").select("id,title,description").then(({ data, error }) => {
+      if (cancelled || error) return;
+      setJobsById(Object.fromEntries((data || []).map((j) => [j.id, j.title])));
+      setJobDescById(Object.fromEntries((data || []).map((j) => [j.id, j.description || ""])));
+    });
+    return () => { cancelled = true; };
+  }, []);
 
-    async function load() {
-      setLoading(true);
-      let query = supabase.from("applications").select("*").order("created_at", { ascending: false });
-      if (jobId) query = query.eq("job_id", jobId);
-      const [appsRes, jobsRes] = await Promise.all([
-        query,
-        supabase.from("jobs").select("id,title,description"),
-      ]);
-      if (cancelled) return;
-      if (appsRes.error) {
-        console.error("Failed to load applications:", appsRes.error.message);
-      } else {
-        setApplications((appsRes.data || []).map(fromDbApplication));
-      }
-      if (!jobsRes.error) {
-        setJobsById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.title])));
-        setJobDescById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.description || ""])));
-      }
-      setLoading(false);
-    }
-    load();
+  useEffect(() => { setPage(0); }, [jobId, filter]);
+  useEffect(() => { fetchPage(page); }, [page, fetchPage]);
+  useEffect(() => { fetchCounts(); }, [fetchCounts]);
 
+  // Realtime: rather than trying to precisely patch one page of a
+  // filtered/paginated result set from a raw INSERT/UPDATE/DELETE payload
+  // (which page a changed row belongs to depends on score/status/order,
+  // not just its id), any change just triggers a debounced silent refetch
+  // of the current page + counts. Suppressed entirely while a bulk action
+  // is running (bulkInFlightRef) -- a 25-candidate batch reject fires 25
+  // UPDATEs in quick succession; those are refetched once, deliberately,
+  // after the whole batch completes instead of thrashing mid-batch.
+  useEffect(() => {
+    let debounceTimer = null;
+    const scheduleRefresh = () => {
+      if (bulkInFlightRef.current) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchPage(page, { silent: true });
+        fetchCounts();
+      }, 600);
+    };
     const channel = supabase
       .channel(jobId ? `applications-${jobId}` : "applications-all")
       .on(
@@ -792,29 +878,14 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
         jobId
           ? { event: "*", schema: "public", table: "applications", filter: `job_id=eq.${jobId}` }
           : { event: "*", schema: "public", table: "applications" },
-        (payload) => {
-          setApplications((prev) => {
-            if (payload.eventType === "INSERT") {
-              if (prev.some((a) => a.id === payload.new.id)) return prev;
-              return [fromDbApplication(payload.new), ...prev];
-            }
-            if (payload.eventType === "UPDATE") {
-              return prev.map((a) => (a.id === payload.new.id ? fromDbApplication(payload.new) : a));
-            }
-            if (payload.eventType === "DELETE") {
-              return prev.filter((a) => a.id !== payload.old.id);
-            }
-            return prev;
-          });
-        }
+        scheduleRefresh
       )
       .subscribe();
-
     return () => {
-      cancelled = true;
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
-  }, [jobId]);
+  }, [jobId, page, fetchPage, fetchCounts]);
 
   function showToast(msg, type = "success") {
     setToast({ msg, type });
@@ -829,25 +900,18 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
     });
   }
 
+  // Selects/deselects everyone on the CURRENT page only -- with real
+  // pagination there is no in-memory "everyone matching this filter" to
+  // select from without loading them all, which is exactly what this
+  // rewrite exists to avoid. See the "Select all on this page" label below.
   function toggleAll() {
-    const filtered = filteredApps();
-    if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map((a) => a.id)));
-  }
-
-  function filteredApps() {
-    return applications.filter((a) => {
-      if (a.status === "rejected" || a.status === "shortlisted") return false;
-      if (filter === "strong") return (a.score || 0) >= 75;
-      if (filter === "good") return (a.score || 0) >= 50 && (a.score || 0) < 75;
-      if (filter === "weak") return (a.score || 0) < 50;
-      return true;
-    });
+    if (selected.size === applications.length && applications.length > 0) setSelected(new Set());
+    else setSelected(new Set(applications.map((a) => a.id)));
   }
 
   async function shortlistSelected(candidatesArg) {
     if (bulkActionInFlight) return;
-    const targets = candidatesArg || filteredApps().filter((a) => selected.has(a.id));
+    const targets = candidatesArg || applications.filter((a) => selected.has(a.id));
     if (targets.length === 0) return;
     setBulkActionInFlight(true);
     try {
@@ -870,14 +934,11 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
         });
         if (pipelineErr) throw pipelineErr;
       }
-      setApplications((prev) =>
-        prev.map((a) =>
-          targets.find((t) => t.id === a.id) ? { ...a, status: "shortlisted" } : a
-        )
-      );
+      setApplications((prev) => prev.filter((a) => !targets.some((t) => t.id === a.id)));
       setSelected(new Set());
       setCompareOpen(false);
       showToast(`${targets.length} candidate${targets.length > 1 ? "s" : ""} moved to pipeline`);
+      fetchCounts();
     } catch (e) {
       console.error("shortlistSelected failed:", e.message);
       showToast("Failed to shortlist", "error");
@@ -888,49 +949,100 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
 
   function rejectSelected(candidatesArg) {
     if (bulkActionInFlight) return;
-    const targets = candidatesArg || filteredApps().filter((a) => selected.has(a.id));
+    const targets = candidatesArg || applications.filter((a) => selected.has(a.id));
     if (targets.length === 0) return;
     if (targets.length === 1) {
       setFeedbackTarget(targets[0]);
       setCompareOpen(false);
     } else {
-      // Batch reject — open feedback for each sequentially or just reject all
       batchReject(targets);
     }
   }
 
+  // Real bulk rejection: every candidate gets an actual AI-drafted,
+  // skill-gap-framed rejection email via POST /bulk-reject-feedback --
+  // previously this only flipped applications.status with NO email sent
+  // at all (confirmed bug). Chunked into groups of BULK_REJECT_BATCH,
+  // grouped by job (relevant on the "All roles" view, where selected
+  // candidates can span multiple jobs -- the backend needs one jobId per
+  // call). Partial failures are real and reported, never hidden: a
+  // candidate whose email failed to send is NOT marked rejected server-side
+  // (see bulkReject.js) and stays selected here so the recruiter can retry.
   async function batchReject(targets) {
     if (bulkActionInFlight) return;
+    const confirmed = window.confirm(
+      `Reject ${targets.length} candidate${targets.length > 1 ? "s" : ""}? Each will immediately receive a personalized AI-drafted rejection email. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
     setBulkActionInFlight(true);
+    bulkInFlightRef.current = true;
+    setBulkProgress({ done: 0, total: targets.length });
+
+    const byJob = new Map();
+    for (const c of targets) {
+      const key = c.jobId || jobId || "unknown";
+      if (!byJob.has(key)) byJob.set(key, []);
+      byJob.get(key).push(c);
+    }
+
+    const failed = [];
+    let succeededCount = 0;
     try {
-      for (const c of targets) {
-        const { error } = await supabase
-          .from("applications")
-          .update({ status: "rejected", rejected_at: new Date().toISOString() })
-          .eq("id", c.id);
-        if (error) console.error(`batchReject: failed for ${c.id}:`, error.message);
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders = {
+        "Content-Type": "application/json",
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      };
+
+      for (const [jid, group] of byJob) {
+        for (let i = 0; i < group.length; i += BULK_REJECT_BATCH) {
+          const chunk = group.slice(i, i + BULK_REJECT_BATCH);
+          try {
+            const res = await fetch(`${BACKEND}/bulk-reject-feedback`, {
+              method: "POST",
+              headers: authHeaders,
+              body: JSON.stringify({ jobId: jid, applicationIds: chunk.map((c) => c.id) }),
+            });
+            const body = await res.json();
+            if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+            for (const r of body.results || []) {
+              if (r.sent) succeededCount += 1;
+              else failed.push(chunk.find((c) => c.id === r.id) || { id: r.id });
+            }
+          } catch (e) {
+            console.error("Bulk reject chunk failed:", e.message);
+            failed.push(...chunk);
+          }
+          setBulkProgress({ done: Math.min(targets.length, succeededCount + failed.length), total: targets.length });
+        }
       }
-      setApplications((prev) =>
-        prev.map((a) =>
-          targets.find((t) => t.id === a.id) ? { ...a, status: "rejected" } : a
-        )
-      );
-      setSelected(new Set());
-      showToast(`${targets.length} candidates rejected`, "info");
+
+      // Remove successfully-rejected rows from the current page's display;
+      // keep everything else (rows untouched by this batch, and rows that
+      // failed -- those stay visible and selected so the recruiter can retry).
+      const failedIds = new Set(failed.map((f) => f.id));
+      const targetIds = new Set(targets.map((t) => t.id));
+      setApplications((prev) => prev.filter((a) => !(targetIds.has(a.id) && !failedIds.has(a.id))));
+      setSelected(failedIds);
+      if (failed.length === 0) {
+        showToast(`${succeededCount} candidates rejected and notified`, "info");
+      } else {
+        showToast(`${succeededCount} rejected and notified, ${failed.length} failed -- still selected, retry when ready`, "error");
+      }
+      fetchCounts();
+      fetchPage(page, { silent: true });
     } finally {
       setBulkActionInFlight(false);
+      bulkInFlightRef.current = false;
+      setBulkProgress(null);
     }
   }
 
-  const filtered = filteredApps();
+  const filtered = applications; // already server-filtered/paginated
   const selectedCandidates = filtered.filter((a) => selected.has(a.id));
-
-  const counts = {
-    all: applications.filter((a) => !["rejected", "shortlisted"].includes(a.status)).length,
-    strong: applications.filter((a) => !["rejected", "shortlisted"].includes(a.status) && (a.score || 0) >= 75).length,
-    good: applications.filter((a) => !["rejected", "shortlisted"].includes(a.status) && (a.score || 0) >= 50 && (a.score || 0) < 75).length,
-    weak: applications.filter((a) => !["rejected", "shortlisted"].includes(a.status) && (a.score || 0) < 50).length,
-  };
+  const totalForFilter = counts[filter] ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalForFilter / PAGE_SIZE));
 
   return (
     <div style={{ padding: "0 0 40px" }}>
@@ -1031,6 +1143,12 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
           </button>
         ))}
       </div>
+
+      {bulkProgress && (
+        <div style={{ background: "#3D4EAC15", border: "1px solid #3D4EAC40", borderRadius: 12, padding: "10px 16px", marginBottom: 16, fontSize: 13, color: "#3D4EAC", fontWeight: 600 }}>
+          Rejecting and notifying candidates… {bulkProgress.done} / {bulkProgress.total}
+        </div>
+      )}
 
       {/* AI Hiring Assistant -- scoped to one job (needs job title/description
           context); on the "All roles" view (no jobId) applicants span many
@@ -1139,9 +1257,10 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
             type="checkbox"
             checked={selected.size === filtered.length && filtered.length > 0}
             onChange={toggleAll}
+            title={pageCount > 1 ? "Select all on this page" : "Select all"}
             style={{ cursor: "pointer", accentColor: "#3D4EAC", width: 16, height: 16 }}
           />
-          {["Candidate", "ATS Score", "Summary", "Skills Match", "Actions"].map((h) => (
+          {["Candidate" + (pageCount > 1 ? " (this page)" : ""), "ATS Score", "Summary", "Skills Match", "Actions"].map((h) => (
             <div
               key={h}
               style={{
@@ -1311,6 +1430,31 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
           })
         )}
       </div>
+
+      {/* Pagination -- real server-side paging, not a client-side slice.
+          totalForFilter comes from the same count query that drives the
+          filter tab badges above, so it stays accurate at any scale. */}
+      {totalForFilter > PAGE_SIZE && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 16 }}>
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0 || loading}
+            style={{ padding: "7px 14px", background: "#F6F6F1", border: "1px solid #EFEFE9", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: page === 0 ? "not-allowed" : "pointer", opacity: page === 0 ? 0.5 : 1 }}
+          >
+            ← Prev
+          </button>
+          <span style={{ fontSize: 12, color: "#6B6B68" }}>
+            Page {page + 1} of {pageCount} · {totalForFilter} total
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+            disabled={page >= pageCount - 1 || loading}
+            style={{ padding: "7px 14px", background: "#F6F6F1", border: "1px solid #EFEFE9", borderRadius: 8, color: "#3A3A38", fontSize: 12, cursor: page >= pageCount - 1 ? "not-allowed" : "pointer", opacity: page >= pageCount - 1 ? 0.5 : 1 }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {/* Modals */}
       {compareOpen && selectedCandidates.length >= 2 && (
