@@ -109,33 +109,6 @@ const TI = {
   input:     { padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, color: "#1A1A18", fontSize: 12, fontFamily: "'Inter',sans-serif", width: 140 },
 }
 
-// ── Plan badge ────────────────────────────────────────────────────────────────
-function PlanCard({ name, price, features, current, color }) {
-  return (
-    <div style={{ ...PC.card, borderColor: current ? color : "rgba(26,26,24,0.06)", background: current ? `${color}08` : "#EFEFE9" }}>
-      {current && <div style={{ ...PC.currentBadge, background: color }}>Current Plan</div>}
-      <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 800, color, marginBottom: 4 }}>{name}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: "#1A1A18", marginBottom: 12 }}>
-        {price}<span style={{ fontSize: 13, color: "#E8E8E1" }}>/mo</span>
-      </div>
-      {features.map((f, i) => (
-        <div key={i} style={{ fontSize: 12, color: "#3A3A38", padding: "3px 0" }}>✓ {f}</div>
-      ))}
-      {!current && (
-        <button style={{ ...PC.upgradeBtn, background: `${color}11`, border: `1px solid ${color}33`, color }}>
-          Upgrade →
-        </button>
-      )}
-    </div>
-  )
-}
-
-const PC = {
-  card:         { position: "relative", border: "2px solid", borderRadius: 14, padding: 16 },
-  currentBadge: { position: "absolute", top: -10, left: 12, fontSize: 10, fontWeight: 700, color: "#1A1A18", padding: "2px 8px", borderRadius: 20 },
-  upgradeBtn:   { marginTop: 12, width: "100%", padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" },
-}
-
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function RecruiterSettings() {
   const [user, setUser] = useState(null)
@@ -178,21 +151,34 @@ export default function RecruiterSettings() {
   const [hiringCount,   setHiringCount]   = useState("5")
   const [keywords,      setKeywords]      = useState([])
 
-  // Team
-  const [teamMembers, setTeamMembers] = useState([
-    { name: "You",          email: user?.email || "", role: "Admin",   avatar: "Y" },
-    { name: "Sarah K.",     email: "sarah@company.com", role: "Recruiter", avatar: "S" },
-    { name: "James T.",     email: "james@company.com", role: "Viewer",    avatar: "J" },
-  ])
-  const [inviteEmail, setInviteEmail]   = useState("")
-  const [inviteRole,  setInviteRole]    = useState("Recruiter")
-  const [inviteSent,  setInviteSent]    = useState(false)
+  // Team — 2026-08-09: was 2 hardcoded fake names (sarah@company.com,
+  // james@company.com) with an "invite" button that only pushed into local
+  // React state (nothing persisted, nothing sent). Now reads the real
+  // `recruiters` table (RLS: you always see your own row; company
+  // admins/owners see the whole company's roster). There is currently no
+  // real "invite a teammate into my existing company" backend flow -- the
+  // only invite mechanism in this codebase (`invites` table, AdminPanel.jsx)
+  // is platform-admin-only and provisions a brand NEW company, not a seat on
+  // an existing one. Building that safely means touching the shared
+  // signup/invite path (a security-sensitive auth flow) -- not done blind in
+  // this pass. See the honest "not available yet" state below instead of a
+  // fake button.
+  const [teamMembers,    setTeamMembers]    = useState([])
+  const [loadingTeam,    setLoadingTeam]    = useState(true)
 
-  // user loads asynchronously (unlike Firebase's synchronous auth.currentUser),
-  // so backfill the "You" row's email once it's available.
   useEffect(() => {
-    if (!user?.email) return
-    setTeamMembers((p) => p.map((m, i) => (i === 0 ? { ...m, email: user.email } : m)))
+    if (!user) return
+    let cancelled = false
+    supabase
+      .from("recruiters")
+      .select("id, email, display_name, role, plan")
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) { console.error("Failed to load team:", error); setLoadingTeam(false); return }
+        setTeamMembers(data || [])
+        setLoadingTeam(false)
+      })
+    return () => { cancelled = true }
   }, [user])
 
   // Integration toggles
@@ -261,13 +247,28 @@ export default function RecruiterSettings() {
     }
   }
 
-  const sendInvite = () => {
-    if (!inviteEmail.trim()) return
-    setTeamMembers((p) => [...p, { name: inviteEmail.split("@")[0], email: inviteEmail, role: inviteRole, avatar: inviteEmail[0].toUpperCase() }])
-    setInviteEmail("")
-    setInviteSent(true)
-    setTimeout(() => setInviteSent(false), 2500)
+  // 2026-08-09: Change Password is real (Supabase's native reset-email
+  // flow) -- Change Photo/Change Email need real storage/re-confirmation
+  // wiring not built yet, so they stay honest disabled placeholders below
+  // rather than fake no-op buttons.
+  const [resetSent, setResetSent] = useState(false)
+  const [resetSending, setResetSending] = useState(false)
+  const sendPasswordReset = async () => {
+    if (!user?.email || resetSending) return
+    setResetSending(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email)
+      if (error) throw error
+      setResetSent(true)
+      setTimeout(() => setResetSent(false), 4000)
+    } catch (err) {
+      console.error("Failed to send password reset:", err)
+    } finally {
+      setResetSending(false)
+    }
   }
+
+  const myPlan = teamMembers.find((m) => m.id === user?.id)?.plan || "free"
 
   const TABS = [
     { key: "profile",       label: "👤 Profile"       },
@@ -337,8 +338,8 @@ export default function RecruiterSettings() {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1A18" }}>{displayName || "Recruiter"}</div>
                 <div style={{ fontSize: 12, color: "#E8E8E1" }}>{user?.email}</div>
-                <button style={{ marginTop: 6, padding: "4px 10px", background: "rgba(61,78,172,0.1)", border: "1px solid rgba(61,78,172,0.2)", borderRadius: 6, color: "#a5b4fc", fontSize: 11, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                  Change Photo
+                <button title="Not available yet" disabled style={{ marginTop: 6, padding: "4px 10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(26,26,24,0.07)", borderRadius: 6, color: "#E8E8E1", fontSize: 11, cursor: "not-allowed", fontFamily: "'Inter',sans-serif" }}>
+                  Change Photo (soon)
                 </button>
               </div>
             </div>
@@ -369,16 +370,17 @@ export default function RecruiterSettings() {
 
           <Section title="Account" icon="🔐">
             <Row label="Email Address" sub={user?.email}>
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                Change Email
+              <button title="Not available yet" disabled style={{ padding: "6px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(26,26,24,0.05)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "not-allowed", fontFamily: "'Inter',sans-serif" }}>
+                Change Email (soon)
               </button>
             </Row>
-            <Row label="Password" sub="Last changed 30 days ago">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                Change Password
+            <Row label="Password" sub="We'll email you a reset link">
+              <button onClick={sendPasswordReset} disabled={resetSending}
+                style={{ padding: "6px 14px", background: resetSent ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${resetSent ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`, borderRadius: 8, color: resetSent ? "#1A7A4A" : "#6B6B68", fontSize: 12, cursor: resetSending ? "default" : "pointer", fontFamily: "'Inter',sans-serif" }}>
+                {resetSending ? "Sending…" : resetSent ? "✓ Reset link sent" : "Send Reset Link"}
               </button>
             </Row>
-            <Row label="Two-Factor Auth" sub="Adds extra login security">
+            <Row label="Two-Factor Auth" sub="Not available yet">
               <Toggle value={false} onChange={() => {}} />
             </Row>
           </Section>
@@ -458,57 +460,53 @@ export default function RecruiterSettings() {
       {tab === "team" && (
         <div>
           <Section title="Team Members" icon="👥">
-            {teamMembers.map((m, i) => (
-              <div key={m.email ?? i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 14, color: "#1A1A18", flexShrink: 0 }}>
-                  {m.avatar}
+            {loadingTeam ? (
+              <div style={{ fontSize: 13, color: "#E8E8E1", padding: "10px 0" }}>Loading team…</div>
+            ) : teamMembers.length === 0 ? (
+              <div style={{ fontSize: 13, color: "#E8E8E1", padding: "10px 0" }}>No team members found.</div>
+            ) : (
+              teamMembers.map((m) => (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3D4EAC,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif", fontWeight: 800, fontSize: 14, color: "#1A1A18", flexShrink: 0 }}>
+                    {(m.display_name || m.email || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A18" }}>
+                      {m.display_name || m.email}{m.id === user?.id ? " (you)" : ""}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#E8E8E1" }}>{m.email}</div>
+                  </div>
+                  <div style={{ fontSize: 11, padding: "3px 10px", background: m.role === "admin" || m.role === "owner" ? "rgba(61,78,172,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${m.role === "admin" || m.role === "owner" ? "rgba(61,78,172,0.2)" : "rgba(26,26,24,0.07)"}`, borderRadius: 20, color: m.role === "admin" || m.role === "owner" ? "#a5b4fc" : "#3A3A38", textTransform: "capitalize" }}>
+                    {m.role}
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A18" }}>{m.name}</div>
-                  <div style={{ fontSize: 11, color: "#E8E8E1" }}>{m.email}</div>
-                </div>
-                <div style={{ fontSize: 11, padding: "3px 10px", background: m.role === "Admin" ? "rgba(61,78,172,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${m.role === "Admin" ? "rgba(61,78,172,0.2)" : "rgba(26,26,24,0.07)"}`, borderRadius: 20, color: m.role === "Admin" ? "#a5b4fc" : "#3A3A38" }}>
-                  {m.role}
-                </div>
-                {m.role !== "Admin" && (
-                  <button
-                    onClick={() => setTeamMembers((p) => p.filter((_, j) => j !== i))}
-                    style={{ background: "none", border: "none", color: "#EFEFE9", cursor: "pointer", fontSize: 13 }}
-                  >✕</button>
-                )}
-              </div>
-            ))}
+              ))
+            )}
+            <div style={{ fontSize: 11, color: "#E8E8E1", marginTop: 10 }}>
+              {teamMembers.length <= 1
+                ? "Only admins/owners can see the full team roster -- you may have teammates not shown here."
+                : "Roster reflects real recruiter accounts on your company."}
+            </div>
           </Section>
 
           <Section title="Invite Team Member" icon="✉️">
-            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="colleague@company.com"
-                style={{ flex: 1, minWidth: 200, padding: "9px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif" }}
-              />
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value)}
-                style={{ padding: "9px 12px", background: "#EFEFE9", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#1A1A18", fontSize: 13, fontFamily: "'Inter',sans-serif", cursor: "pointer" }}
-              >
-                <option>Recruiter</option>
-                <option>Viewer</option>
-                <option>Admin</option>
-              </select>
-              <button
-                onClick={sendInvite}
-                style={{ padding: "9px 18px", background: inviteSent ? "rgba(34,197,94,0.1)" : "rgba(61,78,172,0.12)", border: `1px solid ${inviteSent ? "rgba(34,197,94,0.25)" : "rgba(61,78,172,0.25)"}`, borderRadius: 10, color: inviteSent ? "#1A7A4A" : "#a5b4fc", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
-              >
-                {inviteSent ? "✓ Invited!" : "Send Invite →"}
-              </button>
+            <div style={{ fontSize: 13, color: "#3A3A38", lineHeight: 1.6 }}>
+              Inviting a teammate directly into your company isn't available yet -- the only invite mechanism this
+              product has today provisions a brand-new company account, not a seat on an existing one. Building that
+              safely means changes to the signup flow itself, which hasn't been done. New teammates can sign up and
+              a platform admin can link their account to your company in the meantime.
             </div>
           </Section>
         </div>
       )}
 
       {/* ── INTEGRATIONS TAB ── */}
+      {/* 2026-08-09: toggles used to flip local/DB boolean state and show a
+          "Connected ✓" badge with no real OAuth ever happening -- a
+          recruiter could believe Slack alerts were live when nothing was
+          wired. No integration here has a real OAuth app registered
+          anywhere in this codebase, so every one is now an honest
+          "Not available yet" row instead of a fake toggle. */}
       {tab === "integrations" && (
         <Section title="Connected Tools" icon="🔌">
           {[
@@ -521,17 +519,9 @@ export default function RecruiterSettings() {
           ].map((intg) => (
             <Row key={intg.key}
               label={<span>{intg.icon} {intg.name}</span>}
-              sub={intg.sub}
+              sub="Not available yet"
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {integrations[intg.key] && (
-                  <span style={{ fontSize: 11, color: "#1A7A4A" }}>Connected ✓</span>
-                )}
-                <Toggle
-                  value={integrations[intg.key]}
-                  onChange={(v) => setIntegrations((p) => ({ ...p, [intg.key]: v }))}
-                />
-              </div>
+              <span style={{ fontSize: 11, color: "#E8E8E1" }}>Coming soon</span>
             </Row>
           ))}
         </Section>
@@ -540,47 +530,30 @@ export default function RecruiterSettings() {
       {/* ── BILLING TAB ── */}
       {tab === "billing" && (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
-            <PlanCard
-              name="Starter"
-              price="$49"
-              color="#6B6B68"
-              current={false}
-              features={["50 candidate views/mo", "Basic search", "1 pipeline", "Email support"]}
-            />
-            <PlanCard
-              name="Pro"
-              price="$149"
-              color="#3D4EAC"
-              current={true}
-              features={["Unlimited candidates", "AI DNA matching", "5 pipelines", "Shadow interviews", "Priority support"]}
-            />
-            <PlanCard
-              name="Enterprise"
-              price="$499"
-              color="#FFD166"
-              current={false}
-              features={["Everything in Pro", "Team seats (10)", "Custom integrations", "Dedicated CSM", "SLA guarantee"]}
-            />
-          </div>
-
+          {/* 2026-08-09: was 3 fully hardcoded PlanCards ($49/$149/$499,
+              "Current Plan" always Pro) and Payment Method/Invoices/Cancel
+              buttons with no onClick at all -- no Stripe or any billing
+              provider is wired anywhere in this codebase. "Current Plan"
+              below now shows the real recruiters.plan column (defaults to
+              "free" for every real account); everything else is an honest
+              "not available yet" instead of decorative buttons. */}
           <Section title="Billing Information" icon="💳">
-            <Row label="Current Plan" sub="Renews on Apr 7, 2026">
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#3D4EAC" }}>Pro — $149/mo</span>
+            <Row label="Current Plan" sub="Real, from your account">
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#3D4EAC", textTransform: "capitalize" }}>{myPlan}</span>
             </Row>
-            <Row label="Payment Method" sub="Visa ending in 4242">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
+            <Row label="Payment Method" sub="Billing isn't available yet">
+              <button title="Not available yet" disabled style={{ padding: "6px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(26,26,24,0.05)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "not-allowed", fontFamily: "'Inter',sans-serif" }}>
                 Update Card
               </button>
             </Row>
-            <Row label="Invoices" sub="Download past invoices">
-              <button style={{ padding: "6px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#6B6B68", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
+            <Row label="Invoices" sub="Billing isn't available yet">
+              <button title="Not available yet" disabled style={{ padding: "6px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(26,26,24,0.05)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "not-allowed", fontFamily: "'Inter',sans-serif" }}>
                 View Invoices
               </button>
             </Row>
-            <Row label="Cancel Subscription" sub="You'll lose access at end of billing period">
-              <button style={{ padding: "6px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 8, color: "#fca5a5", fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                Cancel Plan
+            <Row label="Plan Changes" sub="Billing isn't available yet">
+              <button title="Not available yet" disabled style={{ padding: "6px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(26,26,24,0.05)", borderRadius: 8, color: "#E8E8E1", fontSize: 12, cursor: "not-allowed", fontFamily: "'Inter',sans-serif" }}>
+                Contact Us
               </button>
             </Row>
           </Section>
