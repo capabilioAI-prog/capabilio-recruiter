@@ -322,6 +322,123 @@ function CompareModal({ candidates, onClose, onShortlist, onReject }) {
   );
 }
 
+// ─── AI Hiring Assistant panel ─────────────────────────────────────────────────
+// 2026-08-09: holistic, whole-slate advisory pass on top of the per-candidate
+// ATS scoring that already runs automatically at apply time. This panel is
+// PURELY ADVISORY -- it never writes to applications/pipeline_candidates and
+// never triggers Shortlist/Reject itself; those remain explicit human clicks
+// on the existing buttons elsewhere in this file. Tier badges here are
+// labeled "AI tier" throughout to keep them visually distinct from the
+// deterministic ATS Strong/Good/Weak badge already shown per row.
+const TIER_STYLE = {
+  "Strong Fit": { color: "#1A7A4A", bg: "#1A7A4A20" },
+  "Consider": { color: "#f59e0b", bg: "#f59e0b20" },
+  "Not Recommended": { color: "#ef4444", bg: "#ef444420" },
+}
+
+function HiringAssistantPanel({ jobTitle, jobDescription, candidates }) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [err, setErr] = useState(null)
+
+  const run = async () => {
+    if (loading) return
+    setLoading(true)
+    setErr(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${BACKEND}/hiring-assistant/recommend`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          jobTitle,
+          jobDescription,
+          candidates: candidates.map((c) => ({
+            id: c.id, name: c.name, score: c.score,
+            matchedSkills: c.skills, missingSkills: c.missingSkills, atsSummary: c.atsSummary,
+          })),
+        }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      setResult(body)
+      setOpen(true)
+    } catch (e) {
+      console.error("Hiring assistant failed:", e)
+      setErr(e.message)
+      setOpen(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const tierById = new Map((result?.candidates || []).map((c) => [c.id, c]))
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          onClick={run}
+          disabled={loading || candidates.length === 0}
+          style={{
+            background: loading ? "#374151" : "linear-gradient(135deg,#3D4EAC,#8b5cf6)",
+            border: "none", color: "#1A1A18", borderRadius: 8, padding: "9px 16px",
+            cursor: loading || candidates.length === 0 ? "not-allowed" : "pointer",
+            opacity: candidates.length === 0 ? 0.5 : 1, fontSize: 13, fontWeight: 700,
+          }}
+        >
+          {loading ? "Analyzing slate…" : "🤖 Run AI Hiring Assistant"}
+        </button>
+        {result && !loading && (
+          <button onClick={() => setOpen((o) => !o)} style={{ background: "transparent", border: "none", color: "#3D4EAC", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            {open ? "Hide" : "Show"} recommendation
+          </button>
+        )}
+        <span style={{ color: "#3A3A38", fontSize: 11.5 }}>
+          Advisory only — AI-generated, not authoritative. You still choose who to shortlist or reject.
+        </span>
+      </div>
+
+      {open && err && (
+        <div style={{ marginTop: 10, color: "#ef4444", fontSize: 12.5, background: "#ef444415", border: "1px solid #ef444430", borderRadius: 10, padding: "10px 14px" }}>
+          Couldn't run the hiring assistant: {err}
+        </div>
+      )}
+
+      {open && result && (
+        <div style={{ marginTop: 10, background: "#0f1929", border: "1px solid #EFEFE9", borderRadius: 12, padding: 16 }}>
+          <div style={{ color: "#6B6B68", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", marginBottom: 6 }}>
+            AI RECOMMENDATION
+          </div>
+          <p style={{ color: "#E8E8E1", fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>{result.overallSummary}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {candidates.map((c) => {
+              const rec = tierById.get(c.id)
+              if (!rec) return null
+              const style = TIER_STYLE[rec.tier] || TIER_STYLE["Consider"]
+              return (
+                <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderTop: "1px solid #0a1120" }}>
+                  <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 700, color: style.color, background: style.bg, borderRadius: 20, padding: "3px 9px" }}>
+                    {rec.tier}
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: "#E8E8E1", fontSize: 12.5, fontWeight: 600 }}>{c.name}</div>
+                    <div style={{ color: "#3A3A38", fontSize: 11.5, marginTop: 2 }}>{rec.reasoning}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Feedback Modal ────────────────────────────────────────────────────────────
 function FeedbackModal({ candidate, jobTitle, onClose, onSent }) {
   const [loading, setLoading] = useState(true);
@@ -622,6 +739,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [jobsById, setJobsById] = useState({});
+  const [jobDescById, setJobDescById] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all"); // all | strong | good | weak
   const [selected, setSelected] = useState(new Set());
@@ -651,7 +769,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
       if (jobId) query = query.eq("job_id", jobId);
       const [appsRes, jobsRes] = await Promise.all([
         query,
-        supabase.from("jobs").select("id,title"),
+        supabase.from("jobs").select("id,title,description"),
       ]);
       if (cancelled) return;
       if (appsRes.error) {
@@ -661,6 +779,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
       }
       if (!jobsRes.error) {
         setJobsById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.title])));
+        setJobDescById(Object.fromEntries((jobsRes.data || []).map((j) => [j.id, j.description || ""])));
       }
       setLoading(false);
     }
@@ -912,6 +1031,17 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
           </button>
         ))}
       </div>
+
+      {/* AI Hiring Assistant -- scoped to one job (needs job title/description
+          context); on the "All roles" view (no jobId) applicants span many
+          different jobs so a single holistic pass wouldn't be meaningful. */}
+      {jobId && (
+        <HiringAssistantPanel
+          jobTitle={jobTitle}
+          jobDescription={jobDescById[jobId] || ""}
+          candidates={filtered}
+        />
+      )}
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
