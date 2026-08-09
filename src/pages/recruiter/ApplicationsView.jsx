@@ -28,7 +28,48 @@ function fromDbApplication(row) {
     feedbackSent: row.feedback_sent,
     feedbackText: row.feedback_text,
     appliedAt: row.created_at ? new Date(row.created_at) : null,
+    // 2026-08-09 dual-track resume+profile: additive verified-profile signal
+    // alongside (never replacing) the resume-derived score/skills above --
+    // see apply.js's tryResolveCapabilioProfile().
+    capabilioProfileVerified: !!row.capabilio_profile_verified,
+    capabilioProfile: row.capabilio_profile_data || null,
   };
+}
+
+// ─── Verified Capabilio profile badge ──────────────────────────────────────────
+// Shown only when apply.js successfully resolved the applicant's
+// capabilio_username to a real, recruiter_discoverable profile -- most
+// applicants won't have one yet (per the confirmed "everyone won't come
+// straightaway to capabilio" transition plan), so this renders nothing for
+// them rather than an empty/placeholder state.
+function VerifiedProfileBadge({ profile }) {
+  if (!profile) return null;
+  const elo = profile.elo ?? profile.role_elo ?? profile.professional_elo ?? null;
+  const topSkills = Array.isArray(profile.topSkills) ? profile.topSkills.slice(0, 3) : [];
+  return (
+    <div
+      title="This applicant's capabilio_username matched a real, verified Capabilio profile — ELO and skills below are live and proof-backed, not self-reported."
+      style={{
+        marginTop: 6,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 11,
+        fontWeight: 600,
+        color: "#3D4EAC",
+        background: "#3D4EAC14",
+        padding: "3px 8px",
+        borderRadius: 20,
+        letterSpacing: "0.02em",
+      }}
+    >
+      <span>✓ Verified Capabilio Profile</span>
+      {elo != null && <span style={{ opacity: 0.85 }}>· ELO {elo}</span>}
+      {topSkills.length > 0 && (
+        <span style={{ opacity: 0.85 }}>· {topSkills.map((s) => s.skill_name || s).join(", ")}</span>
+      )}
+    </div>
+  );
 }
 
 // ─── Score badge ───────────────────────────────────────────────────────────────
@@ -1327,6 +1368,7 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
                   <div style={{ color: "#EFEFE9", fontSize: 11, marginTop: 2 }}>
                     Applied {app.appliedAt instanceof Date && !isNaN(app.appliedAt) ? app.appliedAt.toLocaleDateString() : "recently"}
                   </div>
+                  {app.capabilioProfileVerified && <VerifiedProfileBadge profile={app.capabilioProfile} />}
                 </div>
 
                 {/* Score */}
