@@ -182,6 +182,33 @@ export default function CandidateSearch() {
   const [q, setQ] = useState("")
   const [pathFilter, setPathFilter] = useState("all")
 
+  // 2026-08-09: advanced filters -- sent as real query params to
+  // GET /partner/candidates (see partnerBridge.js's advanced-filters
+  // commit for exactly what each does and why maxElo isn't offered).
+  // advOpen just toggles the panel; everything else maps 1:1 to a
+  // server-side filter.
+  const [advOpen, setAdvOpen] = useState(false)
+  const [career, setCareer] = useState("")
+  const [location, setLocation] = useState("")
+  const [minElo, setMinElo] = useState("")
+  const [minExperience, setMinExperience] = useState("")
+  const [maxExperience, setMaxExperience] = useState("")
+  const [minTasks, setMinTasks] = useState("")
+  const [minStreak, setMinStreak] = useState("")
+  const [minJobReadiness, setMinJobReadiness] = useState("")
+  const [employmentStatus, setEmploymentStatus] = useState("")
+  const [uanVerified, setUanVerified] = useState(false)
+  const [educationVerified, setEducationVerified] = useState(false)
+  const [sortBy, setSortBy] = useState("recent")
+
+  const advFilters = { career, location, minElo, minExperience, maxExperience, minTasks, minStreak, minJobReadiness, employmentStatus, uanVerified, educationVerified, sortBy }
+  const activeAdvCount = [career, location, minElo, minExperience, maxExperience, minTasks, minStreak, minJobReadiness, employmentStatus].filter((v) => v !== "").length + (uanVerified ? 1 : 0) + (educationVerified ? 1 : 0)
+  const clearAdvFilters = () => {
+    setCareer(""); setLocation(""); setMinElo(""); setMinExperience(""); setMaxExperience("")
+    setMinTasks(""); setMinStreak(""); setMinJobReadiness(""); setEmploymentStatus("")
+    setUanVerified(false); setEducationVerified(false); setSortBy("recent")
+  }
+
   // 2026-08-07: this page previously fetched once on mount and never again
   // -- a student updating their skills/ELO, or completing a challenge,
   // wouldn't show up here until the recruiter did a hard reload. `silent`
@@ -193,7 +220,21 @@ export default function CandidateSearch() {
     setBridgeError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(`${BACKEND}/partner/candidates?limit=50`, {
+      const params = new URLSearchParams({ limit: "50" })
+      if (pathFilter !== "all") params.set("pathType", pathFilter)
+      if (advFilters.career.trim()) params.set("career", advFilters.career.trim())
+      if (advFilters.location.trim()) params.set("location", advFilters.location.trim())
+      if (advFilters.minElo) params.set("minElo", advFilters.minElo)
+      if (advFilters.minExperience) params.set("minExperience", advFilters.minExperience)
+      if (advFilters.maxExperience) params.set("maxExperience", advFilters.maxExperience)
+      if (advFilters.minTasks) params.set("minTasks", advFilters.minTasks)
+      if (advFilters.minStreak) params.set("minStreak", advFilters.minStreak)
+      if (advFilters.minJobReadiness) params.set("minJobReadiness", advFilters.minJobReadiness)
+      if (advFilters.employmentStatus) params.set("employmentStatus", advFilters.employmentStatus)
+      if (advFilters.uanVerified) params.set("uanVerified", "true")
+      if (advFilters.educationVerified) params.set("educationVerified", "true")
+      if (advFilters.sortBy) params.set("sortBy", advFilters.sortBy)
+      const res = await fetch(`${BACKEND}/partner/candidates?${params.toString()}`, {
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
       })
       const body = await res.json()
@@ -206,7 +247,8 @@ export default function CandidateSearch() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathFilter, career, location, minElo, minExperience, maxExperience, minTasks, minStreak, minJobReadiness, employmentStatus, uanVerified, educationVerified, sortBy])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -269,7 +311,69 @@ export default function CandidateSearch() {
           <option value="student">College Path</option>
           <option value="professional">Professional Path</option>
         </select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={FS.select}>
+          <option value="recent">Sort: Most recently active</option>
+          <option value="elo">Sort: Highest ELO</option>
+          <option value="experience">Sort: Most experience</option>
+          <option value="tasks">Sort: Most tasks completed</option>
+        </select>
+        <button onClick={() => setAdvOpen((o) => !o)} style={{ ...FS.select, cursor:"pointer", fontWeight:600, color: activeAdvCount > 0 ? T.indigo : T.ink2, borderColor: activeAdvCount > 0 ? T.indigo : T.border }}>
+          ⚙ Advanced filters{activeAdvCount > 0 ? ` (${activeAdvCount})` : ""}
+        </button>
       </div>
+
+      {advOpen && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12, background:T.cream, border:`1px solid ${T.border}`, borderRadius:14, padding:16 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:10 }}>
+            <FilterField label="Career / role">
+              <input value={career} onChange={(e) => setCareer(e.target.value)} placeholder="e.g. Data Analyst" style={FS.input} />
+            </FilterField>
+            <FilterField label="Location">
+              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Bangalore" style={FS.input} />
+            </FilterField>
+            <FilterField label="Min ELO">
+              <input type="number" min="0" value={minElo} onChange={(e) => setMinElo(e.target.value)} placeholder="e.g. 900" style={FS.input} />
+            </FilterField>
+            <FilterField label="Min experience (yrs)">
+              <input type="number" min="0" step="0.5" value={minExperience} onChange={(e) => setMinExperience(e.target.value)} style={FS.input} />
+            </FilterField>
+            <FilterField label="Max experience (yrs)">
+              <input type="number" min="0" step="0.5" value={maxExperience} onChange={(e) => setMaxExperience(e.target.value)} style={FS.input} />
+            </FilterField>
+            <FilterField label="Min tasks completed">
+              <input type="number" min="0" value={minTasks} onChange={(e) => setMinTasks(e.target.value)} style={FS.input} />
+            </FilterField>
+            <FilterField label="Min streak (days)">
+              <input type="number" min="0" value={minStreak} onChange={(e) => setMinStreak(e.target.value)} style={FS.input} />
+            </FilterField>
+            <FilterField label="Min job readiness %">
+              <input type="number" min="0" max="100" value={minJobReadiness} onChange={(e) => setMinJobReadiness(e.target.value)} style={FS.input} />
+            </FilterField>
+            <FilterField label="Employment status">
+              <select value={employmentStatus} onChange={(e) => setEmploymentStatus(e.target.value)} style={FS.input}>
+                <option value="">Any</option>
+                <option value="discoverable">Open to offers</option>
+                <option value="notice_period">Notice period</option>
+              </select>
+            </FilterField>
+          </div>
+          <div style={{ display:"flex", gap:16, flexWrap:"wrap", alignItems:"center" }}>
+            <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:T.ink2, cursor:"pointer" }}>
+              <input type="checkbox" checked={uanVerified} onChange={(e) => setUanVerified(e.target.checked)} />
+              ✓ Employment verified (EPFO)
+            </label>
+            <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:T.ink2, cursor:"pointer" }}>
+              <input type="checkbox" checked={educationVerified} onChange={(e) => setEducationVerified(e.target.checked)} />
+              ✓ Education verified
+            </label>
+            {activeAdvCount > 0 && (
+              <button onClick={clearAdvFilters} style={{ marginLeft:"auto", fontSize:12, fontWeight:600, color:T.red, background:"transparent", border:"none", cursor:"pointer" }}>
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div style={{ color:T.ink3, fontSize:13, padding:"40px 0", textAlign:"center" }}>Loading candidates...</div>
@@ -292,6 +396,16 @@ export default function CandidateSearch() {
   )
 }
 
+function FilterField({ label, children }) {
+  return (
+    <div>
+      <div style={{ fontSize:10.5, fontWeight:600, color:T.ink3, marginBottom:4 }}>{label}</div>
+      {children}
+    </div>
+  )
+}
+
 const FS = {
   select: { padding:"10px 14px", borderRadius:10, border:`1px solid ${T.border}`, background:T.cream, fontSize:13, fontFamily:"'Inter',sans-serif", color:T.ink2, cursor:"pointer" },
+  input: { width:"100%", boxSizing:"border-box", padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.cream, fontSize:12.5, fontFamily:"'Inter',sans-serif", color:T.ink },
 }
