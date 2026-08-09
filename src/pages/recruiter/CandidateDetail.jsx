@@ -181,7 +181,15 @@ export default function CandidateDetail() {
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
-      <button onClick={() => navigate(-1)} style={{ ...btn.outline, alignSelf: "flex-start" }}>← Back to Candidates</button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <button onClick={() => navigate(-1)} style={btn.outline}>← Back to Candidates</button>
+        <button
+          onClick={() => navigate("/recruiter/messages", { state: { candidateId: c.id || id, candidateName: displayName, pathType: c.path_type } })}
+          style={{ ...btn.outline, color: T.indigo, borderColor: `${T.indigo}44` }}
+        >
+          💬 Message
+        </button>
+      </div>
 
       {/* Header */}
       <div style={{ ...card, display: "flex", gap: 18, alignItems: "flex-start", flexWrap: "wrap" }}>

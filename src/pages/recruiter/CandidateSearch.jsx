@@ -342,7 +342,7 @@ export default function CandidateSearch() {
   }, [candidates, pathFilter, q])
 
   const handleTask = (c) => navigate("/recruiter/tasks", { state: { candidateId: c.id, candidateName: c.display_name || c.username } })
-  const handleMessage = () => navigate("/recruiter/messages")
+  const handleMessage = (c) => navigate("/recruiter/messages", { state: { candidateId: c.id, candidateName: c.display_name || c.username, pathType: c.path_type } })
   const handleOpen = (c) => navigate(`/recruiter/candidates/${c.id}`)
   const handlePipeline = async (c) => {
     try {
