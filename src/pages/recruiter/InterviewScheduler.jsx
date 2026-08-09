@@ -273,23 +273,16 @@ function ScheduleModal({ interview, candidates, onClose, onSaved, gcalStatus, on
     syncToGcal:     gcalStatus === "connected",
   })
   const [saving,     setSaving]     = useState(false)
-  const [generating, setGenerating] = useState(false)
   const [gcalSyncing,setGcalSyncing]= useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]:v }))
 
-  async function generateMeetLink() {
-    setGenerating(true)
-    const id = Math.random().toString(36).slice(2, 12)
-    const link = form.platform === "Google Meet"
-      ? `https://meet.google.com/${id.slice(0,3)}-${id.slice(3,7)}-${id.slice(7)}`
-      : form.platform === "Zoom"
-      ? `https://zoom.us/j/${Math.floor(Math.random()*9000000000+1000000000)}`
-      : form.platform === "Microsoft Teams"
-      ? `https://teams.microsoft.com/l/meetup-join/${id}` : ""
-    set("meetLink", link)
-    setGenerating(false)
-  }
+  // 2026-08-09: removed generateMeetLink() -- it fabricated fake
+  // meet.google.com/zoom.us/teams.microsoft.com URLs with Math.random()
+  // when Google Calendar wasn't connected. Those were never real meeting
+  // rooms; a recruiter could unknowingly send a candidate a link that goes
+  // nowhere. The manual "Meeting Link" field below (always present) is the
+  // honest path when GCal isn't connected -- paste your own real link.
 
   async function handleSave() {
     if (!form.candidateName || !form.date || !form.time) return
@@ -390,14 +383,12 @@ function ScheduleModal({ interview, candidates, onClose, onSaved, gcalStatus, on
           </div>
           <div style={{ gridColumn:"1/-1" }}>
             <div style={{ fontSize:12, color:"#3A3A38", marginBottom:6 }}>Meeting Link</div>
-            <div style={{ display:"flex", gap:8 }}>
-              <input value={form.meetLink} onChange={e => set("meetLink",e.target.value)} placeholder="https://meet.google.com/..." style={{ ...iStyle, flex:1 }} />
-              {["Google Meet","Zoom","Microsoft Teams"].includes(form.platform) && gcalStatus !== "connected" && (
-                <button onClick={generateMeetLink} disabled={generating} style={{ padding:"10px 14px", background:"rgba(61,78,172,0.15)", border:"1px solid rgba(61,78,172,0.3)", borderRadius:10, color:"#a5b4fc", fontSize:12, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}>
-                  {generating ? "…" : "⚡ Generate"}
-                </button>
-              )}
-            </div>
+            <input value={form.meetLink} onChange={e => set("meetLink",e.target.value)} placeholder="https://meet.google.com/..." style={iStyle} />
+            {["Google Meet","Zoom","Microsoft Teams"].includes(form.platform) && gcalStatus !== "connected" && (
+              <div style={{ fontSize:11, color:"#6B6B68", marginTop:6 }}>
+                Paste your real meeting link, or connect Google Calendar (Settings) to auto-generate one when you save.
+              </div>
+            )}
           </div>
           <div style={{ gridColumn:"1/-1" }}>
             <div style={{ fontSize:12, color:"#3A3A38", marginBottom:6 }}>Interviewers (comma-separated emails)</div>
