@@ -1,27 +1,33 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
-
-
+// 2026-08-09: this page used to read a Firebase Firestore `users` collection
+// -- a frozen pre-Supabase-migration snapshot, disconnected from real
+// current candidates (that's why old/test accounts like "venkata-kopuri"
+// showed up alongside real ones with no way to tell them apart). The
+// segment counts and "Reactivation Queue" were also hardcoded literals
+// behind an IS_DEMO_DATA flag, not live data at all.
+//
+// This pass makes ONE segment real: "Strong but Not Selected" is now built
+// from this company's actual `applications` rows (status='rejected' AND
+// score >= STRONG_SCORE_THRESHOLD, same "Strong" cutoff ApplicationsView's
+// ScoreBadge already uses elsewhere in this app, so the definition of
+// "strong" is consistent across the product). The other three segments
+// (Warm Pipeline, Future Talent, Reactivated) have no real backing feature
+// yet -- no "expressed interest" tracking, no automated learning-plan
+// system, no role-rematch engine exist anywhere in this codebase. Rather
+// than fabricate numbers for them (the project's own no-fake-data rule),
+// they now show an honest "not built yet" state instead of literals.
+const STRONG_SCORE_THRESHOLD = 75
 
 const SEGMENTS = [
-  { id:"strong_not_selected", label:"💎 Strong but Not Selected", color:T.amber,  desc:"High ELO, good Arena scores, missed this cycle. Keep warm for future roles." },
-  { id:"warm_pipeline",       label:"🔥 Warm Pipeline",           color:T.amber,  desc:"Expressed interest, contacted, not yet applied to an active role." },
-  { id:"future_talent",       label:"🌱 Future Talent",           color:T.green,  desc:"Strong potential, currently underqualified. Assigned learning plans." },
-  { id:"reactivated",         label:"♻️ Reactivated",             color:T.indigo, desc:"Role match detected. System re-engaged them for a new opening." },
+  { id:"strong_not_selected", label:"💎 Strong but Not Selected", color:T.amber,  desc:"High-scoring applicants your team rejected. Keep warm for future roles.", implemented:true },
+  { id:"warm_pipeline",       label:"🔥 Warm Pipeline",           color:T.amber,  desc:"Expressed interest, contacted, not yet applied to an active role.",       implemented:false },
+  { id:"future_talent",       label:"🌱 Future Talent",           color:T.green,  desc:"Strong potential, currently underqualified. Assigned learning plans.",    implemented:false },
+  { id:"reactivated",         label:"♻️ Reactivated",             color:T.indigo, desc:"Role match detected. System re-engaged them for a new opening.",         implemented:false },
 ]
-
-function segmentCandidate(c) {
-  const elo   = c.eloRating || 800
-  const arena = c.arenaCompleted || 0
-  if (elo >= 980 && arena >= 2) return "strong_not_selected"
-  if (elo >= 920)               return "warm_pipeline"
-  if (elo >= 860)               return "future_talent"
-  return "reactivated"
-}
 
 function WarmthBar({ level }) {
   return (
@@ -34,100 +40,129 @@ function WarmthBar({ level }) {
   )
 }
 
-function PoolCard({ c, segment }) {
-  const navigate   = useNavigate()
-  const col = c.keyword?.toLowerCase().includes("medical") ? T.green
-    : c.keyword?.toLowerCase().includes("software") ? T.indigo
-    : c.keyword?.toLowerCase().includes("data") ? T.blue : T.indigo2
-  const initials   = (c.displayName || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0,2)
-  const warmth     = Math.min(100, Math.round((c.eloRating || 800) / 12.5))
-  const matchScore = Math.min(99, Math.round((c.eloRating || 800) / 13 + (c.jobReadiness || 0) * 0.2))
-  const seg        = SEGMENTS.find((s) => s.id === segment)
+// Real candidate card for the one implemented segment -- built from an
+// `applications` row (+ its job title, + capabilio_profile_data if the
+// applicant's capabilio_username was resolved to a real verified profile,
+// see apply.js's tryResolveCapabilioProfile()), never from fabricated data.
+function PoolCard({ app }) {
+  const navigate = useNavigate()
+  const initials = (app.name || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const verified = app.capabilio_profile_verified && app.capabilio_profile_data
+  const elo = verified ? (app.capabilio_profile_data.elo ?? app.capabilio_profile_data.role_elo ?? app.capabilio_profile_data.professional_elo) : null
+  const skills = Array.isArray(app.matched_skills) ? app.matched_skills.slice(0, 4) : []
 
   return (
     <div className="cap-card" style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, display:"flex", flexDirection:"column", gap:10, position:"relative", transition:"all 0.2s", boxShadow:T.shadow }}>
-      {/* Segment tag */}
-      <div style={{ position:"absolute", top:12, right:12, fontSize:10, fontWeight:700, color:seg?.color, background:`${seg?.color}15`, border:`1px solid ${seg?.color}30`, borderRadius:6, padding:"2px 8px" }}>
-        {seg?.label.split(" ").slice(0,2).join(" ")}
+      <div style={{ position:"absolute", top:12, right:12, fontSize:10, fontWeight:700, color:T.amber, background:`${T.amber}15`, border:`1px solid ${T.amber}30`, borderRadius:6, padding:"2px 8px" }}>
+        Score {app.score}
       </div>
 
       <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{ width:40, height:40, borderRadius:12, background:`${col}18`, border:`1.5px solid ${col}44`, color:col, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:15, flexShrink:0 }}>
+        <div style={{ width:40, height:40, borderRadius:12, background:`${T.indigo}18`, border:`1.5px solid ${T.indigo}44`, color:T.indigo, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:15, flexShrink:0 }}>
           {initials}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontSize:13, fontWeight:600, color:T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{c.displayName || "—"}</div>
-          <div style={{ fontSize:11, color:col }}>◆ {c.keyword || "General"} · ⚡{c.eloRating || 800}</div>
+          <div style={{ fontSize:13, fontWeight:600, color:T.ink, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{app.name || "—"}</div>
+          <div style={{ fontSize:11, color:T.ink3 }}>{app.jobTitle || "—"}{verified && elo != null ? ` · ✓ Verified · ELO ${elo}` : ""}</div>
         </div>
       </div>
+
+      {skills.length > 0 && (
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+          {skills.map((s) => (
+            <span key={s} style={{ fontSize:10, padding:"2px 7px", borderRadius:4, background:T.cream3, color:T.ink2, border:`1px solid ${T.border}` }}>{s}</span>
+          ))}
+        </div>
+      )}
 
       <div>
         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-          <span style={{ fontSize:10, color:T.ink3 }}>Warmth Score</span>
-          <span style={{ fontSize:10, fontWeight:700, color:seg?.color }}>{matchScore}% role match</span>
+          <span style={{ fontSize:10, color:T.ink3 }}>ATS Score</span>
+          <span style={{ fontSize:10, fontWeight:700, color:T.amber }}>{app.score}%</span>
         </div>
-        <WarmthBar level={warmth} />
+        <WarmthBar level={Math.min(100, Math.max(0, app.score || 0))} />
       </div>
 
-      {segment === "strong_not_selected" && (
-        <div style={{ padding:"7px 10px", background:T.amber2, border:`1px solid ${T.amber}20`, borderRadius:8 }}>
-          <div style={{ fontSize:10, color:T.amber, fontWeight:600 }}>📚 Auto Learning Plan Active</div>
-          <div style={{ fontSize:11, color:T.ink3, marginTop:2 }}>3 Arena tasks · 1 certification path · 2 mentor sessions</div>
-        </div>
-      )}
-
-      {segment === "reactivated" && (
-        <div style={{ padding:"7px 10px", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8 }}>
-          <div style={{ fontSize:10, color:T.indigo, fontWeight:600 }}>♻️ Re-engaged for: Senior Data Analyst</div>
-          <div style={{ fontSize:11, color:T.ink3, marginTop:2 }}>Role match score: {matchScore}% · Notified 2d ago</div>
-        </div>
-      )}
-
       <div style={{ display:"flex", gap:6 }}>
-        <button onClick={() => navigate(`/recruiter/candidate/${c.uid}`)}
-          style={{ flex:1, padding:"6px 0", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
-          View Profile
-        </button>
-        <button onClick={() => navigate("/recruiter/pipeline")}
-          style={{ padding:"6px 10px", background:`${seg?.color || T.green}10`, border:`1px solid ${seg?.color || T.green}25`, borderRadius:8, color:seg?.color || T.green, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
-          Move to Role →
+        {verified && (
+          <button onClick={() => navigate(`/recruiter/candidates/${app.capabilio_profile_data.id}`)}
+            style={{ flex:1, padding:"6px 0", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+            Verified Profile
+          </button>
+        )}
+        <button onClick={() => navigate("/recruiter/applications")}
+          style={{ flex:1, padding:"6px 0", background:`${T.amber}10`, border:`1px solid ${T.amber}25`, borderRadius:8, color:T.amber, fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+          View Application →
         </button>
       </div>
     </div>
   )
 }
 
-// 2026-08-06: FLAGGED, NOT FIXED IN THIS PASS. This page reads from a
-// Firebase `users` collection that is disconnected from both this app's
-// Supabase project ("Capabilio Recruiter") AND capabilio-web's real
-// candidate/employment data. The "Reactivation Queue" numbers below
-// (matched counts, avgScore, "opened Xd ago") are hardcoded literals, not
-// live data — see the array a few dozen lines down. Building this into a
-// real segmentation + reactivation engine (backend logic, real learning-plan
-// integration, real role-match detection) is a bigger project than the
-// specific fixes approved in this pass (employment-status visibility,
-// offer-draft, rejection-workflow) — flagging honestly here rather than
-// quietly shipping fabricated numbers as if they were live, or attempting an
-// unverified rebuild in the same change as the safety-critical visibility
-// fix above it.
-const IS_DEMO_DATA = true
+// Honest placeholder for a not-yet-built segment -- explains what real
+// feature/data source is missing instead of showing a fabricated count.
+function NotBuiltYet({ segment }) {
+  const need = {
+    warm_pipeline: "This needs a real 'expressed interest' tracker (a candidate messaging a company, or self-nominating, before formally applying) -- that data doesn't exist anywhere in this product yet.",
+    future_talent: "This needs a real automated learning-plan feature (Arena task assignment, certification tracking tied to a specific skill gap) -- not built yet.",
+    reactivated:   "This needs a real role-rematch engine (detecting when a new job opening matches a previously-rejected candidate and auto-notifying them) -- not built yet.",
+  }[segment.id]
+  return (
+    <div style={{ textAlign:"center", padding:"50px 20px", background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, boxShadow:T.shadow }}>
+      <div style={{ fontSize:36, marginBottom:12 }}>🚧</div>
+      <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, color:T.ink }}>Not built yet</div>
+      <div style={{ fontSize:13, color:T.ink4, marginTop:6, maxWidth:440, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{need}</div>
+    </div>
+  )
+}
 
 export default function TalentPool() {
-  const [candidates, setCandidates] = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [activeTab,  setActiveTab]  = useState("strong_not_selected")
+  const [strongApps, setStrongApps] = useState([])
+  const [loading,     setLoading]   = useState(true)
+  const [error,       setError]     = useState("")
+  const [activeTab,   setActiveTab] = useState("strong_not_selected")
 
   useEffect(() => {
-    getDocs(collection(db, "users"))
-      .then((snap) => setCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError("")
+      try {
+        // RLS scopes this to the logged-in recruiter's own company, same as
+        // every other direct-Supabase query in this app (ApplicationsView,
+        // etc.) -- no company_id filter is added client-side because RLS is
+        // the actual boundary, not a client-side eq() call.
+        const { data: apps, error: appsErr } = await supabase
+          .from("applications")
+          .select("id, job_id, name, score, matched_skills, ats_summary, capabilio_profile_verified, capabilio_profile_data, created_at")
+          .eq("status", "rejected")
+          .gte("score", STRONG_SCORE_THRESHOLD)
+          .order("score", { ascending: false })
+          .limit(100)
+        if (appsErr) throw appsErr
+
+        const jobIds = [...new Set((apps || []).map((a) => a.job_id).filter(Boolean))]
+        let jobsById = {}
+        if (jobIds.length > 0) {
+          const { data: jobs, error: jobsErr } = await supabase.from("jobs").select("id, title").in("id", jobIds)
+          if (jobsErr) throw jobsErr
+          jobsById = Object.fromEntries((jobs || []).map((j) => [j.id, j.title]))
+        }
+
+        if (!cancelled) {
+          setStrongApps((apps || []).map((a) => ({ ...a, jobTitle: jobsById[a.job_id] || "—" })))
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Could not load the talent pool.")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
-  const segmented = SEGMENTS.reduce((acc, s) => {
-    acc[s.id] = candidates.filter((c) => segmentCandidate(c) === s.id)
-    return acc
-  }, {})
+  const countFor = (segmentId) => (segmentId === "strong_not_selected" ? strongApps.length : null) // null = "not tracked yet", not a real zero
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
@@ -136,43 +171,52 @@ export default function TalentPool() {
       <div style={{ background:T.amber2, border:`1px solid ${T.amber}20`, borderRadius:16, padding:"20px 24px" }}>
         <div style={{ fontFamily:"'Inter',sans-serif", fontSize:18, fontWeight:800, color:T.ink, marginBottom:6 }}>🌱 Talent Pool · Never Lose a Good Candidate Again</div>
         <div style={{ fontSize:13, color:T.ink3, lineHeight:1.6 }}>
-          <strong style={{ color:T.amber }}>"Strong but Not Selected"</strong> candidates stay warm with automated learning plans, get reactivated when a matching role opens, and are never ghosted. Reduces future sourcing time by up to 60%.
+          <strong style={{ color:T.amber }}>"Strong but Not Selected"</strong> candidates stay visible here so you can revisit them for future roles instead of losing track after a rejection.
         </div>
       </div>
 
-      {IS_DEMO_DATA && (
+      {error && (
         <div style={{ background:T.red2, border:`1px solid ${T.red}30`, borderRadius:12, padding:"12px 16px", fontSize:12, color:T.red, fontWeight:600 }}>
-          ⚠ Preview data — this page isn't connected to your real candidate pipeline yet. Segment counts and the Reactivation Queue below are illustrative, not live numbers.
+          ⚠ {error}
         </div>
       )}
 
       {/* Summary stats / segment tabs */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
-        {SEGMENTS.map((s) => (
-          <div key={s.id}
-            onClick={() => setActiveTab(s.id)}
-            style={{ background:T.cream, border:`1px solid ${activeTab === s.id ? s.color : T.border}`, borderRadius:16, padding:"18px 16px", cursor:"pointer", transition:"all 0.2s", boxShadow: activeTab === s.id ? T.shadow2 : T.shadow, outline: activeTab === s.id ? `2px solid ${s.color}40` : "none" }}>
-            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:s.color }}>{loading ? "—" : segmented[s.id]?.length || 0}</div>
-            <div style={{ fontSize:12, color:T.ink, fontWeight:600, marginTop:4 }}>{s.label}</div>
-            <div style={{ fontSize:11, color:T.ink4, marginTop:4, lineHeight:1.4 }}>{s.desc}</div>
-          </div>
-        ))}
+        {SEGMENTS.map((s) => {
+          const count = countFor(s.id)
+          return (
+            <div key={s.id}
+              onClick={() => setActiveTab(s.id)}
+              style={{ background:T.cream, border:`1px solid ${activeTab === s.id ? s.color : T.border}`, borderRadius:16, padding:"18px 16px", cursor:"pointer", transition:"all 0.2s", boxShadow: activeTab === s.id ? T.shadow2 : T.shadow, outline: activeTab === s.id ? `2px solid ${s.color}40` : "none", opacity: s.implemented ? 1 : 0.75 }}>
+              <div style={{ fontFamily:"'Inter',sans-serif", fontSize:28, fontWeight:800, color:s.color }}>
+                {loading && s.implemented ? "—" : count === null ? "—" : count}
+              </div>
+              <div style={{ fontSize:12, color:T.ink, fontWeight:600, marginTop:4 }}>{s.label}</div>
+              <div style={{ fontSize:11, color:T.ink4, marginTop:4, lineHeight:1.4 }}>{s.desc}</div>
+              {!s.implemented && <div style={{ fontSize:10, color:T.ink4, marginTop:6, fontStyle:"italic" }}>Not built yet</div>}
+            </div>
+          )
+        })}
       </div>
 
       {/* "Strong but Not Selected" — how it works */}
       {activeTab === "strong_not_selected" && (
         <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.amber, margin:"0 0 16px" }}>💎 How Strong-but-Not-Selected Works</h2>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.amber, margin:"0 0 8px" }}>💎 How This Works Today</h2>
+          <div style={{ fontSize:12, color:T.ink3, marginBottom:16, lineHeight:1.5 }}>
+            Step 1 below is real and live for every candidate shown on this page. Steps 2–4 describe the planned automation (learning plans, warmth tracking, auto-reactivation) — not yet built, so they don't run for these candidates yet.
+          </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
             {[
-              { step:"1", title:"Candidate Rejected",      desc:"AI generates personalised rejection with strengths and gap analysis. No ghosting.",              icon:"📬" },
-              { step:"2", title:"Auto Learning Plan",       desc:"System assigns Arena tasks, certifications, mentor sessions, and simulations based on gap.",    icon:"📚" },
-              { step:"3", title:"Stay Warm",               desc:"Candidate receives progress updates and Capabilio learning path. Warmth score is tracked.",       icon:"🔥" },
-              { step:"4", title:"Role Match → Reactivate", desc:"When a matching role opens, candidate is auto-notified and moved to Reactivated pool instantly.", icon:"♻️"  },
+              { step:"1", title:"Candidate Rejected",      desc:"Recruiter rejects a strong applicant. They appear here automatically, scoped to your company.", icon:"📬", live:true },
+              { step:"2", title:"Auto Learning Plan",       desc:"Planned: system would assign Arena tasks, certifications, mentor sessions based on gap.",       icon:"📚", live:false },
+              { step:"3", title:"Stay Warm",               desc:"Planned: candidate receives progress updates and a tracked warmth score.",                      icon:"🔥", live:false },
+              { step:"4", title:"Role Match → Reactivate", desc:"Planned: auto-notify and move to a Reactivated pool when a matching role opens.",                icon:"♻️",  live:false },
             ].map((step) => (
-              <div key={step.step} style={{ padding:"14px", background:T.amber2, border:`1px solid ${T.amber}15`, borderRadius:12 }}>
+              <div key={step.step} style={{ padding:"14px", background:T.amber2, border:`1px solid ${T.amber}15`, borderRadius:12, opacity: step.live ? 1 : 0.65 }}>
                 <div style={{ fontSize:24 }}>{step.icon}</div>
-                <div style={{ fontSize:11, color:T.amber, fontWeight:700, marginTop:6 }}>Step {step.step}: {step.title}</div>
+                <div style={{ fontSize:11, color:T.amber, fontWeight:700, marginTop:6 }}>Step {step.step}: {step.title}{!step.live && " (planned)"}</div>
                 <div style={{ fontSize:11, color:T.ink3, marginTop:4, lineHeight:1.5 }}>{step.desc}</div>
               </div>
             ))}
@@ -180,65 +224,38 @@ export default function TalentPool() {
         </div>
       )}
 
-      {/* Reactivation matches */}
-      {activeTab === "reactivated" && (
-        <div style={{ background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:20, boxShadow:T.shadow }}>
-          <h2 style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.indigo, margin:"0 0 14px" }}>♻️ Reactivation Queue — New Role Matches Found</h2>
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {[
-              { role:"Senior Data Analyst", matched:7, avgScore:88, opened:"2 days ago" },
-              { role:"ML Engineer",         matched:3, avgScore:92, opened:"5 days ago" },
-            ].map((r) => (
-              <div key={r.role} style={{ display:"flex", alignItems:"center", gap:14, padding:"12px 14px", background:T.indigo3, border:`1px solid ${T.indigo}15`, borderRadius:10 }}>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:T.ink }}>{r.role}</div>
-                  <div style={{ fontSize:11, color:T.ink4 }}>Opened {r.opened}</div>
-                </div>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:16, fontWeight:800, color:T.indigo, fontFamily:"'Inter',sans-serif" }}>{r.matched}</div>
-                  <div style={{ fontSize:10, color:T.ink4 }}>re-matched</div>
-                </div>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:16, fontWeight:800, color:T.green, fontFamily:"'Inter',sans-serif" }}>{r.avgScore}%</div>
-                  <div style={{ fontSize:10, color:T.ink4 }}>avg match</div>
-                </div>
-                <button style={{ fontSize:12, padding:"6px 14px", background:T.cream, border:`1px solid ${T.indigo}25`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
-                  Review →
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Candidate cards grid */}
+      {/* Candidate cards grid / not-built-yet state */}
       <div>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
           <div style={{ fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink }}>
-            {SEGMENTS.find((s) => s.id === activeTab)?.label} — {loading ? "..." : segmented[activeTab]?.length || 0} candidates
+            {SEGMENTS.find((s) => s.id === activeTab)?.label} — {activeTab === "strong_not_selected" ? (loading ? "..." : `${strongApps.length} candidates`) : "not available"}
           </div>
-          <div style={{ display:"flex", gap:8 }}>
-            <button style={{ fontSize:12, padding:"6px 12px", background:T.indigo3, border:`1px solid ${T.indigo}20`, borderRadius:8, color:T.indigo, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
-              📬 Bulk Nurture
-            </button>
-            <button style={{ fontSize:12, padding:"6px 12px", background:T.green2, border:`1px solid ${T.green}20`, borderRadius:8, color:T.green, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
-              ↓ Export Pool
-            </button>
-          </div>
+          {activeTab === "strong_not_selected" && (
+            <div style={{ display:"flex", gap:8 }}>
+              <button title="Not built yet" disabled style={{ fontSize:12, padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink4, cursor:"not-allowed", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
+                📬 Bulk Nurture
+              </button>
+              <button title="Not built yet" disabled style={{ fontSize:12, padding:"6px 12px", background:T.cream3, border:`1px solid ${T.border}`, borderRadius:8, color:T.ink4, cursor:"not-allowed", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
+                ↓ Export Pool
+              </button>
+            </div>
+          )}
         </div>
 
-        {loading ? (
+        {activeTab !== "strong_not_selected" ? (
+          <NotBuiltYet segment={SEGMENTS.find((s) => s.id === activeTab)} />
+        ) : loading ? (
           <div style={{ textAlign:"center", padding:"40px 0", color:T.ink4 }}>Loading talent pool...</div>
-        ) : (segmented[activeTab] || []).length === 0 ? (
+        ) : strongApps.length === 0 ? (
           <div style={{ textAlign:"center", padding:"50px 20px", background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, boxShadow:T.shadow }}>
             <div style={{ fontSize:36, marginBottom:12 }}>🌱</div>
             <div style={{ fontFamily:"'Inter',sans-serif", fontSize:16, color:T.ink }}>No candidates in this pool yet</div>
-            <div style={{ fontSize:13, color:T.ink4, marginTop:6 }}>Candidates appear here as they move through your hiring pipeline.</div>
+            <div style={{ fontSize:13, color:T.ink4, marginTop:6 }}>Strong applicants (score ≥ {STRONG_SCORE_THRESHOLD}) you reject will appear here automatically.</div>
           </div>
         ) : (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
-            {(segmented[activeTab] || []).map((c) => (
-              <PoolCard key={c.uid} c={c} segment={activeTab} />
+            {strongApps.map((app) => (
+              <PoolCard key={app.id} app={app} />
             ))}
           </div>
         )}

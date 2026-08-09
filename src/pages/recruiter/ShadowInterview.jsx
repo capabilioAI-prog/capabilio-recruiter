@@ -1,11 +1,21 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-// `interviewSessions` (the shareable AI-interview link) has moved to Supabase;
-// `users` (candidate lookup) stays on Firestore for now.
-import { doc, getDoc, collection, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
 import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
+
+// 2026-08-09: candidate lookup used to read Firebase Firestore's `users`
+// collection -- a frozen snapshot from before this product migrated to
+// Supabase, disconnected from real current signups (test accounts and old
+// pre-migration ghosts were indistinguishable from real ones there). Now
+// reads real, live, recruiter_discoverable profiles via the same
+// partner-bridge routes CandidateSearch.jsx/CandidateDetail.jsx already use
+// -- same auth pattern (Supabase session bearer token), same BACKEND base.
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
+
+async function authHeaders() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+}
 
 
 const ROLES = [
@@ -596,7 +606,12 @@ function ReportScreen({ transcript, config, candidate, onRestart }) {
       </div>
       <div style={{ display: "flex", gap: 10 }}>
         <button onClick={onRestart} style={RS.restartBtn}>🔄 New Interview</button>
-        <button onClick={() => navigate(`/recruiter/candidate/${candidate?.uid}`)} style={RS.profileBtn}>
+        {/* /recruiter/candidates/:id (plural, CandidateDetail.jsx) is the real
+            partner-bridge profile page -- candidate.uid is now the actual
+            Supabase profiles.id, not a Firestore doc id, so this must NOT
+            point at the old /recruiter/candidate/:uid (singular,
+            Firestore-backed CandidateProfile.jsx) route anymore. */}
+        <button onClick={() => navigate(`/recruiter/candidates/${candidate?.uid}`)} style={RS.profileBtn}>
           View Full Profile →
         </button>
         <button onClick={() => navigate("/recruiter/pipeline")} style={RS.pipelineBtn}>
@@ -686,20 +701,44 @@ function CandidatePicker({ onPick }) {
   const [candidates, setCandidates] = useState([])
   const [search,     setSearch]     = useState("")
   const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState("")
 
   useEffect(() => {
-    getDocs(collection(db, "users")).then((snap) => {
-      setCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
-      setLoading(false)
-    })
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError("")
+      try {
+        const headers = await authHeaders()
+        const params = new URLSearchParams({ limit: "50", sortBy: "recent" })
+        const res = await fetch(`${BACKEND}/partner/candidates?${params.toString()}`, { headers })
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+        if (!cancelled) {
+          // uid/displayName kept as aliases for id/display_name so the rest
+          // of this file (interview_sessions insert, transcript labels,
+          // profile-link navigation) doesn't need to be rewritten
+          // field-by-field for the new response shape.
+          setCandidates((body.candidates || []).map((c) => ({ ...c, uid: c.id, displayName: c.display_name || c.username })))
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Could not load candidates.")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const filtered = candidates.filter((c) => {
     if (!search) return true
     const q = search.toLowerCase()
     return (
-      (c.displayName || "").toLowerCase().includes(q) ||
-      (c.keyword     || "").toLowerCase().includes(q)
+      (c.display_name || "").toLowerCase().includes(q) ||
+      (c.username     || "").toLowerCase().includes(q) ||
+      (c.career       || "").toLowerCase().includes(q) ||
+      (c.domain       || "").toLowerCase().includes(q)
     )
   })
 
@@ -716,6 +755,8 @@ function CandidatePicker({ onPick }) {
       />
       {loading ? (
         <div style={CP.loading}>Loading candidates...</div>
+      ) : error ? (
+        <div style={{ color: "#ef4444", fontSize: 13, textAlign: "center", padding: "20px 0" }}>{error}</div>
       ) : (
         <div style={CP.list}>
           {filtered.map((c) => (
@@ -732,9 +773,9 @@ function CandidatePicker({ onPick }) {
               }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1A18" }}>{c.displayName}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#1A1A18" }}>{c.display_name || c.username || "Unnamed candidate"}</div>
                 <div style={{ fontSize: 11, color: "#3A3A38" }}>
-                  {c.keyword} · ELO {c.eloRating || 800} · {c.jobReadiness || 0}% ready
+                  {c.career || c.domain || "General"} · ELO {c.elo ?? 800} · {c.jobReadiness ?? 0}% ready
                 </div>
               </div>
               <button onClick={() => onPick(c)} style={CP.pickBtn}>
@@ -802,13 +843,18 @@ export default function ShadowInterview() {
 
   useEffect(() => {
     if (uid) {
-      getDoc(doc(db, "users", uid)).then((snap) => {
-        if (snap.exists()) {
-          setCandidate({ uid: snap.id, ...snap.data() })
-          setPhase("setup")
-        }
-        setLoading(false)
-      }).catch((err) => {
+      authHeaders().then((headers) =>
+        fetch(`${BACKEND}/partner/candidates/${uid}`, { headers }).then(async (res) => {
+          const body = await res.json()
+          if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+          if (body.candidate) {
+            const c = body.candidate
+            setCandidate({ ...c, uid: c.id, displayName: c.display_name || c.username })
+            setPhase("setup")
+          }
+          setLoading(false)
+        })
+      ).catch((err) => {
         console.error("Failed to load candidate:", err)
         setLoading(false)
       })
