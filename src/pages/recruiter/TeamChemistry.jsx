@@ -20,6 +20,13 @@ import { T, domainColor, eloLevel } from "./theme"
 // company), same pattern as company_employees/jobs.
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// BACKEND above. Intentionally a DIFFERENT service from BACKEND -- this
+// project's own capabilio-recruiter-backend has no /recruiter/team-chemistry
+// route (confirmed via grep) -- kept pointed at the same working legacy AI
+// endpoint, just made configurable.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 async function authHeaders() {
   const { data: { session } } = await supabase.auth.getSession()
   return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
@@ -162,7 +169,7 @@ function AIPanel({ team, chemistry }) {
     setError("")
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/team-chemistry",
+        `${LEGACY_AI_URL}/recruiter/team-chemistry`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

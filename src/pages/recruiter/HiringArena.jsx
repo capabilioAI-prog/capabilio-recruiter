@@ -2,6 +2,14 @@ import { useState, useEffect } from "react"
 import { supabase } from "../../lib/supabaseClient"
 import { T } from "./theme"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// every other page's VITE_BACKEND_URL convention. This is intentionally a
+// DIFFERENT service, not this project's own capabilio-recruiter-backend --
+// that backend has no /recruiter/generate-challenge route at all (confirmed
+// via grep). Kept pointed at the same working legacy AI endpoint, just made
+// configurable instead of scattering the literal across files.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 // 2026-08-10: this page kept challenge rooms in pure React state
 // (useState([])) -- every room a recruiter created vanished on refresh, and
 // "Past Rooms" was 2 hardcoded fake entries (DEMO_PAST) that never changed.
@@ -50,7 +58,7 @@ function CreateRoomForm({ jobs, onCreated }) {
     setError("")
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/generate-challenge",
+        `${LEGACY_AI_URL}/recruiter/generate-challenge`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

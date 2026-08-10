@@ -3,6 +3,15 @@ import { useParams, useNavigate } from "react-router-dom"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "./firebase"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// this app's VITE_BACKEND_URL convention. Intentionally a DIFFERENT service
+// from this project's own capabilio-recruiter-backend, which has no
+// /recruiter/candidate-analysis route (confirmed via grep) -- kept pointed
+// at the same working legacy AI endpoint, just made configurable. This page
+// still reads candidates from Firestore, a separate known issue -- see
+// RecruiterApp.jsx's routing comment and TalentIncubator.jsx.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 const T = {
   cream:"#F6F6F1", cream2:"#EFEFE9", cream3:"#E8E8E1",
   ink:"#1A1A18", ink2:"#3A3A38", ink3:"#6B6B68", ink4:"#9A9A97",
@@ -165,7 +174,7 @@ function AITab({ candidate }) {
     setError("")
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/candidate-analysis",
+        `${LEGACY_AI_URL}/recruiter/candidate-analysis`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

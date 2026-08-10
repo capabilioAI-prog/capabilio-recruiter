@@ -4,6 +4,15 @@ import { collection, getDocs } from "firebase/firestore"
 import { db } from "./firebase"
 import { T, card, cardLg, tag, btn } from "./theme"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// this app's VITE_BACKEND_URL convention. Intentionally a DIFFERENT service
+// from this project's own capabilio-recruiter-backend, which has no
+// /recruiter/candidate-analysis route (confirmed via grep) -- kept pointed
+// at the same working legacy AI endpoint, just made configurable. This page
+// still reads candidates from Firestore, a separate known issue -- see
+// RecruiterApp.jsx's routing comment and CandidateProfile.jsx.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 
 const domainColor = (d) => {
   d = d || "" // guard against explicit null, not just undefined
@@ -206,7 +215,7 @@ function GrowthForecast({ candidates }) {
     setLoading(true)
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/candidate-analysis",
+        `${LEGACY_AI_URL}/recruiter/candidate-analysis`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

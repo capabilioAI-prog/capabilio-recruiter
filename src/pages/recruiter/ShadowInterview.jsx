@@ -12,6 +12,14 @@ import { T, card, cardLg, tag, btn } from "./theme"
 // -- same auth pattern (Supabase session bearer token), same BACKEND base.
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// BACKEND above. Intentionally a DIFFERENT service from BACKEND -- this
+// project's own capabilio-recruiter-backend has no /recruiter/
+// generate-challenge or /recruiter/shadow-interview route (confirmed via
+// grep) -- kept pointed at the same working legacy AI endpoint, just made
+// configurable.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 async function authHeaders() {
   const { data: { session } } = await supabase.auth.getSession()
   return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
@@ -54,7 +62,7 @@ function SetupScreen({ candidate, onStart }) {
     setError("")
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/generate-challenge",
+        `${LEGACY_AI_URL}/recruiter/generate-challenge`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -365,7 +373,7 @@ function InterviewScreen({ config, candidate, onComplete }) {
     const entry = { question: currentQ, answer, score: null, feedback: null }
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/shadow-interview",
+        `${LEGACY_AI_URL}/recruiter/shadow-interview`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -3,6 +3,13 @@ import { useParams } from "react-router-dom"
 import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
+// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
+// this app's VITE_BACKEND_URL convention. Intentionally a DIFFERENT service
+// from this project's own capabilio-recruiter-backend, which has no
+// /recruiter/shadow-interview route (confirmed via grep) -- kept pointed at
+// the same working legacy AI endpoint, just made configurable.
+const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
 function fromDbSession(row) {
   return {
     id: row.id,
@@ -79,7 +86,7 @@ export default function CandidateInterview() {
 
     try {
       const res = await fetch(
-        "https://capabilio-backend-production-60ab.up.railway.app/api/recruiter/shadow-interview",
+        `${LEGACY_AI_URL}/recruiter/shadow-interview`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
