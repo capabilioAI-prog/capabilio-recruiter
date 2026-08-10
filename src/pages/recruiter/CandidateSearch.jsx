@@ -181,6 +181,16 @@ export default function CandidateSearch() {
   const [bridgeError, setBridgeError] = useState(null)
   const [q, setQ] = useState("")
   const [pathFilter, setPathFilter] = useState("all")
+  // 2026-08-10: "View Profile" opened the real portfolio in a new tab, per
+  // explicit request now shown as an in-page popup instead (matches
+  // capabilio-web's InstitutionOS.jsx roster pattern). Iframe src is
+  // cross-origin (recruiter.capabilio.online embedding capabilio.online),
+  // so the portfolio page renders as an anonymous viewer inside it -- fine
+  // here since candidates only reach this list once they're
+  // recruiter_discoverable (server-side gate in partnerBridge.js), which in
+  // practice means a verified/shareable profile, the same bar a public
+  // anonymous viewer is held to.
+  const [viewingPortfolioUsername, setViewingPortfolioUsername] = useState(null)
 
   // 2026-08-09: advanced filters -- sent as real query params to
   // GET /partner/candidates (see partnerBridge.js's advanced-filters
@@ -348,18 +358,13 @@ export default function CandidateSearch() {
   // data assembled from /partner/candidates -- not the same thing students,
   // institutions, and every other viewer see. Per explicit request, this
   // now opens the candidate's REAL public Portfolio page (proof of skills,
-  // real career timeline, Code DNA) instead, same pattern already used by
-  // capabilio-web's InstitutionOS.jsx roster and the platform's own
-  // CandidateProfile.jsx (this app's earlier, now-unrouted attempt at the
-  // same link -- that one used a bare relative "/portfolio/..." path, which
-  // 404s here since this app is served from a different origin
-  // (recruiter.capabilio.online) than the portfolio pages
-  // (capabilio.online); this uses the full absolute URL instead, matching
-  // the convention already used for every other capabilio.online link in
-  // this codebase (LandingPage.jsx, RecruiterLayout.jsx).
+  // real career timeline, Code DNA) as an in-page popup instead (see
+  // PortfolioModal below), same pattern already used by capabilio-web's
+  // InstitutionOS.jsx roster. Falls back to the old internal page when a
+  // candidate has no username set, so nothing regresses for that edge case.
   const handleOpen = (c) => {
     if (!c.username) { navigate(`/recruiter/candidates/${c.id}`); return }
-    window.open(`https://capabilio.online/portfolio/${encodeURIComponent(c.username)}`, "_blank", "noopener,noreferrer")
+    setViewingPortfolioUsername(c.username)
   }
   const handlePipeline = async (c) => {
     try {
@@ -491,6 +496,64 @@ export default function CandidateSearch() {
           ))}
         </div>
       )}
+
+      {viewingPortfolioUsername && (
+        <PortfolioModal
+          username={viewingPortfolioUsername}
+          onClose={() => setViewingPortfolioUsername(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── Candidate portfolio popup (2026-08-10) ─────────────────────────────────
+// Opened from CandidateCard's "View Profile" button (see handleOpen above).
+// Mirrors capabilio-web's InstitutionOS.jsx PortfolioModal: an in-page
+// popup (iframe in a modal) linking straight to the candidate's real public
+// Portfolio page instead of a smaller internal re-implementation. Unlike
+// InstitutionOS.jsx's version, this iframe is cross-origin (this app is
+// served from recruiter.capabilio.online, portfolios live on
+// capabilio.online) so it can't carry the recruiter's own session in --
+// it loads as an anonymous public viewer, same as anyone visiting the
+// portfolio URL directly. That's fine here: every candidate reaching this
+// list already passed the recruiter_discoverable server-side gate in
+// partnerBridge.js, which in practice means a verified/shareable profile --
+// the same bar portfolioPublic.js holds anonymous viewers to.
+function PortfolioModal({ username, onClose }) {
+  const portfolioUrl = `https://capabilio.online/portfolio/${encodeURIComponent(username)}`
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "rgba(7,13,26,0.92)", backdropFilter: "blur(8px)",
+        zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: "32px 16px", overflowY: "auto",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 16, width: "100%", maxWidth: 900, padding: 20 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ color: T.ink, fontSize: 16, fontWeight: 700, margin: 0 }}>Candidate Portfolio</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <a href={portfolioUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: T.blue, fontWeight: 600 }}>
+              Open in new tab ↗
+            </a>
+            <button onClick={onClose} style={{ background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", fontSize: 14, color: T.ink3 }}>
+              ✕
+            </button>
+          </div>
+        </div>
+        <div style={{ border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden", height: "75vh", background: "#fff" }}>
+          <iframe
+            src={portfolioUrl}
+            title={`${username} — portfolio`}
+            style={{ width: "100%", height: "100%", border: "none" }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
