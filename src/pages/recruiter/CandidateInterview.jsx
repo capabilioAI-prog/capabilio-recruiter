@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
-import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
 // 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
@@ -9,6 +8,21 @@ import { T, card, cardLg, tag, btn } from "./theme"
 // /recruiter/shadow-interview route (confirmed via grep) -- kept pointed at
 // the same working legacy AI endpoint, just made configurable.
 const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
+
+// 2026-08-10 RLS security fix: this page used to talk to Supabase's
+// interview_sessions table directly from the browser (supabase.from(...)).
+// That relied on an `anon`-role RLS policy with USING (true) for both
+// SELECT and UPDATE -- no row-level restriction at all, so anyone with the
+// public anon key could read or overwrite every interview session across
+// every company, not just the one this candidate was sent a link to.
+// Confirmed via a live RLS audit. Fixed by moving all reads/writes for this
+// table behind the backend (see capabilio-recruiter-backend's
+// interviewSession.js), which always looks up/updates by exact primary key
+// and never performs an unfiltered query -- same BACKEND convention every
+// other page in this app already uses. The anon RLS policies were dropped
+// entirely; this table is no longer reachable directly from the browser at
+// all for unauthenticated callers.
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
 
 function fromDbSession(row) {
   return {
@@ -46,13 +60,14 @@ export default function CandidateInterview() {
   // Load session from Supabase
   useEffect(() => {
     let cancelled = false
-    supabase.from("interview_sessions").select("*").eq("id", sessionId).maybeSingle()
-      .then(({ data, error: err }) => {
+    fetch(`${BACKEND}/interview-session/${sessionId}`)
+      .then((res) => res.json().then((body) => ({ ok: res.ok, body })))
+      .then(({ ok, body }) => {
         if (cancelled) return
-        if (err || !data) {
-          setError("Interview link not found or has expired.")
+        if (!ok || !body.session) {
+          setError(body?.error || "Interview link not found or has expired.")
         } else {
-          const session = fromDbSession(data)
+          const session = fromDbSession(body.session)
           if (session.status === "completed") {
             setPhase("done")
             setTranscript(session.transcript)
@@ -60,6 +75,12 @@ export default function CandidateInterview() {
           setSession(session)
         }
         setLoading(false)
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("Interview link not found or has expired.")
+          setLoading(false)
+        }
       })
     return () => { cancelled = true }
   }, [sessionId])
@@ -112,12 +133,21 @@ export default function CandidateInterview() {
 
     const isLast = qIndex + 1 >= total
 
-    // Save progress to Supabase
-    const { error: saveErr } = await supabase.from("interview_sessions").update({
-      transcript: newTranscript,
-      status: isLast ? "completed" : "in_progress",
-    }).eq("id", sessionId)
-    if (saveErr) console.error("Failed to save progress", saveErr)
+    // Save progress via the backend (see the file-header comment -- this
+    // table is no longer reachable directly from the browser).
+    try {
+      const res = await fetch(`${BACKEND}/interview-session/${sessionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: newTranscript,
+          status: isLast ? "completed" : "in_progress",
+        }),
+      })
+      if (!res.ok) console.error("Failed to save progress", await res.text())
+    } catch (err) {
+      console.error("Failed to save progress", err)
+    }
 
     if (isLast) {
       setPhase("done")
@@ -217,9 +247,16 @@ export default function CandidateInterview() {
         <button
           onClick={async () => {
             // Mark session as started
-            const { error: err } = await supabase.from("interview_sessions")
-              .update({ status: "in_progress" }).eq("id", sessionId)
-            if (err) console.error("Failed to mark interview started:", err)
+            try {
+              const res = await fetch(`${BACKEND}/interview-session/${sessionId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "in_progress" }),
+              })
+              if (!res.ok) console.error("Failed to mark interview started:", await res.text())
+            } catch (err) {
+              console.error("Failed to mark interview started:", err)
+            }
             setPhase("interview")
           }}
           style={S.startBtn}
