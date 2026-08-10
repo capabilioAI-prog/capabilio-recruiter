@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 
 const T = {
   cream:"#F6F6F1", cream2:"#EFEFE9", cream3:"#E8E8E1",
@@ -124,9 +125,26 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
   const [drawerOpen,   setDrawerOpen]   = useState(false);
   const [notifOpen,    setNotifOpen]    = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [activeRoleCount, setActiveRoleCount] = useState(null);
   const drawerRef = useRef();
 
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
+  // 2026-08-10: this chip used to be a hardcoded "4 Active Roles" literal --
+  // never computed from anything, so it kept showing 4 even for a brand-new
+  // account with zero jobs (that's what made Resume Screening's real "no
+  // jobs yet" empty state look like a bug -- the sidebar was lying). Real
+  // count of non-closed jobs, RLS-scoped to this recruiter's own company.
+  useEffect(() => {
+    let cancelled = false
+    supabase.from("jobs").select("id, status").then(({ data, error }) => {
+      if (cancelled) return
+      if (error) { console.error("Failed to load active role count:", error.message); return }
+      const open = (data || []).filter((j) => (j.status || "").toLowerCase() !== "closed").length
+      setActiveRoleCount(open)
+    })
+    return () => { cancelled = true }
+  }, []);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -228,8 +246,13 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
         <div style={S.sidebarBottom}>
           {/* Hiring health chips */}
           <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
-            <div style={{ ...S.healthChip, background:T.green2, color:T.green, border:`1px solid ${T.border}` }}><span>●</span> 4 Active Roles</div>
-            <div style={{ ...S.healthChip, background:T.amber2, color:T.amber, border:`1px solid ${T.border}` }}><span>●</span> 3 SLA Alerts</div>
+            <div style={{ ...S.healthChip, background:T.green2, color:T.green, border:`1px solid ${T.border}` }}>
+              <span>●</span> {activeRoleCount == null ? "…" : activeRoleCount} Active Role{activeRoleCount === 1 ? "" : "s"}
+            </div>
+            {/* SLA Alerts removed -- there is no real SLA-tracking system
+                anywhere in this app to compute this from (see Bulk Hiring's
+                fix, which removed the same fabrication). Was a hardcoded
+                "3" regardless of actual state. */}
           </div>
           <div style={S.profileRow}>
             <div style={S.avatar}>{initials}</div>
