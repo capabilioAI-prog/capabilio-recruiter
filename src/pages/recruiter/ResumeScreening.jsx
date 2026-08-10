@@ -27,7 +27,10 @@ async function authHeaders() {
   return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
 }
 
-function verdictFor(score) {
+// Exported only so src/pages/recruiter/__tests__/ResumeScreening.test.js can
+// unit test the real verdict thresholds directly.
+// eslint-disable-next-line react-refresh/only-export-components
+export function verdictFor(score) {
   if (score >= 85) return { label: "Strong Hire", color: T.green }
   if (score >= 70) return { label: "Good Hire", color: T.indigo }
   if (score >= 55) return { label: "Maybe", color: T.amber }

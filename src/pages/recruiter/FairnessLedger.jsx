@@ -34,15 +34,20 @@ const EVENT_TYPES = {
   "application.rejected":    { icon: "❌", color: T.red, label: "Rejection Sent" },
 }
 
-function eventTypeFor(action) {
+// Exported only so src/pages/recruiter/__tests__/FairnessLedger.test.js can
+// unit test the real data-mapping logic directly.
+// eslint-disable-next-line react-refresh/only-export-components
+export function eventTypeFor(action) {
   return EVENT_TYPES[action] || { icon: "●", color: T.ink4, label: action }
 }
 
-function daysBetween(a, b) {
+// eslint-disable-next-line react-refresh/only-export-components
+export function daysBetween(a, b) {
   return Math.max(0, Math.round((b - a) / (1000 * 60 * 60 * 24)))
 }
 
-function fromDbApplication(row) {
+// eslint-disable-next-line react-refresh/only-export-components
+export function fromDbApplication(row) {
   return {
     id: row.id,
     jobId: row.job_id,

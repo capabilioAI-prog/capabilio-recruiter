@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Lint, Test, Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 2026-08-10: the repo has ~75 pre-existing lint errors from before
+      # this CI pipeline existed (mostly unused theme-token imports in older
+      # pages, confirmed unrelated to any change made this session). Gating
+      # CI on lint today would fail the very first run on unrelated legacy
+      # code and make the pipeline look broken/get ignored. Lint still runs
+      # and reports on every PR so new problems are visible, but it's
+      # non-blocking until that backlog is cleaned up -- test and build are
+      # the real gates.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
+        env:
+          # CI has no real Supabase project -- these are placeholder values
+          # so `vite build` doesn't fail on missing env vars. No network
+          # calls happen at build time, only at runtime in the browser.
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: placeholder
+          VITE_BACKEND_URL: http://localhost:3000/api

@@ -45,7 +45,10 @@ const BUCKETS = [
   { id:"not_matched",    label:"Not Matched",           icon:"○",  color:T.ink4,   desc:"Below threshold on critical must-have skills", action:null,                            pipelineStage:null },
 ]
 
-function clusterCandidate(c) {
+// Exported only so src/pages/recruiter/__tests__/BulkHiring.test.js can unit
+// test the real clustering thresholds directly.
+// eslint-disable-next-line react-refresh/only-export-components
+export function clusterCandidate(c) {
   const elo   = c.elo || 800
   const ready = c.jobReadiness || 0
   const arena = c.taskCount || 0
