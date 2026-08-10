@@ -343,7 +343,24 @@ export default function CandidateSearch() {
 
   const handleTask = (c) => navigate("/recruiter/tasks", { state: { candidateId: c.id, candidateName: c.display_name || c.username } })
   const handleMessage = (c) => navigate("/recruiter/messages", { state: { candidateId: c.id, candidateName: c.display_name || c.username, pathType: c.path_type } })
-  const handleOpen = (c) => navigate(`/recruiter/candidates/${c.id}`)
+  // 2026-08-10: "View Profile" used to open /recruiter/candidates/:id
+  // (CandidateDetail.jsx), an internal reconstruction of the candidate's
+  // data assembled from /partner/candidates -- not the same thing students,
+  // institutions, and every other viewer see. Per explicit request, this
+  // now opens the candidate's REAL public Portfolio page (proof of skills,
+  // real career timeline, Code DNA) instead, same pattern already used by
+  // capabilio-web's InstitutionOS.jsx roster and the platform's own
+  // CandidateProfile.jsx (this app's earlier, now-unrouted attempt at the
+  // same link -- that one used a bare relative "/portfolio/..." path, which
+  // 404s here since this app is served from a different origin
+  // (recruiter.capabilio.online) than the portfolio pages
+  // (capabilio.online); this uses the full absolute URL instead, matching
+  // the convention already used for every other capabilio.online link in
+  // this codebase (LandingPage.jsx, RecruiterLayout.jsx).
+  const handleOpen = (c) => {
+    if (!c.username) { navigate(`/recruiter/candidates/${c.id}`); return }
+    window.open(`https://capabilio.online/portfolio/${encodeURIComponent(c.username)}`, "_blank", "noopener,noreferrer")
+  }
   const handlePipeline = async (c) => {
     try {
       const { error } = await supabase.from("pipeline_candidates").insert({
