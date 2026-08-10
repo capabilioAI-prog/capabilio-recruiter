@@ -7,7 +7,6 @@ import RecruiterAuth          from "./RecruiterAuth";
 import RecruiterLayout        from "./RecruiterLayout";
 import RecruiterDashboard     from "./RecruiterDashboard";
 import CandidateSearch        from "./CandidateSearch";
-import CandidateProfile       from "./CandidateProfile";
 import CandidateDetail        from "./CandidateDetail";
 import RecruiterPipeline      from "./RecruiterPipeline";
 import JobBoard               from "./JobBoard";
@@ -129,11 +128,12 @@ export default function RecruiterApp() {
         {/* Core */}
         <Route index                          element={<RecruiterDashboard />} />
         <Route path="search"                  element={<CandidateSearch />} />
-        <Route path="candidate/:uid"          element={<CandidateProfile />} />
-        {/* 2026-08-07: real, live-data candidate profile (Aura-style
-            portfolio) sourced from capabilio-web via the partner bridge --
-            distinct path from "candidate/:uid" above, which reads from a
-            separate, disconnected legacy Firestore project. */}
+        {/* 2026-08-10: the old singular "candidate/:uid" route
+            (CandidateProfile.jsx, Firestore-backed) has been retired -- its
+            only live inbound link (TalentIncubator.jsx) was rewired onto
+            the real partner-bridge candidate data below, so nothing in the
+            app points here anymore. CandidateProfile.jsx is left in the
+            tree, unrouted, rather than deleted. */}
         <Route path="candidates/:id"          element={<CandidateDetail />} />
         <Route path="pipeline"                element={<RecruiterPipeline />} />
         <Route path="jobs"                    element={<JobBoard />} />

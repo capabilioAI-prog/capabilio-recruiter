@@ -1,16 +1,36 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "./firebase"
+import { supabase } from "../../lib/supabaseClient"
 import { T, card, cardLg, tag, btn } from "./theme"
 
-// 2026-08-10: was a hardcoded literal, unconfigurable and inconsistent with
-// this app's VITE_BACKEND_URL convention. Intentionally a DIFFERENT service
-// from this project's own capabilio-recruiter-backend, which has no
-// /recruiter/candidate-analysis route (confirmed via grep) -- kept pointed
-// at the same working legacy AI endpoint, just made configurable. This page
-// still reads candidates from Firestore, a separate known issue -- see
-// RecruiterApp.jsx's routing comment and CandidateProfile.jsx.
+// 2026-08-10: this page was never caught by any earlier audit pass -- it
+// read the same dead pre-Supabase Firestore `users` snapshot Shadow
+// Interview/Talent Pool/Bulk Hiring did (same root cause those were fixed
+// for), and its "View Profile" button pointed at the old singular
+// /recruiter/candidate/:uid route (CandidateProfile.jsx, also
+// Firestore-backed). Since a Firestore doc id is NOT the same value as a
+// real Supabase profiles.id, simply changing the link target without also
+// fixing the data source would have swapped "stale profile" for "blank/
+// not-found page." Rewired onto the same real /partner/candidates data
+// ShadowInterview.jsx/BulkHiring.jsx already use, with the same field
+// aliasing convention (uid/displayName kept as aliases for id/display_name
+// so the rest of this file didn't need a field-by-field rewrite), and the
+// link now correctly points at /recruiter/candidates/:id (plural,
+// CandidateDetail.jsx -- the real partner-bridge profile page). The old
+// singular route + CandidateProfile.jsx are now unreachable -- see
+// RecruiterApp.jsx.
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"
+
+async function authHeaders() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+}
+
+// Intentionally a DIFFERENT service from BACKEND above -- this project's own
+// capabilio-recruiter-backend has no /recruiter/candidate-analysis route
+// (confirmed via grep). Kept pointed at the same working legacy AI endpoint
+// used elsewhere (HiringArena, ShadowInterview, TeamChemistry), just made
+// configurable instead of a scattered hardcoded literal.
 const LEGACY_AI_URL = import.meta.env.VITE_LEGACY_AI_URL || "https://capabilio-backend-production-60ab.up.railway.app/api"
 
 
@@ -210,9 +230,16 @@ const RS = {
 function GrowthForecast({ candidates }) {
   const [loading,  setLoading]  = useState(false)
   const [forecast, setForecast] = useState(null)
+  const [error,    setError]    = useState("")
 
+  // 2026-08-10: previously, any failure here (network error, non-2xx
+  // response, the AI service being down) silently fell back to a fully
+  // invented report ("Strong" recommendation, made-up role names, a made-up
+  // "fast-track within 30 days" claim) with no indication it wasn't real.
+  // Now a failure just shows an honest error instead of fabricated content.
   const run = async () => {
     setLoading(true)
+    setError("")
     try {
       const res = await fetch(
         `${LEGACY_AI_URL}/recruiter/candidate-analysis`,
@@ -226,14 +253,10 @@ function GrowthForecast({ candidates }) {
         }
       )
       const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`)
       setForecast(data)
-    } catch {
-      setForecast({
-        recommendation: "Strong",
-        bestRoles: ["Senior Analyst", "Team Lead", "Product Specialist"],
-        strengths: ["Consistent upward trajectory", "High arena engagement", "Strong domain fundamentals"],
-        cultureFit: "These candidates show excellent growth velocity. Recommend fast-tracking top 3 for interviews within 30 days before competitors identify them.",
-      })
+    } catch (err) {
+      setError(err.message || "Could not generate a forecast right now. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -245,6 +268,11 @@ function GrowthForecast({ candidates }) {
       <div style={{ fontSize: 12, color: "#E8E8E1", marginBottom: 14 }}>
         AI predicts which watched candidates will be job-ready in 30 days
       </div>
+      {error && (
+        <div style={{ padding: "8px 12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, fontSize: 11.5, color: "#C0392B", marginBottom: 12, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
+          {error}
+        </div>
+      )}
       <button onClick={run} disabled={loading || candidates.length === 0} style={GF.btn}>
         {loading ? "⏳ Forecasting..." : "✨ Run Growth Forecast"}
       </button>
@@ -301,14 +329,42 @@ export default function TalentIncubator() {
   const [sortBy,        setSortBy]        = useState("potential")
   const [tab,           setTab]           = useState("watchlist")
 
+  const [loadError, setLoadError] = useState("")
+
   useEffect(() => {
-    getDocs(collection(db, "users")).then((snap) => {
-      setAllCandidates(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
-      setLoading(false)
-    }).catch((err) => {
-      console.error("Failed to load candidates:", err)
-      setLoading(false)
-    })
+    (async () => {
+      setLoading(true)
+      setLoadError("")
+      try {
+        const headers = await authHeaders()
+        const params = new URLSearchParams({ limit: "200", sortBy: "recent" })
+        const res = await fetch(`${BACKEND}/partner/candidates?${params.toString()}`, { headers })
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+        // uid/displayName/eloRating/keyword/jobReadiness/arenaCompleted/
+        // arenaStreak kept as aliases for id/display_name/elo/domain/
+        // jobReadiness/taskCount/streak so the rest of this file (growth
+        // potential math, rings, filters) didn't need a field-by-field
+        // rewrite for the real response shape.
+        setAllCandidates(
+          (body.candidates || []).map((c) => ({
+            ...c,
+            uid: c.id,
+            displayName: c.display_name || c.username,
+            eloRating: c.elo,
+            keyword: c.domain,
+            jobReadiness: c.jobReadiness,
+            arenaCompleted: c.taskCount,
+            arenaStreak: c.streak,
+          }))
+        )
+      } catch (err) {
+        console.error("Failed to load candidates:", err)
+        setLoadError(err.message || "Could not load candidates.")
+      } finally {
+        setLoading(false)
+      }
+    })()
   }, [])
 
   const addToWatch    = (c) => { if (watchlist.find((w) => w.uid === c.uid)) return; setWatchlist((p) => [...p, c]) }
@@ -358,6 +414,12 @@ export default function TalentIncubator() {
           Watch rising stars grow and get notified when they're ready
         </p>
       </div>
+
+      {loadError && (
+        <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, fontSize: 12, color: "#C0392B", marginBottom: 16 }}>
+          {loadError}
+        </div>
+      )}
 
       {/* Stat cards */}
       <div style={P.statsRow}>
@@ -409,7 +471,14 @@ export default function TalentIncubator() {
                   onRemove={removeFromWatch}
                   onView={(cand, mode) => {
                     if (mode === "interview") navigate(`/recruiter/simulation/${cand.uid}`)
-                    else navigate(`/recruiter/candidate/${cand.uid}`)
+                    // Plural /recruiter/candidates/:id (CandidateDetail.jsx)
+                    // is the real partner-bridge profile page -- cand.uid is
+                    // now the real Supabase profiles.id, not a Firestore doc
+                    // id, so this must NOT point at the old singular
+                    // /recruiter/candidate/:uid (CandidateProfile.jsx,
+                    // Firestore-backed, now unreachable) route anymore. Same
+                    // fix ShadowInterview.jsx already made.
+                    else navigate(`/recruiter/candidates/${cand.uid}`)
                   }}
                 />
               ))}
