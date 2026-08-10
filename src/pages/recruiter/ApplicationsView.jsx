@@ -562,6 +562,27 @@ The Hiring Team`;
         .eq("id", candidate.id);
       if (updateErr) throw updateErr;
 
+      // Best-effort audit trail for Fairness Ledger -- reuses the same
+      // write_audit_log RPC already used by OfferManagement.jsx /
+      // HRApprovalQueue.jsx. Never blocks the reject flow if it fails.
+      supabase
+        .rpc("write_audit_log", {
+          p_action: "application.rejected",
+          p_entity_type: "application",
+          p_entity_id: String(candidate.id),
+          p_before: { status: candidate.status || "applied" },
+          p_after: {
+            status: "rejected",
+            score: candidate.score ?? null,
+            matched_skills: candidate.skills || [],
+            missing_skills: candidate.missingSkills || [],
+            feedback_text: feedback,
+          },
+        })
+        .then(({ error: auditErr }) => {
+          if (auditErr) console.error("write_audit_log (reject) failed:", auditErr);
+        });
+
       // Trigger the actual email via backend
       const { data: { session } } = await supabase.auth.getSession();
       await fetch(`${BACKEND}/send-feedback`, {
@@ -962,6 +983,20 @@ export default function ApplicationsView({ jobId, jobTitle, onBack }) {
           .update({ status: "shortlisted", shortlisted_at: new Date().toISOString() })
           .eq("id", c.id);
         if (updateErr) throw updateErr;
+
+        // Best-effort audit trail for Fairness Ledger -- see FeedbackModal's
+        // handleSend() for the matching reject-side entry.
+        supabase
+          .rpc("write_audit_log", {
+            p_action: "application.shortlisted",
+            p_entity_type: "application",
+            p_entity_id: String(c.id),
+            p_before: { status: c.status || "applied" },
+            p_after: { status: "shortlisted", score: c.score ?? null },
+          })
+          .then(({ error: auditErr }) => {
+            if (auditErr) console.error("write_audit_log (shortlist) failed:", auditErr);
+          });
 
         // Add to pipeline
         const { error: pipelineErr } = await supabase.from("pipeline_candidates").insert({
