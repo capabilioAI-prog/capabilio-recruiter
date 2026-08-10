@@ -126,10 +126,20 @@ function CompareColumn({ a, rank, jobTitle }) {
       </div>
 
       {a.resume_url && (
-        <a href={a.resume_url} target="_blank" rel="noreferrer"
-          style={{ padding: "9px 0", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink2, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", fontFamily: "'Inter',sans-serif" }}>
+        <button
+          onClick={async () => {
+            // resume_url is a storage PATH ("<jobId>/<uuid>.pdf"), not a
+            // real URL -- this used to render it as a raw <a href>, which
+            // was always a broken link (relative path, and the "resumes"
+            // bucket had zero read RLS policies anyway). Generate a real
+            // signed URL on click instead.
+            const { data, error } = await supabase.storage.from("resumes").createSignedUrl(a.resume_url, 3600)
+            if (error) { console.error("Could not open resume:", error.message); return }
+            window.open(data.signedUrl, "_blank", "noreferrer")
+          }}
+          style={{ padding: "9px 0", background: T.cream2, border: `1px solid ${T.border}`, borderRadius: 10, color: T.ink2, fontSize: 12, fontWeight: 700, textAlign: "center", cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
           📄 View Resume
-        </a>
+        </button>
       )}
 
       <button onClick={() => navigate(`/recruiter/applications`)}
