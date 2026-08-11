@@ -107,6 +107,30 @@ const BOTTOM_NAV = [
   { icon: "💬", label: "Comms",     path: "/recruiter/messages" },
 ];
 
+// ── Notification categories ────────────────────────────────────────────────
+// NOTE: this bell-dropdown feed is currently a hardcoded sample list, not
+// wired to a real notifications table/backend yet (no such table exists in
+// capabilio-recruiter-backend as of this change) -- categorizing is scoped
+// to the requested "split into groups" ask. Each item below carries a
+// `category` matching one of NOTIF_CATEGORIES.key, so the day this becomes
+// a real feed (Supabase table + realtime subscription), the row's
+// `category` column slots straight into this same filter UI with no
+// further UI changes needed.
+const NOTIF_CATEGORIES = [
+  { key: "all",       label: "All"        },
+  { key: "candidate", label: "Candidates" },
+  { key: "job",       label: "Jobs"       },
+  { key: "system",    label: "System"     },
+];
+
+const NOTIFICATIONS = [
+  { icon: "🚨", text: "SLA breach: Senior Analyst role — 3 candidates pending 5+ days", time: "Just now", color: T.red,    category: "job" },
+  { icon: "🤖", text: "AI shortlist ready: 47 strong-fit candidates for ML Engineer",   time: "4m ago",   color: T.indigo, category: "candidate" },
+  { icon: "⭐", text: "New trust rating submitted for your company (4.7 ★)",            time: "18m ago",  color: T.amber,  category: "system" },
+  { icon: "🎯", text: "Priya Sharma completed Arena challenge — score 94/100",          time: "1h ago",   color: T.green,  category: "candidate" },
+  { icon: "♻️", text: "3 'Strong but Not Selected' candidates match new Data role",     time: "2h ago",   color: T.blue,   category: "candidate" },
+];
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -124,6 +148,7 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
   const [collapsed,    setCollapsed]    = useState(false);
   const [drawerOpen,   setDrawerOpen]   = useState(false);
   const [notifOpen,    setNotifOpen]    = useState(false);
+  const [notifFilter,  setNotifFilter]  = useState("all");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [activeRoleCount, setActiveRoleCount] = useState(null);
   const drawerRef = useRef();
@@ -352,22 +377,35 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
         {/* Notifications */}
         {notifOpen && (
           <div style={S.notifDropdown}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
               <div style={S.notifTitle}>Notifications</div>
               <span style={{ fontSize:11, color:T.indigo, cursor:"pointer" }}>Mark all read</span>
             </div>
-            {[
-              { icon:"🚨", text:"SLA breach: Senior Analyst role — 3 candidates pending 5+ days", time:"Just now",  color:T.red },
-              { icon:"🤖", text:"AI shortlist ready: 47 strong-fit candidates for ML Engineer",  time:"4m ago",   color:T.indigo },
-              { icon:"⭐", text:"New trust rating submitted for your company (4.7 ★)",           time:"18m ago",  color:T.amber },
-              { icon:"🎯", text:"Priya Sharma completed Arena challenge — score 94/100",          time:"1h ago",   color:T.green },
-              { icon:"♻️",  text:"3 'Strong but Not Selected' candidates match new Data role",    time:"2h ago",   color:T.blue },
-            ].map((n, i) => (
-              <div key={i} style={{ ...S.notifItem, borderLeft:`3px solid ${n.color}` }}>
-                <span style={{ fontSize:18 }}>{n.icon}</span>
-                <div><div style={S.notifText}>{n.text}</div><div style={S.notifTime}>{n.time}</div></div>
+            <div style={S.notifTabRow}>
+              {NOTIF_CATEGORIES.map((c) => {
+                const count = c.key === "all" ? NOTIFICATIONS.length : NOTIFICATIONS.filter(n => n.category === c.key).length;
+                const active = notifFilter === c.key;
+                return (
+                  <button key={c.key} onClick={() => setNotifFilter(c.key)}
+                    style={{ ...S.notifTab, ...(active ? S.notifTabActive : null) }}>
+                    {c.label}{count > 0 && <span style={{ ...S.notifTabCount, ...(active ? S.notifTabCountActive : null) }}>{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            {NOTIFICATIONS
+              .filter(n => notifFilter === "all" || n.category === notifFilter)
+              .map((n, i) => (
+                <div key={i} style={{ ...S.notifItem, borderLeft:`3px solid ${n.color}` }}>
+                  <span style={{ fontSize:18 }}>{n.icon}</span>
+                  <div><div style={S.notifText}>{n.text}</div><div style={S.notifTime}>{n.time}</div></div>
+                </div>
+              ))}
+            {NOTIFICATIONS.filter(n => notifFilter === "all" || n.category === notifFilter).length === 0 && (
+              <div style={{ padding:"20px 8px", textAlign:"center", fontSize:12, color:T.ink4 }}>
+                Nothing here yet.
               </div>
-            ))}
+            )}
           </div>
         )}
 
@@ -437,6 +475,11 @@ const S = {
   notifBadge: { position:"absolute", top:4, right:4, width:14, height:14, borderRadius:"50%", background:T.red, fontSize:9, fontWeight:700, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center" },
   notifDropdown: { position:"fixed", top:68, right:16, width:340, background:T.cream, border:`1px solid ${T.border}`, borderRadius:16, padding:16, boxShadow:T.shadow2, zIndex:200, animation:"fadeIn 0.15s ease" },
   notifTitle: { fontFamily:"'Inter',sans-serif", fontSize:14, fontWeight:700, color:T.ink },
+  notifTabRow: { display:"flex", gap:6, marginBottom:12, overflowX:"auto" },
+  notifTab: { display:"flex", alignItems:"center", gap:5, padding:"5px 10px", borderRadius:99, border:`1px solid ${T.border}`, background:T.cream2, color:T.ink3, fontSize:11.5, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif", whiteSpace:"nowrap", flexShrink:0, transition:"all 0.15s" },
+  notifTabActive: { background:T.indigo3, borderColor:T.indigo2, color:T.indigo },
+  notifTabCount: { fontSize:10, fontWeight:700, color:T.ink4, background:T.cream, borderRadius:99, padding:"1px 6px" },
+  notifTabCountActive: { color:T.indigo, background:"#fff" },
   notifItem: { display:"flex", gap:12, padding:"10px 8px", borderBottom:`1px solid ${T.border}`, borderRadius:8, marginBottom:4, background:T.cream2 },
   notifText: { fontSize:12, color:T.ink2, lineHeight:1.4 },
   notifTime: { fontSize:11, color:T.ink4, marginTop:3 },
