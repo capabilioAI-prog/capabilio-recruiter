@@ -107,15 +107,16 @@ const BOTTOM_NAV = [
   { icon: "💬", label: "Comms",     path: "/recruiter/messages" },
 ];
 
-// ── Notification categories ────────────────────────────────────────────────
-// NOTE: this bell-dropdown feed is currently a hardcoded sample list, not
-// wired to a real notifications table/backend yet (no such table exists in
-// capabilio-recruiter-backend as of this change) -- categorizing is scoped
-// to the requested "split into groups" ask. Each item below carries a
-// `category` matching one of NOTIF_CATEGORIES.key, so the day this becomes
-// a real feed (Supabase table + realtime subscription), the row's
-// `category` column slots straight into this same filter UI with no
-// further UI changes needed.
+// ── Notifications ───────────────────────────────────────────────────────────
+// Backed by the real `notifications` table (Supabase project
+// xogmrwpnkmdmjvwpmfzc), fed by AFTER INSERT/UPDATE triggers on
+// applications/offers/interviews/pipeline_candidates (see migration
+// add_notifications_system). Read state is per-recruiter (notification_reads
+// join table + RLS), because every recruiter at a company otherwise shares
+// identical visibility on this data -- a shared is_read flag would let one
+// recruiter's "mark all read" silently clear another recruiter's unread
+// badge. The frontend reads through the `notifications_with_read_state`
+// view, which already joins in the current recruiter's own read state.
 const NOTIF_CATEGORIES = [
   { key: "all",       label: "All"        },
   { key: "candidate", label: "Candidates" },
@@ -123,13 +124,29 @@ const NOTIF_CATEGORIES = [
   { key: "system",    label: "System"     },
 ];
 
-const NOTIFICATIONS = [
-  { icon: "🚨", text: "SLA breach: Senior Analyst role — 3 candidates pending 5+ days", time: "Just now", color: T.red,    category: "job" },
-  { icon: "🤖", text: "AI shortlist ready: 47 strong-fit candidates for ML Engineer",   time: "4m ago",   color: T.indigo, category: "candidate" },
-  { icon: "⭐", text: "New trust rating submitted for your company (4.7 ★)",            time: "18m ago",  color: T.amber,  category: "system" },
-  { icon: "🎯", text: "Priya Sharma completed Arena challenge — score 94/100",          time: "1h ago",   color: T.green,  category: "candidate" },
-  { icon: "♻️", text: "3 'Strong but Not Selected' candidates match new Data role",     time: "2h ago",   color: T.blue,   category: "candidate" },
-];
+// type -> display icon/color. `category`/`type` come from the DB row;
+// system-category events don't have a real trigger source yet (see
+// NOTIF_TYPE_META fallback), which is an intentional, honest gap rather
+// than a fabricated "SLA breach" style event -- flagged, not invented.
+const NOTIF_TYPE_META = {
+  application_created:      { icon: "📥", color: T.indigo },
+  offer_status_changed:     { icon: "🎁", color: T.amber  },
+  interview_scheduled:      { icon: "📅", color: T.blue   },
+  interview_status_changed: { icon: "📅", color: T.blue   },
+  pipeline_stage_changed:   { icon: "🔀", color: T.green  },
+};
+const notifMeta = (n) => NOTIF_TYPE_META[n.type] || { icon: "🔔", color: T.ink3 };
+
+function timeAgo(isoString) {
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -151,9 +168,67 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
   const [notifFilter,  setNotifFilter]  = useState("all");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [activeRoleCount, setActiveRoleCount] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(true);
   const drawerRef = useRef();
 
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
+  // Real notifications feed (see NOTIF_CATEGORIES comment above). Fetched on
+  // mount so the bell badge is correct before the dropdown is ever opened,
+  // then kept live via a postgres_changes subscription -- Realtime enforces
+  // the same RLS as a normal query, so this can't leak another company's
+  // events even though the channel itself isn't filtered by company_id.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("notifications_with_read_state")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { console.error("Failed to load notifications:", error.message); setNotifLoading(false); return; }
+        setNotifications(data || []);
+        setNotifLoading(false);
+      });
+
+    const channel = supabase
+      .channel("recruiter-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          setNotifications((prev) => [{ ...payload.new, is_read: false }, ...prev].slice(0, 50));
+        }
+      )
+      .subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const markAllRead = async () => {
+    const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+    // Optimistic update -- this is a low-stakes UI toggle, not scoring or
+    // pipeline data, so we don't block the UI on the round trip.
+    setNotifications((prev) => prev.map((n) => (unreadIds.includes(n.id) ? { ...n, is_read: true } : n)));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from("notification_reads")
+      .upsert(
+        unreadIds.map((notification_id) => ({ notification_id, recruiter_id: user.id })),
+        { onConflict: "notification_id,recruiter_id", ignoreDuplicates: true }
+      );
+    if (error) {
+      console.error("Failed to mark notifications read:", error.message);
+      // Roll back the optimistic update so the badge doesn't lie about state.
+      setNotifications((prev) => prev.map((n) => (unreadIds.includes(n.id) ? { ...n, is_read: false } : n)));
+    }
+  };
 
   // 2026-08-10: this chip used to be a hardcoded "4 Active Roles" literal --
   // never computed from anything, so it kept showing 4 even for a brand-new
@@ -368,7 +443,7 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
               + Post Job
             </button>
             <button className="header-icon" onClick={() => setNotifOpen(!notifOpen)} style={S.iconBtn}>
-              🔔<span style={S.notifBadge}>5</span>
+              🔔{unreadCount > 0 && <span style={S.notifBadge}>{unreadCount > 9 ? "9+" : unreadCount}</span>}
             </button>
             <div style={S.headerAvatar} onClick={() => navigate("/recruiter/settings")}>{initials}</div>
           </div>
@@ -379,11 +454,15 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
           <div style={S.notifDropdown}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
               <div style={S.notifTitle}>Notifications</div>
-              <span style={{ fontSize:11, color:T.indigo, cursor:"pointer" }}>Mark all read</span>
+              <span
+                onClick={markAllRead}
+                style={{ fontSize:11, color: unreadCount > 0 ? T.indigo : T.ink4, cursor: unreadCount > 0 ? "pointer" : "default" }}>
+                Mark all read
+              </span>
             </div>
             <div style={S.notifTabRow}>
               {NOTIF_CATEGORIES.map((c) => {
-                const count = c.key === "all" ? NOTIFICATIONS.length : NOTIFICATIONS.filter(n => n.category === c.key).length;
+                const count = c.key === "all" ? notifications.length : notifications.filter(n => n.category === c.key).length;
                 const active = notifFilter === c.key;
                 return (
                   <button key={c.key} onClick={() => setNotifFilter(c.key)}
@@ -393,15 +472,21 @@ export default function RecruiterLayout({ recruiter, onSignOut }) {
                 );
               })}
             </div>
-            {NOTIFICATIONS
+            {notifLoading && (
+              <div style={{ padding:"20px 8px", textAlign:"center", fontSize:12, color:T.ink4 }}>Loading…</div>
+            )}
+            {!notifLoading && notifications
               .filter(n => notifFilter === "all" || n.category === notifFilter)
-              .map((n, i) => (
-                <div key={i} style={{ ...S.notifItem, borderLeft:`3px solid ${n.color}` }}>
-                  <span style={{ fontSize:18 }}>{n.icon}</span>
-                  <div><div style={S.notifText}>{n.text}</div><div style={S.notifTime}>{n.time}</div></div>
-                </div>
-              ))}
-            {NOTIFICATIONS.filter(n => notifFilter === "all" || n.category === notifFilter).length === 0 && (
+              .map((n) => {
+                const { icon, color } = notifMeta(n);
+                return (
+                  <div key={n.id} style={{ ...S.notifItem, borderLeft:`3px solid ${color}`, opacity: n.is_read ? 0.55 : 1 }}>
+                    <span style={{ fontSize:18 }}>{icon}</span>
+                    <div><div style={S.notifText}>{n.body || n.title}</div><div style={S.notifTime}>{timeAgo(n.created_at)}</div></div>
+                  </div>
+                );
+              })}
+            {!notifLoading && notifications.filter(n => notifFilter === "all" || n.category === notifFilter).length === 0 && (
               <div style={{ padding:"20px 8px", textAlign:"center", fontSize:12, color:T.ink4 }}>
                 Nothing here yet.
               </div>
